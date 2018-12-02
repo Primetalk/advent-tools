@@ -1,7 +1,7 @@
-package org.primetalk.advent.day1
+package org.primetalk.advent
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.{FlatSpec, Matchers}
+import day1._
 
 class Day1Test extends FlatSpec with Matchers {
 
