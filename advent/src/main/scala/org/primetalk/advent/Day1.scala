@@ -63,10 +63,10 @@ import scala.collection.mutable
   *
   * Your puzzle answer was 73364.
   */
-package object day1 extends Utils {
+object Day1 extends Utils {
 
   lazy val inputTextFromResource : Iterator[String] =
-    readResource("input.txt")
+    readResource("day1.txt")
 
   lazy val inputText: Seq[String] =
     inputTextFromResource.toSeq
@@ -154,4 +154,9 @@ package object day1 extends Utils {
     duplicateFrequencySearch(0, mutable.TreeSet(), Nil, seqOfChanges)
 
   lazy val answer2: Int = findFirstDuplicateFrequency
+
+  def main(args: Array[String]): Unit = {
+    println("Answer1: " + answer1)
+    println("Answer2: " + answer2)
+  }
 }

@@ -4,9 +4,9 @@ object advent extends SbtModule {
   def scalaVersion = "2.12.7"
   override def artifactName = "advent"
 //  def mainClass = Some("org.primetalk.advent.day1")
-//  def ivyDeps = Agg(
-//    ivy"com.lihaoyi::fastparse:2.0.5"
-//  )
+  def ivyDeps = Agg(
+    ivy"com.lihaoyi::fastparse:2.0.5"
+  )
   object test extends Tests {
     def testFrameworks =  Seq(
       "org.scalatest.tools.Framework"

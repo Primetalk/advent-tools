@@ -1,6 +1,6 @@
 package org.primetalk.advent
 
-import org.primetalk.advent.day2._
+import org.primetalk.advent.Day2._
 import org.scalatest.{FlatSpec, Matchers}
 
 class Day2Test extends FlatSpec with Matchers {

@@ -48,10 +48,10 @@ package org.primetalk.advent
   *
   * Your puzzle answer was pebjqsalrdnckzfihvtxysomg.
   */
-package object day2 extends Utils {
+object Day2 extends Utils {
 
   lazy val inputTextFromResource : Iterator[String] =
-    readResource("input.txt")
+    readResource("day2.txt")
 
   lazy val ids: Seq[String] =
     inputTextFromResource.toSeq
@@ -111,4 +111,9 @@ package object day2 extends Utils {
 
   lazy val answer2: String =
     target(ids)
+
+  def main(args: Array[String]): Unit = {
+    println("Answer1: " + answer1)
+    println("Answer2: " + answer2)
+  }
 }
