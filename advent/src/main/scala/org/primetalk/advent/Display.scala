@@ -6,44 +6,78 @@ import scala.reflect.ClassTag
 
 case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
 
-  val minX: Int = offset._1
+  /** We only allocate array when it's needed*/
+  lazy val array: Array[Array[T]] = Array.ofDim[T](size._1, size._2)
 
-  val maxX1: Int = minX + size._1
-  val maxX: Int = maxX1 - 1
+  val minX: Int = offset._1
+  val maxXplusExtra1: Int = minX + size._1
+  val maxX: Int = maxXplusExtra1 - 1
 
   val minY: Int = offset._2
-  val maxY1: Int = minY + size._2
-  val maxY: Int = maxY1 - 1
+  val maxYplusExtra1: Int = minY + size._2
+  val maxY: Int = maxYplusExtra1 - 1
+
+  def xs = Range(minX, maxX)
+  def ys = Range(minY, maxY)
 
   def points: Seq[Position] =
     for{
-      j <- minY until maxY1
-      i <- minX until maxX1
+      j <- ys
+      i <- xs
     } yield (i, j)
 
   def values: Seq[T] =
     for{
-      j <- minY until maxY1
-      i <- minX until maxX1
+      j <- ys
+      i <- xs
     } yield apply(i, j)
 
   def valuesOnEdges: Set[T] =
     {
       val jValues = for {
-        j <- minY until maxY1
+        j <- ys
         v <- Seq(apply((minX, j)), apply((maxX, j)))
       } yield v
 
       val iValues = for {
-        i <- minX until maxX1
+        i <- xs
         v <- Seq(apply((i, minY)), apply((i, maxY)))
       } yield v
 
       iValues.toSet ++ jValues.toSet
     }
 
-
-  lazy val array: Array[Array[T]] = Array.ofDim[T](size._1, size._2)
+  /** The order is not guaranteed. It might be considered as Set*/
+  def edges: Seq[Position] = {
+    if(maxX < minX || maxY < minY)
+      Seq()
+    else if(maxX == minX)
+      ys.map((minX, _))
+    else if(maxY == minY)
+      xs.map((_, minY))
+    else
+      xs.map((_, minY)) ++
+        xs.map((_, maxY)) ++
+        (minY + 1).until(maxY).map((minX, _)) ++
+        (minY + 1).until(maxY).map((maxX, _))
+  }
+  /** Enumerates all positions on edges.
+    * O(N+M)*/
+//  def edges: Set[Position] =
+//    {
+//      if(minX > maxX1 || minY > maxY1) Set()
+//      val jValues = for {
+//        j <- ys
+//        v <- Seq(apply((minX, j)), apply((maxX1, j)))
+//      } yield v
+//
+//      val iValues = for {
+//        i <- xs
+//        v <- Seq(apply((i, minY)), apply((i, maxY1)))
+//      } yield v
+//
+//      iValues.toSet ++ jValues.toSet
+//    }
 
   def apply(position: Position): T = {
     val p = position - offset
@@ -55,7 +89,9 @@ case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
     array(p._1)(p._2) = v
   }
 
-  /** Sum of all elements in rect inclusive boundaries. */
+  /** Sum of all elements in rect inclusive boundaries.
+    * Rectangle should be within display boundaries.
+    */
   def inclusiveRectSum(topLeft: Position, bottomRight: Position): T = {
     val num = implicitly[Numeric[T]]
     val tl = topLeft - offset
