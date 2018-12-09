@@ -15,8 +15,11 @@ class UtilsTest extends FlatSpec with Matchers {
 
   it should "unfold" in {
     new Utils {
-      unfoldWithSuffix(List[Int](2)){i => if(i >= 100) None else Some(i * i)}(2) shouldBe
-        List(256, 16, 4, 2)
+      unfoldWithSuffix(List[Int]()){ i: Int =>
+        if(i >= 10) None
+        else Some((i + 1, i*i))
+      }(1) shouldBe
+        List(81, 64, 49, 36, 25, 16, 9, 4, 1)
     }
   }
 }
