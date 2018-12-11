@@ -1,11 +1,11 @@
 package org.primetalk.advent
 
-import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector}
+import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector, VecOps}
 
 import scala.reflect.ClassTag
 
-case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
-
+case class Display[T: ClassTag](offset: Vector, size: Vector) {
+  // initial: () => T = () => {implicitly[Numeric[T]].zero}
   /** We only allocate array when it's needed*/
   lazy val array: Array[Array[T]] = Array.ofDim[T](size._1, size._2)
 
@@ -17,8 +17,8 @@ case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
   val maxYplusExtra1: Int = minY + size._2
   val maxY: Int = maxYplusExtra1 - 1
 
-  def xs = Range(minX, maxX)
-  def ys = Range(minY, maxY)
+  def xs = Range(minX, maxXplusExtra1)
+  def ys = Range(minY, maxYplusExtra1)
 
   def points: Seq[Position] =
     for{
@@ -47,7 +47,11 @@ case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
       iValues.toSet ++ jValues.toSet
     }
 
-  /** The order is not guaranteed. It might be considered as Set*/
+  /** Enumerates all positions on edges.
+    * O(N+M)
+    * The order is not guaranteed.
+    * It might be considered as Set.
+    */
   def edges: Seq[Position] = {
     if(maxX < minX || maxY < minY)
       Seq()
@@ -61,23 +65,6 @@ case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
         (minY + 1).until(maxY).map((minX, _)) ++
         (minY + 1).until(maxY).map((maxX, _))
   }
-  /** Enumerates all positions on edges.
-    * O(N+M)*/
-//  def edges: Set[Position] =
-//    {
-//      if(minX > maxX1 || minY > maxY1) Set()
-//      val jValues = for {
-//        j <- ys
-//        v <- Seq(apply((minX, j)), apply((maxX1, j)))
-//      } yield v
-//
-//      val iValues = for {
-//        i <- xs
-//        v <- Seq(apply((i, minY)), apply((i, maxY1)))
-//      } yield v
-//
-//      iValues.toSet ++ jValues.toSet
-//    }
 
   def apply(position: Position): T = {
     val p = position - offset
@@ -92,8 +79,7 @@ case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
   /** Sum of all elements in rect inclusive boundaries.
     * Rectangle should be within display boundaries.
     */
-  def inclusiveRectSum(topLeft: Position, bottomRight: Position): T = {
-    val num = implicitly[Numeric[T]]
+  def inclusiveRectSum(topLeft: Position, bottomRight: Position)(implicit num: Numeric[T]): T = {
     val tl = topLeft - offset
     val br = bottomRight - offset
 
@@ -111,4 +97,34 @@ case class Display[T: Numeric: ClassTag](offset: Vector, size: Vector) {
     go(tl._1, tl._2, num.zero)
   }
 
+  //    d.array = array.transpose
+  def transpose: Display[T] = {
+    val d = Display[T](offset.transpose, size.transpose)
+    for{
+      p <- points
+      pp = p.transpose
+    } {
+      d(pp) = apply(p)
+    }
+    d
+  }
+
+  /** Draws the function on this display. */
+  def renderFunction(f: Position => T): Unit = {
+    for{
+      p <- points
+    } {
+      this(p) = f(p)
+    }
+  }
+
+  /** Fill display with the given value.*/
+  def fillAll(value: => T): Unit = {
+    val arr = Array.fill(size._2)(value)
+    for{
+      y <- ys
+    } {
+      array(y) = arr
+    }
+  }
 }
