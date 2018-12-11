@@ -25,7 +25,7 @@ trait Utils {
   def parseIntsNewLineSeparated(text: String): Seq[Int] =
     splitLines(text).map(_.toInt)
 
-  val intsRegex: Regex = "\\d+".r
+  val intsRegex: Regex = "[-]?\\d+".r
 
   def parseAllIntsInString(text: String): Seq[Int] =
     intsRegex.findAllMatchIn(text).map{_.toString().toInt}.toSeq
