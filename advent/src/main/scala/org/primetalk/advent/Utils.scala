@@ -30,11 +30,54 @@ trait Utils {
   def parseAllIntsInString(text: String): Seq[Int] =
     intsRegex.findAllMatchIn(text).map{_.toString().toInt}.toSeq
 
-  def unfold[A](f: A => Option[A])(z: A): A = {
-    f(z) match {
-      case None => z
-      case Some(zz) => unfold(f)(zz)
+  def unfold[A](z: A)(f: A => Option[A]): A = {
+    def unfold0(z: A): A = {
+      f(z) match {
+        case None => z
+        case Some(zz) => unfold0(zz)
+      }
     }
+    unfold0(z)
+  }
+
+  //     val maxGen = 20
+  //    def go(s: ExtendedState, gen: Int): ExtendedState = {
+  //      if(gen == maxGen)
+  //        s
+  //      else
+  //        go(generate(generativePatterns)(s, 22), gen + 1)
+  //    }
+  //    val state20 = go(state1, 0)
+  //
+  //    def from(s: ExtendedState): Stream[ExtendedState] =
+  //      s #::
+  //        from(generate(generativePatterns)(s, 22))
+  //    val state20 = from(state1).drop(20).head
+  def unfoldN[A](z: A, n: Int)(f: A => A): A = {
+    def unfoldN0(z: A, n: Int): A = {
+      if(n == 0)
+        z
+      else
+        unfoldN0(f(z), n - 1)
+    }
+    unfoldN0(z, n)
+  }
+
+  def unfoldWhile[A](z: A)(f: A => A, p: A => Boolean): A = {
+    def unfoldWhile0(z: A): A = {
+      if(p(z))
+        unfoldWhile0(f(z))
+      else
+        z
+    }
+    unfoldWhile0(z)
+  }
+
+  def unfoldUntil[A](f: A => A, p: A => Boolean)(z: A): A = {
+    if(p(z))
+      z
+    else
+      unfoldUntil(f, p)(f(z))
   }
 
   /** Starts with initial state `S`, then applies `f` continuously.
