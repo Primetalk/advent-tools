@@ -1,5 +1,7 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.Geom2dUtils.{Position, PosOps, mainDirections, directions8}
+
 object GraphUtils {
 
   type GraphEdges[T] = Seq[(T, T)]
@@ -73,34 +75,61 @@ object GraphUtils {
       )
   }
 
+  /** Inserts an element into otherwise sorted vector. */
+  def insertIntoSortedVector[T: Ordering](v: Vector[T], el: T, prefix: List[T] = List()): Vector[T] = {
+    lazy val h = v.head
+    if(v.isEmpty)
+      (el :: prefix).reverse.toVector
+    else if(implicitly[Ordering[T]].gteq(h, el))
+      (el :: prefix).foldLeft(v)(_.+:(_))
+    else
+      insertIntoSortedVector(v.tail, el, h :: prefix)
+  }
+
   def findShortestPaths[T](
     graphAsFunction: GraphAsFunction[T],
     finish: Set[T]
   )(
-    toVisit: List[(T, Int, ReversePath[T])],
-    visited: Map[T, (Int, ReversePath[T])] = Map()
-  ): Set[(Int, ReversePath[T])] = toVisit match {
-    case Nil => Set()
-    case (h, length, hPath) :: t =>
+    toVisit: Vector[(T, Int, ReversePath[T])],
+    distances: Map[T, (Int, ReversePath[T])] = Map() // Int - the length of the path
+  ): Set[(Int, ReversePath[T])] =
+    if(toVisit.isEmpty)
+      Set()
+    else {
+      val (h, length, hPath) = toVisit.head
       val hs = graphAsFunction(h)
-      val notVisited = hs -- visited.keys
-      if(notVisited.isEmpty)
-        findShortestPaths(graphAsFunction, finish)(t, visited)
-      else {
-        val paths: Set[(T, (Int, List[T]))] = hs.map(hh => (hh, (length + 1, hh :: hPath)))
-        val inFinish: Set[(T, (Int, List[T]))] = paths.filter(p => finish.contains(p._1))
-        if (inFinish.isEmpty) {
-
-          val nextVisited = paths.foldLeft(visited){ case (v, (hh, (ll, pp))) =>
+      val paths: Set[(T, (Int, List[T]))] = hs.map(hh => (hh, (length + 1, hh :: hPath)))
+      val inFinish: Set[(T, (Int, List[T]))] = paths.filter(p => finish.contains(p._1))
+      if (inFinish.isEmpty) {
+        val nextToVisit = paths
+          .filterNot { case (hh, _) => distances.keySet.contains(hh) }
+          .map { case (hh, (newLength, newPath)) => (hh, newLength, newPath) }
+        val nextDistances = paths.foldLeft(distances){
+          case (v, (hh, (ll, pp))) =>
             v.get(hh) match {
               case Some((l, _)) if l < ll => v
               case _ => v.updated(hh, (ll, pp))
             }
-          }
-          findShortestPaths(graphAsFunction, finish)(t, nextVisited)
-        } else
-          inFinish.map(_._2)
-      }
+        }
+        implicit val orderingByDistance: Ordering[(T, Int, ReversePath[T])] = Ordering.by(_._2)
+        val nextToVisitSorted = nextToVisit.foldLeft(toVisit.tail)((v, el) => insertIntoSortedVector(v, el))
+        findShortestPaths(graphAsFunction, finish)(nextToVisitSorted, nextDistances)
+      } else
+        inFinish.map(_._2)
+    }
+
+  /** Unconstrained graph for 2d plane. 4 main directions. */
+  def d2graph4dir: GraphAsFunction[Position] =
+    p => mainDirections.map(_ + p).toSet[Position]
+
+  /** Unconstrained graph for 2d plane. 8 directions. */
+  def d2graph8dir: GraphAsFunction[Position] =
+    p => directions8.map(_ + p).toSet[Position]
+
+  /** Calculates the minimum distance between nodes. */
+  def distance[T](graphAsFunction: GraphAsFunction[T])(a: T, b: T): Int = {
+    val paths = findShortestPaths(graphAsFunction, Set(b))(Vector((a, 0, a :: Nil)), Map())
+    paths.head._1
   }
 
 }
