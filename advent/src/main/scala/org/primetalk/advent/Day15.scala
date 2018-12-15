@@ -25,12 +25,14 @@ object Day15 extends Utils {
       hitPoints > 0
   }
 
+  val elfsAttackPower = 10 // found by try. Algorithm for searching could have been binary search.
+
   def findAllUnits(d: Display[Char]): Seq[GameUnit] = {
     val seq = for{
       p <- d.points
       c = d(p)
       if c == 'E' || c == 'G'
-    } yield GameUnit(0, c, p)
+    } yield GameUnit(0, c, p, attackPower = if(c == 'E') elfsAttackPower else 3 )
     seq.zipWithIndex.map{ case (u, i) => u.copy(id = i) }
   }
 
@@ -77,11 +79,10 @@ object Day15 extends Utils {
       else {
         val reversedPaths = shortestPaths.sortBy(_.head)
         val targetPosition = reversedPaths.head.head
-        val reversedPaths2 = reversedPaths.filter(_.head == targetPosition)
-        val paths = reversedPaths2.map(_.reverse)
-        val selectedPath = paths.minBy(_.head)
-        val firstStep = selectedPath.head
-        copy(units = units.updated(self.id, self.copy(position = firstStep)))
+        val reversedPathsToTarget = reversedPaths.filter(_.head == targetPosition)
+        val startsOfPaths = reversedPathsToTarget.map(_.last)
+        val selectedStart = startsOfPaths.min
+        copy(units = units.updated(self.id, self.copy(position = selectedStart)))
       }
     }
 
@@ -193,6 +194,7 @@ object Day15 extends Utils {
 
   // 187800
   // 198354
+  // 195811 -- my solution doesn't work for it. It returns 78 rounds instead of 77.
   def answer1: Int = {
     playGame(inputTextFromResource)
   }
