@@ -1,7 +1,8 @@
 package org.primetalk.advent
 
 import Geom2dUtils._
-import org.primetalk.advent.GraphUtils.{GraphAsFunction, ReversePath, findAllShortestPaths}
+import org.primetalk.advent.GraphUtils._
+//{GraphAsFunction, PathInfo, ReversePath, findAllShortestPaths3}
 
 object Day15 extends Utils {
 
@@ -67,33 +68,21 @@ object Day15 extends Utils {
     def inRangeForMove(u: GameUnit): Seq[Position] =
       graph(u.position)
 
-//    /** All cells are considered. */
-//    def inRangeForAttack(u: GameUnit): Seq[Position] =
-//      graph(u.position)
-
     /** One unit's turn. */
     def move(self: GameUnit, inRangeOfAllTargets: Set[Position]): State = {
-//      val targets = units.values.filter(_.kind != self.kind)
-//      val inRangeOfAllTargets =
-//        targets.flatMap(t => mainDirections.map( _ + t.position)).toSet
-//      if(inRangeOfAllTargets.contains(self.position) || inRangeOfAllTargets.isEmpty)
-//        this
-//      else {
-        val (_, shortestPaths: Seq[ReversePath[Position]]) =
-          findAllShortestPaths[Position](graph, inRangeOfAllTargets
-          )(Vector((self.position, 0, Set(Nil))), Map())
-        if(shortestPaths.isEmpty)
-          this
-        else {
-          val reversedPaths = shortestPaths.sortBy(_.head)
-          val targetPosition = reversedPaths.head.head
-          val reversedPaths2 = reversedPaths.filter(_.head == targetPosition)
-          val paths = reversedPaths2.map(_.reverse)
-          val selectedPath = paths.minBy(_.head)
-          val firstStep = selectedPath.head
-          copy(units = units.updated(self.id, self.copy(position = firstStep)))
-        }
-//      }
+      val (_, shortestPaths: Seq[ReversePath[Position]]) =
+        findAllShortestPaths3(graph, self.position, inRangeOfAllTargets)
+      if(shortestPaths.isEmpty)
+        this
+      else {
+        val reversedPaths = shortestPaths.sortBy(_.head)
+        val targetPosition = reversedPaths.head.head
+        val reversedPaths2 = reversedPaths.filter(_.head == targetPosition)
+        val paths = reversedPaths2.map(_.reverse)
+        val selectedPath = paths.minBy(_.head)
+        val firstStep = selectedPath.head
+        copy(units = units.updated(self.id, self.copy(position = firstStep)))
+      }
     }
 
     def attack(self: GameUnit): State = {
@@ -139,7 +128,12 @@ object Day15 extends Utils {
       }
     }
 
-    def isBattleCompleted: Boolean = units.values.map(_.kind).toSet.size == 1
+    def isBattleCompleted: Boolean =
+      units.values
+        .filter(_.isAlive)
+        .map(_.kind)
+        .toSet.size == 1
+
     def totalHitPoints: Int = units.values.map(_.hitPoints).sum
     def outcome: Int = totalHitPoints * round
 
@@ -161,12 +155,12 @@ object Day15 extends Utils {
   }
 
   def round(s: State): State = {
-    System.gc() // todo: get rid
+//    System.gc() // todo: get rid
     s.showWithUnits()
     // the order in which units take their turns within a round is
     // the reading order of their starting positions in that round
-    val unitIds = s.units.values.toSeq.sortBy(_.position).map(_.id)
-    unitIds
+    val unitIds = s.units.values.filter(_.isAlive).toSeq.sortBy(_.position).map(_.id)
+    val resultState = unitIds
       .foldLeft(s.copy(round = s.round + 1)) {
         (s, id) =>
           // units.get(id)
@@ -178,6 +172,8 @@ object Day15 extends Utils {
               s.turn(self)
           }
       }
+    if(s.units == resultState.units) throw new IllegalStateException("Stuck")
+    resultState
   }
 
   def runUntilBattleCompletes(s: State): State = {
@@ -192,10 +188,11 @@ object Day15 extends Utils {
     val initialState = State(immutableMaze, units, 0)
     val finalState = runUntilBattleCompletes(initialState)
     finalState.showWithUnits()
-    println(finalState.units.values.toSeq.sortBy(_.position).map(_.toString).mkString("\n"))
     finalState.outcome
   }
 
+  // 187800
+  // 198354
   def answer1: Int = {
     playGame(inputTextFromResource)
   }
