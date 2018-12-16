@@ -419,16 +419,14 @@ object Day15 extends Utils {
   }
 
   def convertMazeToGraph(d: Display[Char], occupiedPositions: Set[Position]): GraphAsFunction[Position] = p => {
-//    if(d.isWithinRange(p)) {
-      mainDirections
-        .map( _ + p)
-        .filterNot(occupiedPositions.contains)
-        .filter(d.isWithinRange)
-        .filter{ pp =>
-          val c = d.apply(pp)
-          c != '#'
-        }
-//    } else Seq()
+    mainDirections
+      .map( _ + p)
+      .filterNot(occupiedPositions.contains)
+      .filter(d.isWithinRange)
+      .filter{ pp =>
+        val c = d.apply(pp)
+        c != '#'
+      }
   }
 
   type Id = Int
