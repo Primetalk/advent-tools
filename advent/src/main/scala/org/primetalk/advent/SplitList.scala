@@ -2,7 +2,10 @@ package org.primetalk.advent
 
 /** A pair of lists that are considered as left
   * and right parts of a long sequence.
-  * There are some operations convenient to
+  * There are some operations convenient to deal
+  * with elements of a long sequence at some position.
+  *
+  * See also `Zipper`.
   */
 case class SplitList[T](left: List[T], right: List[T]) {
 
