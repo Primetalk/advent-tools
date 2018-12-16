@@ -150,7 +150,7 @@ object Day11  {
   }
 
   lazy val answer1: Position = {
-    val display = Display[Int]((1,1), (300, 300))
+    val display = Display[Int]((1,1), (300, 300))()
     display.renderFunction(calculatePowerLevel(serial = input))
     val s = sums(3)(display)
     s.maxBy(_._2)._1
@@ -160,7 +160,7 @@ object Day11  {
   // 235,226,15
   // 236,227,14
   lazy val answer2: (Position, Int) = {
-    val display = Display[Int]((1,1), (300, 300))
+    val display = Display[Int]((1,1), (300, 300))()
     display.renderFunction(calculatePowerLevel(serial = input))
     val sizes: Seq[Int] = 1 to 300
 

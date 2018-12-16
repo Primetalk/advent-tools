@@ -12,7 +12,7 @@ trait Generators {
       b <- Gen.choose(-1000,1000)
       c <- Gen.choose(0,1000)
       d <- Gen.choose(0,1000)
-      display = Display((a,b), (c, d))
+      display = Display((a,b), (c, d))()
     } yield display
   implicit def arbitraryDisplay[T: Numeric : ClassTag]: Arbitrary[Display[T]] = Arbitrary(displayGen)
 

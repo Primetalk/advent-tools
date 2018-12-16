@@ -31,6 +31,7 @@ trait Utils {
     intsRegex.findAllMatchIn(text).map{_.toString().toInt}.toSeq
 
   def unfold[A](z: A)(f: A => Option[A]): A = {
+    @annotation.tailrec
     def unfold0(z: A): A = {
       f(z) match {
         case None => z
@@ -54,6 +55,7 @@ trait Utils {
   //        from(generate(generativePatterns)(s, 22))
   //    val state20 = from(state1).drop(20).head
   def unfoldN[A](z: A, n: Int)(f: A => A): A = {
+    @annotation.tailrec
     def unfoldN0(z: A, n: Int): A = {
       if(n == 0)
         z
@@ -64,6 +66,7 @@ trait Utils {
   }
 
   def unfoldWhile[A](z: A)(f: A => A, p: A => Boolean): A = {
+    @annotation.tailrec
     def unfoldWhile0(z: A): A = {
       if(p(z))
         unfoldWhile0(f(z))
@@ -73,11 +76,12 @@ trait Utils {
     unfoldWhile0(z)
   }
 
-  def unfoldUntil[A](f: A => A, p: A => Boolean)(z: A): A = {
+  @annotation.tailrec
+  final def unfoldUntil[A](f: A => A)(p: A => Boolean)(z: A): A = {
     if(p(z))
       z
     else
-      unfoldUntil(f, p)(f(z))
+      unfoldUntil(f)(p)(f(z))
   }
 
   /** Starts with initial state `S`, then applies `f` continuously.
@@ -86,7 +90,8 @@ trait Utils {
     *
     * O(N)
     */
-  def unfoldWithSuffix[S, T](tail: List[T] = Nil)(f: S => Option[(S, T)])(z: S): List[T] = {
+  @annotation.tailrec
+  final def unfoldWithSuffix[S, T](tail: List[T] = Nil)(f: S => Option[(S, T)])(z: S): List[T] = {
     f(z) match {
       case None => tail
       case Some((zz, b)) => unfoldWithSuffix(b :: tail)(f)(zz)

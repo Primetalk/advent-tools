@@ -168,7 +168,7 @@ object Day10 extends Utils {
   lazy val lines: Seq[String] =
     inputTextFromResource.toSeq
 
-  case class PointState(p: Position, v: Vector)
+  case class PointState(p: Position, v: Vector2d)
 
   type AllPoints = Seq[PointState]
   def parseLine(line: String): PointState = {
@@ -201,7 +201,7 @@ object Day10 extends Utils {
 
   def printState(state: AllPoints): Unit = {
     val r = boundingRectangle(state)
-    val display = new Display[Char](r.topLeft, r.bottomRight - r.topLeft + (1,1))
+    val display = new Display[Char](r.topLeft, r.bottomRight - r.topLeft + (1,1))()
     for{
       lineArray <- display.array
     } {

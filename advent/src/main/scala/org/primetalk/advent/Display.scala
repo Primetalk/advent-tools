@@ -1,13 +1,21 @@
 package org.primetalk.advent
 
-import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector, VecOps}
+import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector2d, VecOps}
 
 import scala.reflect.ClassTag
 
-case class Display[T: ClassTag](offset: Vector, size: Vector) {
+// TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
+// TODO: PrintDisplay
+// TODO: DrawDisplay on canvas (Scala.js)
+// TODO: Remove state. Mutable array could be provided from outside as an implicit context
+// TODO: Use refined type for array size,vector size.
+case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => Array[Array[T]]] = None) {
+
+
   // initial: () => T = () => {implicitly[Numeric[T]].zero}
   /** We only allocate array when it's needed*/
-  lazy val array: Array[Array[T]] = Array.ofDim[T](size._1, size._2)
+  lazy val array: Array[Array[T]] =
+    init.getOrElse(() => Array.ofDim[T](size._2, size._1)).apply()
 
   val minX: Int = offset._1
   val maxXplusExtra1: Int = minX + size._1
@@ -19,6 +27,10 @@ case class Display[T: ClassTag](offset: Vector, size: Vector) {
 
   def xs = Range(minX, maxXplusExtra1)
   def ys = Range(minY, maxYplusExtra1)
+
+  def isWithinRange(p: (Int, Int)): Boolean =
+    p._1 >= minX && p._1 <= maxX &&
+      p._2 >= minY && p._2 <= maxY
 
   def points: Seq[Position] =
     for{
@@ -68,12 +80,12 @@ case class Display[T: ClassTag](offset: Vector, size: Vector) {
 
   def apply(position: Position): T = {
     val p = position - offset
-    array(p._1)(p._2)
+    array(p._2)(p._1)
   }
 
   def update(position: Position, v: T): Unit = {
     val p = position - offset
-    array(p._1)(p._2) = v
+    array(p._2)(p._1) = v
   }
 
   /** Sum of all elements in rect inclusive boundaries.
@@ -99,7 +111,7 @@ case class Display[T: ClassTag](offset: Vector, size: Vector) {
 
   //    d.array = array.transpose
   def transpose: Display[T] = {
-    val d = Display[T](offset.transpose, size.transpose)
+    val d = Display[T](offset.transpose, size.transpose)()
     for{
       p <- points
       pp = p.transpose
