@@ -7,6 +7,19 @@ object Geom2dUtils {
   /** Origin is in top left corner. */
   case class Rectangle(topLeft: Position, bottomRight: Position) {
     def area: Long = {(bottomRight._1 - topLeft._1) * (bottomRight._2 - topLeft._2)}
+
+    def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
+
+  }
+
+  /** Finds bounding rectangle for a collection of points. */
+  def boundingRect(positions: Seq[Position]): Rectangle = {
+    val xs = positions.map(_._1)
+    val ys = positions.map(_._2)
+    Rectangle(
+      topLeft = (xs.min, ys.min),
+      bottomRight = (xs.max, ys.max)
+    )
   }
 
   val origin: Position = (0, 0)

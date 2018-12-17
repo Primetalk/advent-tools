@@ -17,6 +17,8 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   lazy val array: Array[Array[T]] =
     init.getOrElse(() => Array.ofDim[T](size._2, size._1)).apply()
 
+  def lineY(y: Int): Array[T] = array(y - minY)
+
   val minX: Int = offset._1
   val maxXplusExtra1: Int = minX + size._1
   val maxX: Int = maxXplusExtra1 - 1
@@ -132,11 +134,23 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
 
   /** Fill display with the given value.*/
   def fillAll(value: => T): Unit = {
-    val arr = Array.fill(size._2)(value)
+    def arr = Array.fill(size._1)(value)
     for{
-      y <- ys
+      j <- 0 until size._2
     } {
-      array(y) = arr
+      array(j) = arr
     }
   }
+
+  def showDisplay(colWidth: Int = 1)(show: T => String = _.toString): String = {
+    (for{
+      y <- ys
+
+    } yield {
+      lineY(y)
+        .map(show)
+        .map(_.padTo(colWidth, ' ').mkString)
+    }).mkString("\n")
+  }
+
 }
