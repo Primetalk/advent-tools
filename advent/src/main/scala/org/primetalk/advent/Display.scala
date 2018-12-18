@@ -172,6 +172,10 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     d
   }
 
+  def map[B: ClassTag](f: T => B): Display[B] = {
+    val a: Array[Array[B]] = array.map(_.map(f).toArray)
+    new Display[B](offset, size)(Some(() => a))
+  }
 }
 
 object Display {

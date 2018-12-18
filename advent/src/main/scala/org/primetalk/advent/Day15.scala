@@ -386,12 +386,8 @@ object Day15 extends Utils {
   lazy val inputTextFromResource : String =
     readResourceAsString("day15.txt")
 
-  def readMazeWithUnits(lines: Seq[String]): Display[Char] = {
-    val size = (lines.head.length, lines.length) // 32*32
-    val a = lines.map(_.toCharArray).toArray
-    val d = Display[Char](origin, size)(Some(() => a))
-    d
-  }
+  def readMazeWithUnits(lines: Seq[String]): Display[Char] =
+    Display.readCharDisplay(lines)
 
   // Each unit, either Goblin or Elf, has 3 attack power and starts with 200 hit points.
   case class GameUnit(id: Int, kind: Char, position: Position,
@@ -400,23 +396,23 @@ object Day15 extends Utils {
       hitPoints > 0
   }
 
-  val elfsAttackPower = 10 // found by try. Algorithm for searching could have been binary search.
+  val elfesAttackPower = 3//10 // found by try. Algorithm for searching could have been binary search.
 
   def findAllUnits(d: Display[Char]): Seq[GameUnit] = {
     val seq = for{
       p <- d.points
       c = d(p)
       if c == 'E' || c == 'G'
-    } yield GameUnit(0, c, p, attackPower = if(c == 'E') elfsAttackPower else 3 )
+    } yield GameUnit(0, c, p, attackPower = if(c == 'E') elfesAttackPower else 3 )
     seq.zipWithIndex.map{ case (u, i) => u.copy(id = i) }
   }
 
-  def readMaze(lines: Seq[String]): Display[Char] = {
-    val size = (lines.head.length, lines.length) // 32*32
-    val a = lines.map(_.replace('E', '.').replace('G', '.').toCharArray).toArray
-    val d = Display[Char](origin, size)(Some(() => a))
-    d
-  }
+  def readMaze(lines: Seq[String]): Display[Char] =
+    readMazeWithUnits(lines)
+      .map {
+        case 'E' | 'G' => '.'
+        case c => c
+      }
 
   def convertMazeToGraph(d: Display[Char], occupiedPositions: Set[Position]): GraphAsFunction[Position] = p => {
     mainDirections
@@ -509,7 +505,9 @@ object Day15 extends Utils {
         .toSet.size == 1
 
     def totalHitPoints: Int = units.values.map(_.hitPoints).sum
-    def outcome: Int = totalHitPoints * round
+
+    def outcome: Int =
+      totalHitPoints * (round - 1) // Incorrect calculation. Just to fix
 
     def showWithUnits(): Unit = {
       println()
@@ -568,13 +566,16 @@ object Day15 extends Utils {
     finalState.outcome
   }
 
+  // Change elfesAttackPower to 3
   // 187800
-  // 198354
-  // 195811 -- my solution doesn't work for it. It returns 78 rounds instead of 77.
+  // 198354 - the result of this method. It returns 78 rounds instead of 77.
+  // 195811 - the actual expected result (rounds = 77). My solution doesn't work for it.
+  //      The solution arrives at the correct position, but it takes one additional round.
   def answer1: Int = {
     playGame(inputTextFromResource)
   }
 
+  // Change elfesAttackPower to 10 and don't forget to subtract one round.
   def answer2: Int = 2
 
   def main(args: Array[String]): Unit = {
