@@ -3,6 +3,7 @@ package org.primetalk.advent
 import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector2d, VecOps}
 
 import scala.reflect.ClassTag
+import Geom2dUtils.directions8
 
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
 // TODO: PrintDisplay
@@ -61,6 +62,12 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
       iValues.toSet ++ jValues.toSet
     }
 
+  def valuesAround(p: Position): Seq[T] = {
+    directions8
+      .map(_ + p)
+      .filter(isWithinRange)
+      .map(apply)
+  }
   /** Enumerates all positions on edges.
     * O(N+M)
     * The order is not guaranteed.
@@ -145,12 +152,40 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   def showDisplay(colWidth: Int = 1)(show: T => String = _.toString): String = {
     (for{
       y <- ys
-
     } yield {
       lineY(y)
         .map(show)
-        .map(_.padTo(colWidth, ' ').mkString)
+        .map(_.padTo(colWidth, ' ')).mkString
     }).mkString("\n")
   }
 
+  /** Transform this display according to cellular automaton rules. */
+  def produceByLocalRules(rules: (T, Seq[T]) => T): Display[T] = {
+    val d = new Display[T](offset, size)()
+    for{
+      p <- points
+      v = valuesAround(p)
+      next = rules(apply(p), v)
+    } {
+      d(p) = next
+    }
+    d
+  }
+
+}
+
+object Display {
+  def readCharDisplay(lines: Seq[String]): Display[Char] = {
+    val size = (lines.head.length, lines.length)
+    val a = lines.map(_.toCharArray).toArray
+    val d = Display[Char]((0,0), size)(Some(() => a))
+    d
+  }
+
+  def eq[T](d1: Display[T], d2: Display[T]): Boolean = {
+    d1.offset == d2.offset &&
+    d1.size == d2.size &&
+    d1.array.zip(d2.array)
+      .forall{ case (a,b) => a.sameElements(b) }
+  }
 }

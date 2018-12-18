@@ -97,4 +97,7 @@ trait Utils {
       case Some((zz, b)) => unfoldWithSuffix(b :: tail)(f)(zz)
     }
   }
+
+  def generateStreamFrom[S](s0: S)(f: S => S): Stream[S] =
+    s0 #:: generateStreamFrom(f(s0))(f)
 }
