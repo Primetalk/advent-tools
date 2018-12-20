@@ -16,7 +16,7 @@ object GraphUtils {
 
   type ReversePath[T] = List[T]
 
-  def convertEdgesToDependencies[T](edges: GraphEdges[T]): GraphDependencies[T] =
+  def convertEdgesToDependenciesOnlyForTrees[T](edges: GraphEdges[T]): GraphDependencies[T] =
     edges
       .foldLeft(Map[T, Set[T]]()) {
         case (acc, (s,e)) =>
@@ -26,6 +26,22 @@ object GraphUtils {
               e -> (acc.getOrElse(e, Set()) + s)
             )
       }
+
+  def convertEdgesToUndirectedGraph[T](edges: GraphEdges[T]): GraphDependencies[T] = {
+    val edges2 = edges.flatMap { edge => Seq(edge, (edge._2, edge._1)) }
+    convertEdgesToDirectedGraph(edges2)
+  }
+
+  def convertEdgesToDirectedGraph[T](edges: GraphEdges[T]): GraphDependencies[T] =
+    edges
+      .foldLeft(Map[T, Set[T]]()) {
+        case (acc, (s, e)) =>
+          val oldSet: Set[T] = acc.getOrElse(s, Set())
+          acc ++ Map(s -> oldSet.+(e))
+      }
+
+  def convertDependenciesToFunction[T](deps: GraphDependencies[T]): GraphAsFunction[T] =
+    p => deps.getOrElse(p, Set()).toSeq
   /**
     * Performs topological sort of nodes.
     * The dependencies are represented by set of direct dependents for each node.
@@ -55,7 +71,7 @@ object GraphUtils {
 
   def topologicalSortFromEdges[T: Ordering](edges: Seq[(T, T)]): List[T] =
     topologicalSortFromDependencies(
-      convertEdgesToDependencies(edges)
+      convertEdgesToDependenciesOnlyForTrees(edges)
     )
 
   /** Starts with a given list of nodes and walks through the given graph until
@@ -121,6 +137,34 @@ object GraphUtils {
       } else {
         (length, inFinish.map(_._2._2))
       }
+    }
+
+  def findShortestPathsForAllReachablePoints[T](
+    graphAsFunction: GraphAsFunction[T]
+  )(
+    toVisit: Vector[(T, Int, ReversePath[T])],
+    distances: Map[T, (Int, ReversePath[T])] = Map() // Int - the length of the path
+  ): Map[T, (Int, ReversePath[T])] =
+    if(toVisit.isEmpty)
+      distances
+    else {
+      val (h, length, hPath) = toVisit.head
+      val hs = graphAsFunction(h)
+      val paths: Seq[(T, (Int, List[T]))] = hs.map(hh => (hh, (length + 1, hh :: hPath)))
+
+      val nextToVisit = paths
+        .filterNot { case (hh, _) => distances.keySet.contains(hh) }
+        .map { case (hh, (newLength, newPath)) => (hh, newLength, newPath) }
+      val nextDistances = paths.foldLeft(distances){
+        case (v, (hh, (ll, pp))) =>
+          v.get(hh) match {
+            case Some((l, _)) if l < ll => v
+            case _ => v.updated(hh, (ll, pp))
+          }
+      }
+      implicit val orderingByDistance: Ordering[(T, Int, ReversePath[T])] = Ordering.by(_._2)
+      val nextToVisitSorted = nextToVisit.foldLeft(toVisit.tail)((v, el) => insertIntoSortedVector(v, el))
+      findShortestPathsForAllReachablePoints(graphAsFunction)(nextToVisitSorted, nextDistances)
     }
 
   /** Finds all shortest paths.
