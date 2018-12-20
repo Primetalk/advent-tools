@@ -201,7 +201,7 @@ object Day10 extends Utils {
 
   def printState(state: AllPoints): Unit = {
     val r = boundingRectangle(state)
-    val display = new Display[Char](r.topLeft, r.bottomRight - r.topLeft + (1,1))()
+    val display = new Display[Char](r.topLeft, r.size)()
     for{
       lineArray <- display.array
     } {

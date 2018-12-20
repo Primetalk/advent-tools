@@ -212,8 +212,8 @@ object Day17 extends Utils {
 
   def drawLines(linesOfClay: Seq[LineOfClay]): Display[Char] = {
     val rect = boundingRect(springOfWaterPosition +: linesOfClay.flatMap(_.boundingRect.coordinatePoints))
-//      .enlargeBy(1)
-    val d = new Display[Char](rect.topLeft + (-1, 0), rect.bottomRight - rect.topLeft + (1,1) + (1,0))()
+    // we enlarge size by 2 columns - one to left and another one to right
+    val d = new Display[Char](rect.topLeft + (-1, 0), rect.size + (2,0))()
     d.fillAll(sand)
     linesOfClay.foreach{
       case VerticalLineOfClay(x, minY, maxY) =>

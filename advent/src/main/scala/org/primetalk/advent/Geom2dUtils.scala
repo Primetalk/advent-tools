@@ -10,6 +10,7 @@ object Geom2dUtils {
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
 
+    def size: Vector2d = bottomRight - topLeft + (1, 1)
   }
 
   /** Finds bounding rectangle for a collection of points. */
