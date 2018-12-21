@@ -113,7 +113,7 @@ object Day8 extends Utils {
   }
 
   def main(args: Array[String]): Unit = {
-//    println("Answer1: " + answer1)
+    println("Answer1: " + answer1)
     println("Answer2: " + answer2)
   }
 

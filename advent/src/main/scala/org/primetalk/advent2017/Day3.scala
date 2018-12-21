@@ -1,7 +1,7 @@
 package org.primetalk.advent2017
 
 import org.primetalk.advent
-import org.primetalk.advent.Geom2dUtils.{Direction, Down, Left, Position, Right, Up, Vector, manhattanDistance, mul, PosOps}
+import org.primetalk.advent.Geom2dUtils.{Direction, Down, Left, Position, Right, Up, Vector2d, manhattanDistance, mul, PosOps}
 import org.primetalk.advent.{Display, ProgUtils}
 
 /**
@@ -108,14 +108,14 @@ object Day3 extends ProgUtils {
   val maxSize = 100
   val offsetX: Int = -maxSize / 2
   val offsetY: Int = -maxSize / 2
-  val offset: Vector = (offsetX, offsetY)
-  val displaySize: Vector = (maxSize, maxSize)
+  val offset: Vector2d = (offsetX, offsetY)
+  val displaySize: Vector2d = (maxSize, maxSize)
 
 
 //  type Display = Array[Array[Int]]
 
-  def newDisplay(size: Vector): Display[Int] =
-    advent.Display((-size._1/2, -size._2/2), size)
+  def newDisplay(size: Vector2d): Display[Int] =
+    advent.Display((-size._1/2, -size._2/2), size)()
 
   def fillIn(input: Int): Int = {
     val display = newDisplay(displaySize)

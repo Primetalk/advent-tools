@@ -169,7 +169,7 @@ object Day6 extends Utils {
 
 
   def answer2: Int = {
-    val d = Display[Int]((0, 0), (400, 400))
+    val d = Display[Int]((0, 0), (400, 400))()
     calcRegion(d, coordinates)
   }
 
