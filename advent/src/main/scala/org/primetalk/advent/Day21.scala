@@ -1,5 +1,7 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.SequenceUtils.{floyd, unfoldN}
+
 /**
   * --- Day 21: Chronal Conversion ---
   *
@@ -130,7 +132,7 @@ PRE: r0 = ? rx = 0
   // 1413889
   lazy val answer2: Long = {
     val initialValueOfR3 = 0L
-    val (start, loop) = CollectionUtils.floyd(initialValueOfR3)()(evalR3)
+    val (start, loop) = floyd(initialValueOfR3)()(evalR3)
 //    println("(start, loop) = " + (start, loop) )
     val indexOfLastIterationInLoop = start + loop - 1
     unfoldN(initialValueOfR3, indexOfLastIterationInLoop)(evalR3)

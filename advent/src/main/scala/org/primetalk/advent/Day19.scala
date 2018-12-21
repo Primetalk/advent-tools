@@ -1,5 +1,7 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.SequenceUtils.{unfoldUntil, unfoldWhile}
+
 import scala.util.Try
 
 /**
@@ -60,10 +62,22 @@ import scala.util.Try
   *
   * Both parts of this puzzle are complete! They provide two gold stars: **
   */
-trait Day19Program extends Utils {
+trait Day19Program extends Utils with Day19DeviceEmulator {
 
   def lines: Seq[String]
 
+
+  lazy val initialIpSelector: IpSelector =
+    parseAllIntsInString(lines.head).head
+
+  lazy val inputProgram: Vector[OperationBinary] = lines.tail.map { line =>
+    val opname = line.take(4)
+    val Seq(a, b, c) = parseAllIntsInString(line)
+    OperationBinary(opname, a, b, c)
+  }.toVector
+
+}
+trait Day19DeviceEmulator {
   type Word = Long
   type IP = Word
 
@@ -117,17 +131,7 @@ trait Day19Program extends Utils {
 
   val microCodes: Map[OpName, OperationMicroCode] =
     operations.map(o => (o.opname, o)).toMap
-
-  lazy val initialIpSelector: IpSelector =
-    parseAllIntsInString(lines.head).head
-
-  lazy val inputProgram: Vector[OperationBinary] = lines.tail.map { line =>
-    val opname = line.take(4)
-    val Seq(a, b, c) = parseAllIntsInString(line)
-    OperationBinary(opname, a, b, c)
-  }.toVector
-
-  def evalInput(iKind: InputMicroCodeType, registers: Registers)(input: Int): Word = iKind match {
+ def evalInput(iKind: InputMicroCodeType, registers: Registers)(input: Int): Word = iKind match {
     case DirectInput => input
     case IndirectInput => registers.values(input)
     case IgnoreInput => -100
@@ -164,7 +168,7 @@ trait Day19Program extends Utils {
     unfoldWhile(r)(executeOneInstruction(program), rr => rr.ip >= 0 && rr.ip < program.length)
   }
 }
-trait Day19 extends Day19Program {
+abstract class Day19 extends Day19Program {
   /*
 What value is left in register 0 when the background process halts?
    */

@@ -2,6 +2,7 @@ package org.primetalk.advent
 
 import Geom2dUtils._
 import org.primetalk.advent.GraphUtils._
+import org.primetalk.advent.SequenceUtils.unfoldUntil
 
 /**
   * --- Day 15: Beverage Bandits ---
