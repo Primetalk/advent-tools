@@ -60,7 +60,7 @@ import scala.util.Try
   *
   * Both parts of this puzzle are complete! They provide two gold stars: **
   */
-trait Day19 extends Utils {
+trait Day19Program extends Utils {
 
   def lines: Seq[String]
 
@@ -74,7 +74,7 @@ trait Day19 extends Utils {
   val registerCount = 6
 
   /** 6 registers */
-  case class Registers(values: Seq[Word] = 0L until registerCount, ipRegisterSelector: Int, ip: Word) {
+  case class Registers(values: Seq[Word] = 0L until registerCount, ipRegisterSelector: Int, ip: Word, executedInstructions: Long = 0L) {
     def copyIpToRegister: Registers = this.copy(values = values.updated(ipRegisterSelector, ip))
 
     def copyFromRegisterToIpAndMoveNext: Registers = this.copy(ip = values(ipRegisterSelector) + 1)
@@ -134,7 +134,10 @@ trait Day19 extends Utils {
   }
 
   def update(c: Int, registers: Registers)(value: Word): Registers =
-    registers.copy(values = registers.values.updated(c, value))
+    registers.copy(
+      values = registers.values.updated(c, value),
+      executedInstructions = registers.executedInstructions + 1L
+    )
 
   def evalOperation(op: OperationMicroCode, binary: OperationBinary, registers: Registers): Registers = op match {
     case OperationMicroCode(_, aMicro, bMicro, f) =>
@@ -158,9 +161,10 @@ trait Day19 extends Utils {
   }
 
   final def eval(program: Vector[OperationBinary])(r: Registers): Registers = {
-    unfoldWhile(r)(executeOneInstruction(program), rr => rr.ip >= 0 && rr.ip < program.length )
+    unfoldWhile(r)(executeOneInstruction(program), rr => rr.ip >= 0 && rr.ip < program.length)
   }
-
+}
+trait Day19 extends Day19Program {
   /*
 What value is left in register 0 when the background process halts?
    */
