@@ -4,20 +4,27 @@ object Geom2dUtils {
   type Position = (Int, Int)
   type Vector2d = (Int, Int)
   type Direction = Vector2d
+
+  def rectangleByDiagonal(topLeft: Position, bottomRight: Position): Rectangle = {
+    Rectangle(topLeft, bottomRight - topLeft + (1, 1))
+  }
+
   /** Origin is in top left corner. */
-  case class Rectangle(topLeft: Position, bottomRight: Position) {
-    def area: Long = {(bottomRight._1 - topLeft._1) * (bottomRight._2 - topLeft._2)}
+  case class Rectangle(topLeft: Position, size: Vector2d) {
+
+    def area: Long =
+      size._1 * size._2
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
 
-    def size: Vector2d = bottomRight - topLeft + (1, 1)
+    def bottomRight: Position = topLeft + size - (1, 1)
   }
 
   /** Finds bounding rectangle for a collection of points. */
   def boundingRect(positions: Seq[Position]): Rectangle = {
     val xs = positions.map(_._1)
     val ys = positions.map(_._2)
-    Rectangle(
+    rectangleByDiagonal(
       topLeft = (xs.min, ys.min),
       bottomRight = (xs.max, ys.max)
     )
@@ -71,5 +78,25 @@ object Geom2dUtils {
       else
         a._1 - b._1
     }
+  type ManhattanPosition = (Int, Int)
+
+  /**
+    * Manhattan affine transform is applied - rotate +45° and scale by sqrt(2)/2.
+    */
+  def manhattanTransform(p: Position): ManhattanPosition = {
+    (p._2 + p._1, p._2 - p._1)
+  }
+  /** It's a rectangle that is constructed by diagonals.
+    * For this an affine transform is applied - rotate +45° and scale by sqrt(2)/2.
+    * It's also enough to describe it with just two points.
+    */
+  case class ManhattanEllipse(p1: Position, p2: Position) {
+    def size: Vector2d =
+      manhattanTransform(p2 - p1)
+  }
+
+  def manhattanCircle(p: Position, r: Int): ManhattanEllipse = {
+    ManhattanEllipse(p - (r,0), p + (r,0))
+  }
 
 }

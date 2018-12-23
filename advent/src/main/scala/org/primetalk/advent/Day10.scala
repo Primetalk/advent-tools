@@ -189,32 +189,9 @@ object Day10 extends Utils {
   def advanceTimeBy1Many(state: AllPoints): AllPoints =
     state.map(advanceTimeBy1ForOnePoint)
 
-//  def entropy(st: AllPoints): Double = {
-//
-//  }
-
-  def boundingRectangle(state: AllPoints): Rectangle =
-    Rectangle(
-      (state.map(_.p._1).min, state.map(_.p._2).min),
-      (state.map(_.p._1).max, state.map(_.p._2).max)
-    )
-
   def printState(state: AllPoints): Unit = {
-    val r = boundingRectangle(state)
-    val display = new Display[Char](r.topLeft, r.size)()
-    for{
-      lineArray <- display.array
-    } {
-      util.Arrays.fill(lineArray, '.')
-    }
-    state.foreach{ p => display(p.p) = '#' }
-    val t = display.transpose
-    for{
-      lineArray <- t.array
-    } {
-      val str = new String(lineArray)
-      println(str)
-    }
+    val d = Display.showPoints(state.map(_.p), '*')
+    println(d.showDisplay()())
   }
   // KBJHEZCB
   def answer1: Int = {
@@ -222,7 +199,7 @@ object Day10 extends Utils {
     val state1 = initialStates.map(advanceTimeByNForOnePoint(_, baseShift))
     val states = Stream.iterate(state1)(advanceTimeBy1Many)
     val limitSize = 10000
-    val areasWithIndices: Seq[((Seq[PointState], Long), Int)] = states.map(s => (s, boundingRectangle(s).area)).take(limitSize).zipWithIndex
+    val areasWithIndices: Seq[((Seq[PointState], Long), Int)] = states.map(s => (s, boundingRect(s.map(_.p)).area)).take(limitSize).zipWithIndex
     var prevSize = Long.MaxValue
     var prevState = state1
     areasWithIndices.foreach{ case ((state, area), index) =>
@@ -232,7 +209,7 @@ object Day10 extends Utils {
       } else {
         println("I: " + (baseShift + index - 1))
         printState(prevState)
-        return baseShift + index - 1
+        return baseShift + index - 1 // FIXME `return` statement
       }
     }
     0
