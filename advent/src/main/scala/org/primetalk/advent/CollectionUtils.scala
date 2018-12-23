@@ -35,6 +35,22 @@ object CollectionUtils {
       }
     }
   }
+  /** Inserts an element into the beginning of the sorted vector. */
+  def insertIntoSortedVector[T: Ordering](v: Vector[T], el: T, prefix: List[T] = List()): Vector[T] = {
+    lazy val h = v.head
+    if(v.isEmpty)
+      (el :: prefix).reverse.toVector
+    else if(implicitly[Ordering[T]].gteq(h, el))
+      (el :: prefix).foldLeft(v)(_.+:(_))
+    else
+      insertIntoSortedVector(v.tail, el, h :: prefix)
+  }
+
+  /** Insert new elements into the beginning of the sorted vector.
+    */
+  def insertAllIntoSortedVector[T: Ordering](v: Vector[T], elements: Seq[T], prefix: List[T] = List()): Vector[T] = {
+    elements.foldLeft(v)((v, el) => insertIntoSortedVector(v, el))
+  }
 
 }
 
@@ -132,5 +148,11 @@ object SequenceUtils {
   def generateStreamFrom[S](s0: S)(f: S => S): Stream[S] =
     s0 #:: generateStreamFrom(f(s0))(f)
 
-
+  def findFixedPoint[A](z: A)(f: A => A): A = {
+    val n = f(z)
+    if(n == z)
+      z
+    else
+      findFixedPoint(n)(f)
+  }
 }
