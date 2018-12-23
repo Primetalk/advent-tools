@@ -5,7 +5,8 @@ object advent extends SbtModule {
   override def artifactName = "advent"
 //  def mainClass = Some("org.primetalk.advent.day1")
   override def ivyDeps = Agg(
-    ivy"com.lihaoyi::fastparse:2.0.5"
+    ivy"com.lihaoyi::fastparse:2.0.5",
+    ivy"ru.primetalk::rewritable-tree:0.1.0"
   )
   object test extends Tests {
     def testFrameworks =  Seq(
