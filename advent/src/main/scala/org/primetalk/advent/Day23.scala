@@ -98,7 +98,6 @@ object Day23 extends Utils {
   lazy val answer1: Long = {
     val bots = nanoBots(lines)
     val strongest = strongestNanoBot(bots)
-    println(strongest)
     val cnt = totalCount(strongest, bots)
     cnt
   }
@@ -108,120 +107,18 @@ object Day23 extends Utils {
   def countBots(p: Vector3d, bots: Seq[NanoBot]): Int =
     bots.count(_.isWithinRange(p))
 
-//  def findBestPosition1(bots: Seq[NanoBot]): Position = {
-////    val strongest = strongestNanoBot(bots)
-////    val (mean, stdDev) = meanAndStdDist(bots.map(_.position))
-//    val p = boundingParallelepiped(bots.map(_.position))
-//
-//    def findGoodPoint(parallelepiped: Parallelepiped): (Position, Int) = {
-//      val goodPoints: Seq[(Position, Int)] = (0 until 10000).map { n =>
-//        val points = parallelepiped.randomPoints(1000)(new Random(n.toLong))
-//        points.map(p => (p, countBots(p, bots))).maxBy(_._2)
-//      }.sortBy(- _._2)
-//      println(goodPoints.take(5))
-//      goodPoints.head
-//    }
-//    val p0 = findGoodPoint(p)
-////    def go(position: Position, cnt: Int, s: Vector3d): Position = {
-////      val size2 = s / 2
-////      val parallelepiped = Parallelepiped(position - size2, position + size2)
-////      val (pp, cnt2) = findGoodPoint(parallelepiped)
-////      if(cnt2 > cnt)
-////        go(pp, cnt2, s)
-////      else pp
-////    }
-////    go(p0._1, p0._2, p.size)
-////    val p = Parallelepiped(mean - (stdDev * 1), mean + (stdDev * 1))
-////    val points: Seq[Position] = (0 until 10000).flatMap(n => p.randomPoints(100)(new Random(n.toLong)))
-////    val counts = points.map(p => (p, countBots(p, bots))).sortBy(- _._2)
-////    println(counts.take(5))
-////    counts.head._1
-//
-//    p0._1
-//  }
-//
-//  def findBestPosition2(bots: Seq[Day23.NanoBot]): Position = {
-//    val spheres: Array[ManhattanParallelepiped] = bots.map(bot => manhattanSphere(bot.position, bot.radius)).toArray.sortBy(- _.manhattanSize)
-////    val points = spheres.flatMap(p => Seq(p.topLeft, p.bottomRight))
-////
-////    type SphereId = Int
-////    val allIds = spheres.indices.toSet
-////    type State = (ManhattanParallelepiped, Set[SphereId])
-////    val initialState = (boundingParallelepiped(points), Set())
-//    def go(states: Seq[ManhattanParallelepiped]): Set[ManhattanParallelepiped] = {
-//      println(states.size)
-//      val pairwiseIntersections =
-//        for{
-//          s1 <- states
-//          _ = {System.gc()}
-//          s2 <- states
-//          if s1 != s2
-//          i <- s1.intersect(s2)
-//      } yield i
-//      if(pairwiseIntersections.isEmpty)
-//        states.toSet
-//      else
-//        go(pairwiseIntersections.sortBy(- _.manhattanSize).take(200))
-//    }
-//    val res = go(spheres.take(11))
-//    println(res.mkString("\n"))
-////    val graph: GraphAsFunction[State] = {
-////      case (p, currentIds) =>
-////        (allIds -- currentIds).toSeq.flatMap {
-////          id =>
-////            val otherP = spheres(id)
-////            p.intersect(otherP).map {
-////              newP =>
-////                (newP, currentIds.+(id))
-////            }
-////        }
-////    }
-////    findMax(graph)(initialState)
-//    origin
-////      ???
-//  }
-
   def findBestPosition3(bots: Seq[Day23.NanoBot]): Seq[Position] = {
-    val spheres: Array[ManhattanParallelepiped] = bots.map(bot => manhattanSphere(bot.position, bot.radius)).toArray
-    def countParall(p: ManhattanParallelepiped): Int =
+    val spheres: Array[ManhattanParallelepiped] =
+      bots.map(bot => manhattanSphere(bot.position, bot.radius)).toArray
+    def countBotsThatIntersectParallelepiped(p: ManhattanParallelepiped): Int =
       spheres.count(sp => p.intersect(sp).nonEmpty)
-    def go(toConsider: Vector[(ManhattanParallelepiped, Int)], countLimit: Int, found: List[ManhattanParallelepiped] = Nil): List[ManhattanParallelepiped] =
-      if(toConsider.isEmpty)
-        found.filter(p => countParall(p) >= countLimit)
-      else {
-        val (pp, cnt) = toConsider.head
-        val tail = toConsider.tail
-        if(cnt < countLimit) {
-          go(tail, countLimit, found)
-        } else if(pp.manhattanSize <= 3)
-          go(tail, countLimit, pp :: found)
-        else{
-          val cnt = countParall(Parallelepiped(pp.topLeft, pp.topLeft))
-          val nextCountLimit = cnt.max(countLimit) // there exist at least a point that has this number of bots around
-          if(nextCountLimit > countLimit) println(nextCountLimit)
-          val parallelepipeds = pp.divideIntoSmallerPieces(2)
-          if(parallelepipeds.size == 1) {
-            require(parallelepipeds.head == pp)
-            go(tail, nextCountLimit, pp :: found)
-          } else {
-            val subdivisions = parallelepipeds.map(ppp => (ppp, countParall(ppp)))
-            go(insertAllIntoSortedVector(tail, subdivisions)(Ordering.by(-_._2)), nextCountLimit, found)
-          }
-        }
-      }
     val points = spheres.flatMap(p => Seq(p.topLeft, p.bottomRight))
     val initialArea = boundingParallelepiped(points)
-    val initialCount = countParall(initialArea)
-    require(bots.size == initialCount) // Our initial area is just very big
-    val initialCountLimit = 1 // 976 // to speedup we may set 976, because it yields the same results.
+    // to speedup we may start with 976, because it yields the same results.
     val found1 =
-      GraphUtils.searchForMaximum(initialArea)(pp => countParall(Parallelepiped(pp.topLeft, pp.topLeft)), countParall)(_.divideIntoSmallerPieces(2))
+      GraphUtils.searchForMaximum(initialArea)(pp => countBotsThatIntersectParallelepiped(Parallelepiped(pp.topLeft, pp.topLeft)), countBotsThatIntersectParallelepiped)(_.divideIntoSmallerPieces(2))
     println(found1)
-//    val found = go(Vector((initialArea, initialCount)), initialCountLimit)
-//    println(found)
     found1.map(_._1.topLeft).map(fromManhattan).distinct
-
-
   }
   // 678, 824, 871,
   // 883 (0 until 10000).flatMap(n => p.randomPoints(100)(new Random(n.toLong)))
@@ -232,8 +129,6 @@ object Day23 extends Utils {
     val bots = nanoBots(lines)
     val bestPositions = findBestPosition3(bots)
     val bestPos = bestPositions.maxBy(countBots(_, bots))
-//    val cnt = countBots(bestPos, bots)
-//    println(cnt) // 971 - 976
     manhattanDistance(origin, bestPos).toLong
   }
 
