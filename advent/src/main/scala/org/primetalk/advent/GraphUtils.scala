@@ -370,7 +370,7 @@ object GraphUtils {
     *
     * The algorithm can be used to find maximum in large ranges where we can estimate max of a function.
     */
-  def searchForMaximum[T, N: Numeric](z: T)(getAValue: T => N, max: T => N)(split: T => Seq[T]): List[(T, N)] = {
+  def  searchForMaximum[T, N: Numeric](z: T)(getAValue: T => N, max: T => N)(split: T => Seq[T]): List[(T, N)] = {
     val N = implicitly[Numeric[N]]
     type MaxN = N
     @annotation.tailrec
@@ -386,23 +386,23 @@ object GraphUtils {
           val headValue = getAValue(head)
           val nextMax = N.max(headValue, maxSoFar)
           val nextCandidates =
-            if(nextMax == maxSoFar)
-              if(N.gteq(headValue, maxSoFar))
+            if(nextMax == maxSoFar) {
+              if (N.gteq(headValue, maxSoFar))
                 h :: candidates
               else
                 candidates
-            else
+            } else
               h :: Nil // removing old candidates because we have found a better value
-            val next =
-              split(head)
-                .map { t => (t, max(t)) }
-                .filter(t => N.gteq(t._2, nextMax)) // we are interested only in those regions that might contain a value greater or equal to known good value
-            val nextToCheck =
-              if(next.size == 1 && next.head == h) // couldn't split
-                tail
-              else
-                insertAllIntoSortedVector[(T,N)](tail, next)(Ordering.by(t => N.negate(t._2)))
-            go(nextToCheck, nextCandidates, nextMax)
+          val next =
+            split(head)
+              .map { t => (t, max(t)) }
+              .filter(t => N.gteq(t._2, nextMax)) // we are interested only in those regions that might contain a value greater or equal to known good value
+          val nextToCheck =
+            if(next.size == 1 && next.head == h) // couldn't split
+              tail
+            else
+              insertAllIntoSortedVector[(T,N)](tail, next)(Ordering.by(t => N.negate(t._2)))
+          go(nextToCheck, nextCandidates, nextMax)
         }
       }
     }

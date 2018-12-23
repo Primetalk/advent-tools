@@ -1,7 +1,6 @@
 package org.primetalk.advent
 
 import Geom3dUtils._
-import CollectionUtils._
 
 /**
   * --- Day 23: Experimental Emergency Teleportation ---
@@ -95,7 +94,7 @@ object Day23 extends Utils {
   def totalCount(strongest: NanoBot, bots: Seq[NanoBot]): Int =
     bots.count(b => strongest.isWithinRange(b.position))
 
-  lazy val answer1: Long = {
+  lazy val answer1: Int = {
     val bots = nanoBots(lines)
     val strongest = strongestNanoBot(bots)
     val cnt = totalCount(strongest, bots)
@@ -116,7 +115,7 @@ object Day23 extends Utils {
     val initialArea = boundingParallelepiped(points)
     // to speedup we may start with 976, because it yields the same results.
     val found1 =
-      GraphUtils.searchForMaximum(initialArea)(pp => countBotsThatIntersectParallelepiped(Parallelepiped(pp.topLeft, pp.topLeft)), countBotsThatIntersectParallelepiped)(_.divideIntoSmallerPieces(2))
+      GraphUtils.searchForMaximum(initialArea)(pp => countBotsThatIntersectParallelepiped(Parallelepiped(pp.topLeft, (0,0,0))), countBotsThatIntersectParallelepiped)(_.divideIntoSmallerPieces(2))
     println(found1)
     found1.map(_._1.topLeft).map(fromManhattan).distinct
   }
@@ -125,11 +124,12 @@ object Day23 extends Utils {
   // 53546326 - too low
   // 138697279 - too low
   // 138697281
-  lazy val answer2: Long = {
+  lazy val answer2: Int = {
     val bots = nanoBots(lines)
     val bestPositions = findBestPosition3(bots)
+    val counts = bestPositions.map(countBots(_, bots))
     val bestPos = bestPositions.maxBy(countBots(_, bots))
-    manhattanDistance(origin, bestPos).toLong
+    manhattanDistance(origin, bestPos)
   }
 
   def main(args: Array[String]): Unit = {

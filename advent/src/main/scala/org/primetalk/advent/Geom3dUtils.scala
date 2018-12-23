@@ -6,25 +6,32 @@ object Geom3dUtils {
   type Vector3d = (Int, Int, Int)
   type Position = Vector3d
   type Direction = Vector3d
+
+  def parallelepipedByDiagonal(topLeft: Position, bottomRight: Position): Parallelepiped =
+    Parallelepiped(topLeft, bottomRight - topLeft + (1, 1, 1))
+
   /** Origin is in top left corner. */
-  case class Parallelepiped(topLeft: Position, bottomRight: Position) {
+  case class Parallelepiped(topLeft: Position, size: Vector3d) {
+
+    def bottomRight: Position = topLeft + size - (1, 1, 1)
 
     def isWithin(p: Position): Boolean = p match {
       case (x,y,z) =>
-        x0 <= x && x <= x1 &&
-        y0 <= y && y <= y1 &&
-        z0 <= z && z <= z1
+        x0 <= x && (x - x0) < size._1 &&
+        y0 <= y && (y - y0) < size._2 &&
+        z0 <= z && (z - z0) < size._3
     }
 
     def x0: Int = topLeft._1
     def y0: Int = topLeft._2
     def z0: Int = topLeft._3
 
-    def x1: Int = bottomRight._1
-    def y1: Int = bottomRight._2
-    def z1: Int = bottomRight._3
+    def x1: Int = x0 + size._1 - 1
+    def y1: Int = y0 + size._2 - 1
+    def z1: Int = z0 + size._3 - 1
 
-    def isValid: Boolean = x1 >= x0 && y1 >= y0 && z1 >= z0
+    def isValid: Boolean =
+      size.isAllPositive
 
     def randomPoint(rnd: Random): Position = {
       val s = size
@@ -46,27 +53,16 @@ object Geom3dUtils {
         (x1,y1,z1)
       )
 
-    def randomPoints(count: Int)(rnd: Random): scala.Seq[Position] = {
-      (0 until count).toSeq.map{ _ => randomPoint(rnd) }
-    }
-
     def manhattanSize: Long = size.manhattanSize
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
-
-    def size: Vector3d = bottomRight - topLeft + (1, 1, 1)
-
-    def isSizeNonNegative: Boolean = {
-      val s = size
-      s.isAllNonNegative
-    }
 
     def intersect(other: Parallelepiped): Option[Parallelepiped] = {
       val othersVerticesInside = other.vertices.filter(isWithin)
       val verticesInsideOther = vertices.filter(other.isWithin)
       val vs = othersVerticesInside ++ verticesInsideOther
       vs.headOption.map(_ =>
-        Parallelepiped(
+        parallelepipedByDiagonal(
           (vs.map(_._1).min, vs.map(_._2).min, vs.map(_._3).min),
           (vs.map(_._1).max, vs.map(_._2).max, vs.map(_._3).max)
           )
@@ -74,16 +70,20 @@ object Geom3dUtils {
     }
 
     def divideIntoSmallerPieces(n: Int): Seq[Parallelepiped] = {
-      (for {
-        i <- 0 until n
-        j <- 0 until n
-        k <- 0 until n
-      } yield
-        Parallelepiped(
-          (x0 + (x1 - x0 + 1) * i    / n    , y0 + (y1 - y0 + 1) * j    / n    , z0 + (z1 - z0 + 1) * k    / n    ),
-          (x0 + (x1 - x0 + 1) *(i+1) / n - 1, y0 + (y1 - y0 + 1) *(j+1) / n - 1, z0 + (z1 - z0 + 1) *(k+1) / n - 1)
-        ))
-        .filter(_.isValid)
+      if(size == (1,1,1))
+        Seq(this)
+      else
+        (for {
+          i <- 0 until n
+          j <- 0 until n
+          k <- 0 until n
+          tl = (x0 + size._1 * i    / n, y0 + size._2 * j      / n, z0 + size._3 * k     / n)
+          br = (x0 + size._1 * (i+1)/ n, y0 + size._2 * (j + 1)/ n, z0 + size._3 *(k + 1)/ n) - (1, 1, 1)
+        } yield
+          parallelepipedByDiagonal(tl, br))
+            .filter(_.isValid)
+            .filterNot(_ == this)
+            .distinct
     }
   }
 
@@ -109,7 +109,7 @@ object Geom3dUtils {
   }
 
   def manhattanSphere(p: Position, r: Int): ManhattanParallelepiped = {
-    Parallelepiped(manhattanTransform(p - (r,0,0)), manhattanTransform(p + (r,0,0)))
+    parallelepipedByDiagonal(manhattanTransform(p - (r,0,0)), manhattanTransform(p + (r,0,0)))
   }
 
   /** Finds bounding rectangle for a collection of points. */
@@ -117,7 +117,7 @@ object Geom3dUtils {
     val xs = positions.map(_._1)
     val ys = positions.map(_._2)
     val zs = positions.map(_._2)
-    Parallelepiped(
+    parallelepipedByDiagonal(
       topLeft = (xs.min, ys.min, zs.min),
       bottomRight = (xs.max, ys.max, zs.max)
     )
@@ -143,8 +143,13 @@ object Geom3dUtils {
       (p._1 + vector._1, p._2 + vector._2, p._3 + vector._3)
     def -(vector: Vector3d): Position =
       (p._1 - vector._1, p._2 - vector._2, p._3 - vector._3)
+
     def isAllNonNegative: Boolean =
       p._1 >= 0 && p._2 >= 0 && p._3 >= 0
+
+    def isAllPositive: Boolean =
+      p._1 >0 && p._2 >0 && p._3 >0
+
     def size: Long = (p._1 * p._1) + (p._2 * p._2) + (p._3 * p._3)
     def manhattanSize: Long = p._1.abs + p._2.abs + p._3.abs
   }
