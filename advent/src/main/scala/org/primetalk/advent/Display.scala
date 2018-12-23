@@ -4,6 +4,7 @@ import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector2d, VecOps}
 
 import scala.reflect.ClassTag
 import Geom2dUtils.directions8
+import Geom2dUtils.mainDirections
 
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
 // TODO: PrintDisplay
@@ -31,9 +32,15 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   def xs = Range(minX, maxXplusExtra1)
   def ys = Range(minY, maxYplusExtra1)
 
-  def isWithinRange(p: (Int, Int)): Boolean =
+  def isWithinRange(p: Position): Boolean =
     p._1 >= minX && p._1 <= maxX &&
       p._2 >= minY && p._2 <= maxY
+
+  def adjacentPositions(p: Position): Seq[Position] =
+    mainDirections.map(_ + p).filter(isWithinRange)
+
+  def positionsAround(p: Position): Seq[Position] =
+    directions8.map(_ + p).filter(isWithinRange)
 
   def points: Seq[Position] =
     for{
@@ -63,9 +70,7 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     }
 
   def valuesAround(p: Position): Seq[T] = {
-    directions8
-      .map(_ + p)
-      .filter(isWithinRange)
+    positionsAround(p)
       .map(apply)
   }
   /** Enumerates all positions on edges.
