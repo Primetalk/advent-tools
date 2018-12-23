@@ -31,3 +31,4 @@ trait Utils {
     intsRegex.findAllMatchIn(text).map{_.toString().toInt}.toSeq
 
 }
+object Utils extends Utils {}
