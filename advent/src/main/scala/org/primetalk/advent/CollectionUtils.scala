@@ -115,9 +115,11 @@ object SequenceUtils {
   def unfoldWhile[A](z: A)(f: A => A, p: A => Boolean): A = {
     @annotation.tailrec
     def unfoldWhile0(z: A): A = {
-      if(p(z))
-        unfoldWhile0(f(z))
-      else
+      if(p(z)) {
+        val next = f(z)
+        if(next == z) throw new IllegalStateException("Stuck at " + z)
+        unfoldWhile0(next)
+      } else
         z
     }
     unfoldWhile0(z)
@@ -127,8 +129,11 @@ object SequenceUtils {
   final def unfoldUntil[A](f: A => A)(p: A => Boolean)(z: A): A = {
     if(p(z))
       z
-    else
-      unfoldUntil(f)(p)(f(z))
+    else {
+      val next = f(z)
+      if(next == z) throw new IllegalStateException("Stuck at " + z)
+      unfoldUntil(f)(p)(next)
+    }
   }
 
   /** Starts with initial state `S`, then applies `f` continuously.
@@ -155,4 +160,18 @@ object SequenceUtils {
     else
       findFixedPoint(n)(f)
   }
+
+  /** Finds minimum argument for predicate to hold true. */
+  def findMinArgForPredicate(p: Int => Boolean)(guessBelow: Int, guessAbove: Int): Int = {
+    if(guessAbove == guessBelow + 1)
+      guessAbove
+    else {
+      val next = (guessAbove + guessBelow) / 2
+      if(p(next))
+        findMinArgForPredicate(p)(guessBelow, next)
+      else
+        findMinArgForPredicate(p)(next, guessAbove)
+    }
+  }
+
 }
