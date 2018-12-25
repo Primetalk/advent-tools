@@ -8,7 +8,6 @@ object Day22 extends Utils {
   lazy val inputTextFromResource : Iterator[String] =
     readResource("day22.txt")
 
-
   lazy val lines: Seq[String] =
     inputTextFromResource.toSeq
 
@@ -28,10 +27,10 @@ object Day22 extends Utils {
   val ClimbingGear: Instrument    = '*'
   val Neither: Instrument = '0'
 
-  val instruments = Seq(Torch, ClimbingGear, Neither)
+  val tools = Seq(Torch, ClimbingGear, Neither)
   type ExtendedPosition = (Position, Instrument)
 
-  def suitableInstruments(regionType: RegionType): Seq[Instrument] = regionType match {
+  def suitableTools(regionType: RegionType): Seq[Instrument] = regionType match {
     case Rocky => Seq(Torch, ClimbingGear)
     case Wet => Seq(ClimbingGear, Neither)
     case Narrow => Seq(Torch, Neither)
@@ -80,7 +79,7 @@ object Day22 extends Utils {
     }
     // In order to find path we may need to look outside of the bounding rectangle.
     // This is the amount appended.
-    val enlargeBy: Position = (40, 40)
+    val enlargeBy: Position = (46,1)//(150,150)//(25, 10) => 1050 // (46,1) => 1048
 
     val erosionLevels: Display[ErosionLevel] =
       renderErosionLevelsOfArea(target + enlargeBy)
@@ -89,8 +88,6 @@ object Day22 extends Utils {
 
     regions(target) = Rocky
 
-//    println(regions.showDisplay()())
-
     def apply: Int =
       totalRiskLevel(regions)
 
@@ -98,10 +95,10 @@ object Day22 extends Utils {
       val nextPositionsWithTheSameInstrument =
         regions
           .adjacentPositions(currentPos)
-          .filter(p => suitableInstruments(regions(p))
+          .filter(p => suitableTools(regions(p))
             .contains(currentInstr)
           )
-      val nextInstrumentsInTheSamePosition = suitableInstruments(regions(currentPos)).filterNot(_ == currentInstr)
+      val nextInstrumentsInTheSamePosition = suitableTools(regions(currentPos)).filterNot(_ == currentInstr)
       nextPositionsWithTheSameInstrument.map(p => ((p, currentInstr), 1) ) ++
         nextInstrumentsInTheSamePosition.map(i => ((currentPos, i), 7))
     }
@@ -112,25 +109,26 @@ object Day22 extends Utils {
 
     def timeToTarget: Int = {
       val gr = graph(regions)
-      val initialExtendedPosition = (origin, Torch)
+      val initialExtendedPosition = (origin, Torch) // You start at 0,0 (the mouth of the cave) with the torch equipped
       import TimeMeasurementUtils._
       val (time, paths) = measure(
         GraphUtils.findShortestPathsInWeightedGraph(
           gr, Set((target, Torch))
-        )(Vector( (0, initialExtendedPosition :: Nil) ), lengthLimit = 1051, distances = Map(initialExtendedPosition -> (0, initialExtendedPosition :: Nil)))
+        )(Vector( (0, initialExtendedPosition :: Nil) ), lengthLimit = 1048 /*1200*/, distances = Map(initialExtendedPosition -> (0, initialExtendedPosition :: Nil)))
       ).report(t => println("time, ms: " + t))
       println("found: " + paths.size)
-//      println(paths.headOption.map(_.size))
+      println(paths.headOption.map(_.size))
       println(paths.headOption)
-      drawPath(regions, paths.head)
+      drawPath(regions, paths.head) // destroying the regions
       println(regions.showDisplay()())
       time
     }
   }
+  lazy val map0 = Eval(inputDepth, inputTarget, inputModulo)
   // 5531
   // 5400
   lazy val answer1: Long = {
-    Eval(inputDepth, inputTarget, inputModulo).apply
+    map0.apply
   }
 
   // Part 2
@@ -142,13 +140,14 @@ object Day22 extends Utils {
   // 1058 - just guessed
   // 1063? - next guess
   // 1050 - incorrect answer. Currently it's what I have
+  // 1050 - still incorrect...
+  // 1048 - max X for the path is 52
   lazy val answer2: Long = {
-    val map0 = Eval(inputDepth, inputTarget, inputModulo)
     map0.timeToTarget
   }
 
   def main(args: Array[String]): Unit = {
-//    println("Answer1: " + answer1)
+    println("Answer1: " + answer1)
     println("Answer2: " + answer2)
   }
 
