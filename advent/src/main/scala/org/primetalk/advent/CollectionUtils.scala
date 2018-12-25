@@ -52,6 +52,12 @@ object CollectionUtils {
     elements.foldLeft(v)((v, el) => insertIntoSortedVector(v, el))
   }
 
+  def reverseOrder[T](implicit ordering: Ordering[T]): Ordering[T] =
+    ordering.reverse
+
+  def descending[T](implicit ordering: Ordering[T]): Ordering[T] =
+    ordering.reverse
+
 }
 
 object SequenceUtils {
