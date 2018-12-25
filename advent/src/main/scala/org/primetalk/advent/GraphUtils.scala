@@ -8,6 +8,10 @@ object GraphUtils {
 
   type GraphEdges[T] = Seq[(T, T)]
 
+  type Predicate[T] = T => Boolean
+
+  type GraphAsSetOfEdges[T] = (T, T) => Boolean
+
   type GraphDependencies[T] = Map[T, Set[T]]
 
   // Seq is considered as Set of vertices.
@@ -339,12 +343,12 @@ object GraphUtils {
       else {
         val adjacent: Seq[(T, Int)] = graphAsFunction(h)
         val nextToVisit =
-          adjacent.map {
-              case (t, edgeLength) => (edgeLength + length, t :: hPath)
-            }
-            .filterNot{ // removing vertices that have known distance that is smaller
-              case (newPathLength, t :: _) =>
-                distance(t) <= newPathLength
+          adjacent
+            .collect{
+              case (t, edgeLength)
+                if distance(t) > edgeLength + length        // only if known distance is larger than the new one
+                  && edgeLength + length <= lengthLimit =>  // and  if we are still under the length limit
+                (edgeLength + length, t :: hPath)
             }
         val nextToVisitSorted = insertAllIntoSortedVector(toVisit.tail, nextToVisit)(Ordering.by(_._1))
         findShortestPathsInWeightedGraph(graphAsFunction, finish)(
@@ -408,6 +412,39 @@ object GraphUtils {
     }
     val m = getAValue(z)
     go(Vector((z, m)), Nil, m)
+  }
+
+  def convertGraphAsSetOfEdges[T](nodes: Seq[T], g: GraphAsSetOfEdges[T]): GraphDependencies[T] = {
+    (for{
+      n1 <- nodes
+      n2 <- nodes
+      if g(n1, n2)
+    } yield (n1, n2)).foldLeft(Map(): GraphDependencies[T]){ case (m, (n1, n2)) =>
+        m
+          .updated(n1, m.getOrElse(n1, Set()) + n2)
+          .updated(n2, m.getOrElse(n2, Set()) + n1)
+    }
+  }
+
+  /** Collects all nodes connected to the given one. */
+  def collectConnectedComponent[T](g: GraphDependencies[T])(n: T): Set[T] = {
+    def go(toVisit2: Set[T], visited: Set[T], found: Set[T]): Set[T] =
+      if(toVisit2.isEmpty)
+        found
+      else {
+        val hh = toVisit2.head
+        val connected = g.getOrElse(hh, Set()) -- visited - hh
+        go(connected ++: toVisit2.tail, visited + hh, connected ++: found)
+      }
+    go(Set(n), Set(), Set(n))
+  }
+
+  def findAllConnectedComponents[T](g: GraphDependencies[T])(toVisit: Set[T] = g.keySet, result: List[Set[T]] = Nil): List[Set[T]] =
+    if(toVisit.isEmpty)
+      result
+    else {
+      val component = collectConnectedComponent(g)(toVisit.head)
+      findAllConnectedComponents(g)(toVisit.diff(component), component :: result)
   }
 }
 
