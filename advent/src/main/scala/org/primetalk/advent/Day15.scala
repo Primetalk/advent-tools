@@ -2,6 +2,7 @@ package org.primetalk.advent
 
 import Geom2dUtils._
 import org.primetalk.advent.GraphUtils._
+import org.primetalk.advent.SequenceUtils.unfoldUntil
 
 /**
   * --- Day 15: Beverage Bandits ---
@@ -530,7 +531,6 @@ object Day15 extends Utils {
   }
 
   def round(s: State): State = {
-//    System.gc() // todo: get rid
     s.showWithUnits()
     // the order in which units take their turns within a round is
     // the reading order of their starting positions in that round
@@ -568,7 +568,7 @@ object Day15 extends Utils {
 
   // Change elfesAttackPower to 3
   // 187800
-  // 198354 - the result of this method. It returns 78 rounds instead of 77.
+  // FIXME 198354 - the result of this method.  It returns 78 rounds instead of 77.
   // 195811 - the actual expected result (rounds = 77). My solution doesn't work for it.
   //      The solution arrives at the correct position, but it takes one additional round.
   def answer1: Int = {

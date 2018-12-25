@@ -1,5 +1,6 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.SequenceUtils.unfoldWithSuffix
 import org.scalatest.{FlatSpec, Matchers}
 
 class UtilsTest extends FlatSpec with Matchers {

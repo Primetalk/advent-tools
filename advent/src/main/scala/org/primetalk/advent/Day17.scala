@@ -193,11 +193,11 @@ object Day17 extends Utils {
   }
 
   case class VerticalLineOfClay(x: Int, minY: Int, maxY: Int) extends LineOfClay {
-    def boundingRect: Rectangle = Rectangle((x, minY), (x, maxY))
+    def boundingRect: Rectangle = rectangleByDiagonal((x, minY), (x, maxY))
   }
 
   case class HorizontalLineOfClay(y: Int, minX: Int, maxX: Int) extends LineOfClay {
-    def boundingRect: Rectangle = Rectangle((minX, y), (maxX, y))
+    def boundingRect: Rectangle = rectangleByDiagonal((minX, y), (maxX, y))
   }
 
   def parseLine(line: String): LineOfClay = {

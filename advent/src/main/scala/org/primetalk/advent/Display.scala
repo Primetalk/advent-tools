@@ -1,17 +1,16 @@
 package org.primetalk.advent
 
-import org.primetalk.advent.Geom2dUtils.{PosOps, Position, Vector2d, VecOps}
+import Geom2dUtils.{PosOps, Position, Rectangle, rectangleByDiagonal, VecOps, Vector2d, directions8, mainDirections}
 
 import scala.reflect.ClassTag
-import Geom2dUtils.directions8
 
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
-// TODO: PrintDisplay
+// DONE showDisplay
 // TODO: DrawDisplay on canvas (Scala.js)
 // TODO: Remove state. Mutable array could be provided from outside as an implicit context
 // TODO: Use refined type for array size,vector size.
 case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => Array[Array[T]]] = None) {
-
+  lazy val rect = Rectangle(offset, size)
 
   // initial: () => T = () => {implicitly[Numeric[T]].zero}
   /** We only allocate array when it's needed*/
@@ -31,9 +30,15 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   def xs = Range(minX, maxXplusExtra1)
   def ys = Range(minY, maxYplusExtra1)
 
-  def isWithinRange(p: (Int, Int)): Boolean =
+  def isWithinRange(p: Position): Boolean =
     p._1 >= minX && p._1 <= maxX &&
       p._2 >= minY && p._2 <= maxY
+
+  def adjacentPositions(p: Position): Seq[Position] =
+    mainDirections.map(_ + p).filter(isWithinRange)
+
+  def positionsAround(p: Position): Seq[Position] =
+    directions8.map(_ + p).filter(isWithinRange)
 
   def points: Seq[Position] =
     for{
@@ -63,9 +68,7 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     }
 
   def valuesAround(p: Position): Seq[T] = {
-    directions8
-      .map(_ + p)
-      .filter(isWithinRange)
+    positionsAround(p)
       .map(apply)
   }
   /** Enumerates all positions on edges.
@@ -179,6 +182,10 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
 }
 
 object Display {
+  def apply[T: ClassTag](rect: Rectangle): Display[T] = {
+    new Display[T](rect.topLeft, rect.size)()
+  }
+
   def readCharDisplay(lines: Seq[String]): Display[Char] = {
     val size = (lines.head.length, lines.length)
     val a = lines.map(_.toCharArray).toArray
@@ -191,5 +198,13 @@ object Display {
     d1.size == d2.size &&
     d1.array.zip(d2.array)
       .forall{ case (a,b) => a.sameElements(b) }
+  }
+
+  def showPoints(points: Seq[Position], pointChar: Char): Display[Char] = {
+    val rect = Geom2dUtils.boundingRect(points)
+    val d = Display[Char](rect)
+    d.fillAll(' ')
+    points.foreach(p => d(p) = pointChar)
+    d
   }
 }

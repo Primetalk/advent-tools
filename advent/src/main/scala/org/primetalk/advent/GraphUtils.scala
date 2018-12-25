@@ -1,18 +1,24 @@
 package org.primetalk.advent
 
 import org.primetalk.advent.Geom2dUtils.{PosOps, Position, directions8, mainDirections}
-
-import scala.collection.immutable
+import CollectionUtils._
+import scala.annotation.tailrec
 
 object GraphUtils {
 
   type GraphEdges[T] = Seq[(T, T)]
+
+  type Predicate[T] = T => Boolean
+
+  type GraphAsSetOfEdges[T] = (T, T) => Boolean
 
   type GraphDependencies[T] = Map[T, Set[T]]
 
   // Seq is considered as Set of vertices.
   // The order is maintained
   type GraphAsFunction[T] = T => Seq[T]
+
+  type WeightedGraphAsFunction[T, W] = T => Seq[(T, W)]
 
   type ReversePath[T] = List[T]
 
@@ -95,17 +101,6 @@ object GraphUtils {
       )
   }
 
-  /** Inserts an element into otherwise sorted vector. */
-  def insertIntoSortedVector[T: Ordering](v: Vector[T], el: T, prefix: List[T] = List()): Vector[T] = {
-    lazy val h = v.head
-    if(v.isEmpty)
-      (el :: prefix).reverse.toVector
-    else if(implicitly[Ordering[T]].gteq(h, el))
-      (el :: prefix).foldLeft(v)(_.+:(_))
-    else
-      insertIntoSortedVector(v.tail, el, h :: prefix)
-  }
-
   def findShortestPaths[T](
     graphAsFunction: GraphAsFunction[T],
     finish: Set[T]
@@ -119,8 +114,8 @@ object GraphUtils {
       val (h, length, hPath) = toVisit.head
       val hs = graphAsFunction(h)
       val paths: Seq[(T, (Int, List[T]))] = hs.map(hh => (hh, (length + 1, hh :: hPath)))
-      val inFinish: Seq[(T, (Int, List[T]))] = paths.filter(p => finish.contains(p._1))
-      if (inFinish.isEmpty) {
+      val pathsInFinish: Seq[(T, (Int, List[T]))] = paths.filter(p => finish.contains(p._1))
+      if (pathsInFinish.isEmpty) {
         val nextToVisit = paths
           .filterNot { case (hh, _) => distances.keySet.contains(hh) }
           .map { case (hh, (newLength, newPath)) => (hh, newLength, newPath) }
@@ -132,10 +127,10 @@ object GraphUtils {
             }
         }
         implicit val orderingByDistance: Ordering[(T, Int, ReversePath[T])] = Ordering.by(_._2)
-        val nextToVisitSorted = nextToVisit.foldLeft(toVisit.tail)((v, el) => insertIntoSortedVector(v, el))
+        val nextToVisitSorted = insertAllIntoSortedVector(toVisit.tail, nextToVisit)
         findShortestPaths(graphAsFunction, finish)(nextToVisitSorted, nextDistances)
       } else {
-        (length, inFinish.map(_._2._2))
+        (pathsInFinish.head._2._1, pathsInFinish.map(_._2._2))
       }
     }
 
@@ -324,5 +319,132 @@ object GraphUtils {
     paths._1
   }
 
+  type ReversePathWithLength[T] = (Int, ReversePath[T])
+
+  @tailrec
+  final def findShortestPathsInWeightedGraph[T](
+    graphAsFunction: WeightedGraphAsFunction[T, Int],
+    finish: Set[T]
+  )(
+    toVisit: Vector[ReversePathWithLength[T]],
+    found: List[ReversePathWithLength[T]] = Nil,
+    lengthLimit: Int = Int.MaxValue,
+    distances: Map[T, ReversePathWithLength[T]] = Map() // Int - the length of the path
+  ): (Int, Seq[ReversePath[T]]) =
+    if(toVisit.isEmpty) {
+      (lengthLimit, found.filter(_._1 <= lengthLimit).map(_._2))
+    } else {
+      def distance(t: T): Int = distances.get(t).map(_._1).getOrElse(Int.MaxValue)
+      val head@(length, hPath@ h :: _) = toVisit.head
+      if(length > lengthLimit) // ignoring paths that are longer than the limit
+        findShortestPathsInWeightedGraph(graphAsFunction, finish)(toVisit.tail, found, lengthLimit, distances) // fast forward
+      else if(finish.contains(h))
+        findShortestPathsInWeightedGraph(graphAsFunction, finish)(toVisit.tail, head :: found, length, distances) // fast forward
+      else {
+        val adjacent: Seq[(T, Int)] = graphAsFunction(h)
+        val nextToVisit =
+          adjacent
+            .collect{
+              case (t, edgeLength)
+                if distance(t) > edgeLength + length        // only if known distance is larger than the new one
+                  && edgeLength + length <= lengthLimit =>  // and  if we are still under the length limit
+                (edgeLength + length, t :: hPath)
+            }
+        val nextToVisitSorted = insertAllIntoSortedVector(toVisit.tail, nextToVisit)(Ordering.by(_._1))
+        findShortestPathsInWeightedGraph(graphAsFunction, finish)(
+          nextToVisitSorted,
+          found       = found,
+          lengthLimit = lengthLimit,
+          distances   = (distances
+                          ++ nextToVisit.map(p => (p._2.head, p)) // optimization - to remember known distances. We could as well use `.update(h,head)`. It is slower.
+                        )
+        )
+      }
+    }
+
+  /**
+    * Searches for a maximum value.
+    * Each T has a range of possible values associated with it.
+    * Split function can generate a few other elements and it is guaranteed that the maximum value of
+    * the newly generated elements is within the maximum of the source.
+    * For each element a value is estimated. And it might become a new found minimum.
+    * Elements that have maximum less than known value are eliminated.
+    * The algorithm will search until there are chances to find a bigger value.
+    * It'll return values that cannot be split further and have value equal to minSoFar.
+    *
+    * The algorithm can be used to find maximum in large ranges where we can estimate max of a function.
+    */
+  def  searchForMaximum[T, N: Numeric](z: T)(getAValue: T => N, max: T => N)(split: T => Seq[T]): List[(T, N)] = {
+    val N = implicitly[Numeric[N]]
+    type MaxN = N
+    @annotation.tailrec
+    def go(toCheck: Vector[(T, MaxN)], candidates: List[(T, MaxN)] = Nil, maxSoFar: N): List[(T, MaxN)] = {
+      if(toCheck.isEmpty)
+        candidates.filter(t => N.gteq(t._2, maxSoFar))
+      else {
+        val h@(head, maxHead) = toCheck.head
+        val tail = toCheck.tail
+        if(N.lt(maxHead, maxSoFar))
+          go(tail, candidates, maxSoFar)
+        else {
+          val headValue = getAValue(head)
+          val nextMax = N.max(headValue, maxSoFar)
+          val nextCandidates =
+            if(nextMax == maxSoFar) {
+              if (N.gteq(headValue, maxSoFar))
+                h :: candidates
+              else
+                candidates
+            } else
+              h :: Nil // removing old candidates because we have found a better value
+          val next =
+            split(head)
+              .map { t => (t, max(t)) }
+              .filter(t => N.gteq(t._2, nextMax)) // we are interested only in those regions that might contain a value greater or equal to known good value
+          val nextToCheck =
+            if(next.size == 1 && next.head == h) // couldn't split
+              tail
+            else
+              insertAllIntoSortedVector[(T,N)](tail, next)(Ordering.by(t => N.negate(t._2)))
+          go(nextToCheck, nextCandidates, nextMax)
+        }
+      }
+    }
+    val m = getAValue(z)
+    go(Vector((z, m)), Nil, m)
+  }
+
+  def convertGraphAsSetOfEdges[T](nodes: Seq[T], g: GraphAsSetOfEdges[T]): GraphDependencies[T] = {
+    (for{
+      n1 <- nodes
+      n2 <- nodes
+      if g(n1, n2)
+    } yield (n1, n2)).foldLeft(Map(): GraphDependencies[T]){ case (m, (n1, n2)) =>
+        m
+          .updated(n1, m.getOrElse(n1, Set()) + n2)
+          .updated(n2, m.getOrElse(n2, Set()) + n1)
+    }
+  }
+
+  /** Collects all nodes connected to the given one. */
+  def collectConnectedComponent[T](g: GraphDependencies[T])(n: T): Set[T] = {
+    def go(toVisit2: Set[T], visited: Set[T], found: Set[T]): Set[T] =
+      if(toVisit2.isEmpty)
+        found
+      else {
+        val hh = toVisit2.head
+        val connected = g.getOrElse(hh, Set()) -- visited - hh
+        go(connected ++: toVisit2.tail, visited + hh, connected ++: found)
+      }
+    go(Set(n), Set(), Set(n))
+  }
+
+  def findAllConnectedComponents[T](g: GraphDependencies[T])(toVisit: Set[T] = g.keySet, result: List[Set[T]] = Nil): List[Set[T]] =
+    if(toVisit.isEmpty)
+      result
+    else {
+      val component = collectConnectedComponent(g)(toVisit.head)
+      findAllConnectedComponents(g)(toVisit.diff(component), component :: result)
+  }
 }
 

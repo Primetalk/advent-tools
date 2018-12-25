@@ -77,6 +77,7 @@ object Day8 extends Utils {
         val (children, rest) = parseNodes(tail, childrenCount)
         val metadata = rest.take(metadataCount)
         parseNodes(rest.drop(metadataCount), count - 1, Node(childrenCount, metadataCount, children, metadata) :: nodesAccum)
+      case _ => throw new IllegalArgumentException("Unsupported format " + input.mkString(", "))
     }
 
   def sumMetadata(list: List[Node], acc: Int = 0): Int = list match {

@@ -1,5 +1,7 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.SequenceUtils.{unfoldUntil, unfoldWhile}
+
 import scala.util.Try
 
 /**
@@ -60,16 +62,26 @@ import scala.util.Try
   *
   * Both parts of this puzzle are complete! They provide two gold stars: **
   */
-trait Day19Program extends Utils {
+trait Day19Program extends Utils with Day19DeviceEmulator {
 
   def lines: Seq[String]
 
+  lazy val programSpecification: ProgramSpecification = parseProgramSpecification(lines)
+
+  lazy val initialIpSelector: IpSelector = programSpecification.ipSelector
+
+  lazy val inputProgram: Vector[OperationBinary] = programSpecification.instructions.toVector
+
+}
+trait Day19DeviceEmulator {
   type Word = Long
   type IP = Word
+  type RegisterId = Int
 
-  type IpSelector = Int
+  type IpSelector = RegisterId
   type OpName = String
 
+  case class ProgramSpecification(ipSelector: IpSelector, instructions: Seq[OperationBinary])
   /* there are now six registers (numbered 0 through 5) */
   val registerCount = 6
 
@@ -82,55 +94,45 @@ trait Day19Program extends Utils {
 
   case class OperationBinary(opname: OpName, a: Int, b: Int, outputRegister: Int)
 
-  sealed trait InputMicroCodeType
+  sealed trait ArgMicroCodeType
 
-  case object DirectInput extends InputMicroCodeType
+  case object ImmediateArg extends ArgMicroCodeType
 
-  case object IndirectInput extends InputMicroCodeType
+  case object RegisterArg extends ArgMicroCodeType
 
-  case object IgnoreInput extends InputMicroCodeType
+  case object IgnoreArg extends ArgMicroCodeType
 
-  case class OperationMicroCode(opname: OpName, aMicro: InputMicroCodeType, bMicro: InputMicroCodeType, f: (Word, Word) => Word)
+  case class OperationMicroCode(opname: OpName, aMicro: ArgMicroCodeType, bMicro: ArgMicroCodeType, f: (Word, Word) => Word)
 
   def cmpGreaterThan(a: Word, b: Word): Word = if (a > b) 1 else 0
 
   def cmpEqual(a: Word, b: Word): Word = if (a == b) 1 else 0
 
   val operations = Seq(
-    OperationMicroCode("addr", IndirectInput, IndirectInput, _ + _),
-    OperationMicroCode("addi", IndirectInput, DirectInput, _ + _),
-    OperationMicroCode("mulr", IndirectInput, IndirectInput, _ * _),
-    OperationMicroCode("muli", IndirectInput, DirectInput, _ * _),
-    OperationMicroCode("banr", IndirectInput, IndirectInput, _ & _),
-    OperationMicroCode("bani", IndirectInput, DirectInput, _ & _),
-    OperationMicroCode("borr", IndirectInput, IndirectInput, _ | _),
-    OperationMicroCode("bori", IndirectInput, DirectInput, _ | _),
-    OperationMicroCode("setr", IndirectInput, IgnoreInput, (a, _) => a),
-    OperationMicroCode("seti", DirectInput, IgnoreInput, (a, _) => a),
-    OperationMicroCode("gtir", DirectInput, IndirectInput, cmpGreaterThan),
-    OperationMicroCode("gtri", IndirectInput, DirectInput, cmpGreaterThan),
-    OperationMicroCode("gtrr", IndirectInput, IndirectInput, cmpGreaterThan),
-    OperationMicroCode("eqir", DirectInput, IndirectInput, cmpEqual),
-    OperationMicroCode("eqri", IndirectInput, DirectInput, cmpEqual),
-    OperationMicroCode("eqrr", IndirectInput, IndirectInput, cmpEqual),
+    OperationMicroCode("addr", RegisterArg, RegisterArg, _ + _),
+    OperationMicroCode("addi", RegisterArg, ImmediateArg, _ + _),
+    OperationMicroCode("mulr", RegisterArg, RegisterArg, _ * _),
+    OperationMicroCode("muli", RegisterArg, ImmediateArg, _ * _),
+    OperationMicroCode("banr", RegisterArg, RegisterArg, _ & _),
+    OperationMicroCode("bani", RegisterArg, ImmediateArg, _ & _),
+    OperationMicroCode("borr", RegisterArg, RegisterArg, _ | _),
+    OperationMicroCode("bori", RegisterArg, ImmediateArg, _ | _),
+    OperationMicroCode("setr", RegisterArg, IgnoreArg, (a, _) => a),
+    OperationMicroCode("seti", ImmediateArg, IgnoreArg, (a, _) => a),
+    OperationMicroCode("gtir", ImmediateArg, RegisterArg, cmpGreaterThan),
+    OperationMicroCode("gtri", RegisterArg, ImmediateArg, cmpGreaterThan),
+    OperationMicroCode("gtrr", RegisterArg, RegisterArg, cmpGreaterThan),
+    OperationMicroCode("eqir", ImmediateArg, RegisterArg, cmpEqual),
+    OperationMicroCode("eqri", RegisterArg, ImmediateArg, cmpEqual),
+    OperationMicroCode("eqrr", RegisterArg, RegisterArg, cmpEqual),
   )
 
   val microCodes: Map[OpName, OperationMicroCode] =
     operations.map(o => (o.opname, o)).toMap
-
-  lazy val initialIpSelector: IpSelector =
-    parseAllIntsInString(lines.head).head
-
-  lazy val inputProgram: Vector[OperationBinary] = lines.tail.map { line =>
-    val opname = line.take(4)
-    val Seq(a, b, c) = parseAllIntsInString(line)
-    OperationBinary(opname, a, b, c)
-  }.toVector
-
-  def evalInput(iKind: InputMicroCodeType, registers: Registers)(input: Int): Word = iKind match {
-    case DirectInput => input
-    case IndirectInput => registers.values(input)
-    case IgnoreInput => -100
+  def evalInput(iKind: ArgMicroCodeType, registers: Registers)(input: Int): Word = iKind match {
+    case ImmediateArg => input
+    case RegisterArg => registers.values(input)
+    case IgnoreArg => -100
   }
 
   def update(c: Int, registers: Registers)(value: Word): Registers =
@@ -163,8 +165,20 @@ trait Day19Program extends Utils {
   final def eval(program: Vector[OperationBinary])(r: Registers): Registers = {
     unfoldWhile(r)(executeOneInstruction(program), rr => rr.ip >= 0 && rr.ip < program.length)
   }
+
+  def parseProgramSpecification(lines: Seq[String]): ProgramSpecification = {
+    val initialIpSelector: IpSelector =
+      Utils.parseAllIntsInString(lines.head).head
+
+    val inputProgram: Vector[OperationBinary] = lines.tail.map { line =>
+      val opname = line.take(4)
+      val Seq(a, b, c) = Utils.parseAllIntsInString(line)
+      OperationBinary(opname, a, b, c)
+    }.toVector
+    ProgramSpecification(initialIpSelector, inputProgram)
+  }
 }
-trait Day19 extends Day19Program {
+abstract class Day19 extends Day19Program {
   /*
 What value is left in register 0 when the background process halts?
    */

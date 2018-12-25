@@ -1,5 +1,7 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.SequenceUtils.{floyd, unfoldN}
+
 /**
   * --- Day 18: Settlers of The North Pole ---
   *
@@ -222,7 +224,7 @@ What will the total resource value of the lumber collection area be after 10 min
   // 194934
   lazy val answer2: Long = {
     val initialState = Display.readCharDisplay(lines)
-    val (start, loopLength) = CollectionUtils.floyd(initialState)(Display.eq)(_.produceByLocalRules(rules))
+    val (start, loopLength) = floyd(initialState)(Display.eq)(_.produceByLocalRules(rules))
     val phase = (time - start) % loopLength
     val N = start + phase // This is the first position when state is identical to the state at $time
     val stateN = unfoldN(initialState, N)(_.produceByLocalRules(rules))

@@ -1,6 +1,7 @@
 package org.primetalk.advent
 
-import org.primetalk.advent.Geom2dUtils.{ Down => DisplayDown, Up => DisplayUp, _ }
+import org.primetalk.advent.Geom2dUtils.{Down => DisplayDown, Up => DisplayUp, _}
+import org.primetalk.advent.SequenceUtils.unfold
 
 object Day13 extends Utils {
 
@@ -62,6 +63,7 @@ object Day13 extends Utils {
       display2(pos) = dir match {
         case MapUp | MapDown => '|'
         case Left|Right => '-'
+        case _ => '@'
       }
     }
     display2
@@ -72,7 +74,9 @@ object Day13 extends Utils {
   }
 
   def showWithCarts(display: Display[Char], carts: CartStates): Unit = {
-    val mapByY = carts.map(c => (c.position._2, c)).groupBy(_._1).toMap.mapValues(_.map(_._2).toSet)
+    val mapByY = carts.map(c => (c.position._2, c))
+      .groupBy(_._1)
+      .mapValues(_.map(_._2).toSet)
     for{
       y <- display.ys
     } {

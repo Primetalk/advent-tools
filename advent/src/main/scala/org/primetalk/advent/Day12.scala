@@ -1,5 +1,7 @@
 package org.primetalk.advent
 
+import org.primetalk.advent.SequenceUtils.unfoldN
+
 /**
   * --- Day 12: Subterranean Sustainability ---
   *

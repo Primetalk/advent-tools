@@ -76,12 +76,13 @@ object Day8 extends Utils {
   type Gamma = Map[Id, Int]
 
   def check(gamma: Gamma)(condition: Condition): Boolean = condition match {
-    case Condition(condRegId, ">", condArg) => gamma.getOrElse(condRegId, 0) > condArg
-    case Condition(condRegId, "<", condArg) => gamma.getOrElse(condRegId, 0) < condArg
+    case Condition(condRegId, ">",  condArg) => gamma.getOrElse(condRegId, 0) > condArg
+    case Condition(condRegId, "<",  condArg) => gamma.getOrElse(condRegId, 0) < condArg
     case Condition(condRegId, ">=", condArg) => gamma.getOrElse(condRegId, 0) >= condArg
     case Condition(condRegId, "<=", condArg) => gamma.getOrElse(condRegId, 0) <= condArg
     case Condition(condRegId, "==", condArg) => gamma.getOrElse(condRegId, 0) == condArg
     case Condition(condRegId, "!=", condArg) => gamma.getOrElse(condRegId, 0) != condArg
+    case Condition(_,         op,   _      ) => throw new IllegalArgumentException("Unsupported operation " + op)
   }
 
   def operation(cmd: Command): Int => Int => Int = cmd match {
