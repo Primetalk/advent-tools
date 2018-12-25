@@ -17,8 +17,7 @@ class Day24Test extends BaseTest {
         | that does 116 bludgeoning damage at initiative 1
         |4485 units each with 2961 hit points (immune to radiation; weak to fire,
         | cold) with an attack that does 12 slashing damage at initiative 4
-        |
-      """.stripMargin
+        |""".stripMargin
   }
 
 }

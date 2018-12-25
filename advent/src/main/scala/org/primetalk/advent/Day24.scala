@@ -1,12 +1,14 @@
 package org.primetalk.advent
 
 import SequenceUtils._
+import CollectionUtils._
 
 import scala.util.Try
 
-object Day24Parser {
+object Day24Parser  {
   import fastparse._
   import NoWhitespace._
+  import ParsingUtils._
   sealed trait AttackKind
   case object Fire extends AttackKind
   case object Radiation extends AttackKind
@@ -15,6 +17,7 @@ object Day24Parser {
   case object Slashing extends AttackKind
 
   type Id = Int
+
   case class GroupOfUnits(unitsCount: Int, hitPoints: Int,
     attackKind: AttackKind, attackDamage: Int, immuneTo: Seq[AttackKind], weakTo: Seq[AttackKind],
     initiative: Int
@@ -22,24 +25,45 @@ object Day24Parser {
     def effectivePower: Int = unitsCount * attackDamage
     def id: Id = initiative
   }
-  case class AutonomousGroup(id: Id, armyKind: ArmyKind, groupOfUnits: GroupOfUnits)
 
-  def positiveNumber[_ : P]: P[Int] = P(CharIn("0123456789").rep(1).!).map(_.toInt)
+  case class AutonomousGroup(id: Id, armyKind: ArmyKind, groupOfUnits: GroupOfUnits) {
+    def applyDamage(d: Int): AutonomousGroup = {
+      val removeUnits = d / groupOfUnits.hitPoints
+      val restUnits = math.max(0, groupOfUnits.unitsCount - removeUnits)
+      this.copy(groupOfUnits = groupOfUnits.copy(unitsCount = restUnits))
+    }
+  }
 
-  def attackKind[_ : P]: P[AttackKind] = P(
-    "fire".!.map(_ => Fire: AttackKind) |
-    "radiation".!.map(_ => Radiation) |
-    "bludgeoning".!.map(_ => Bludgeoning) |
-    "cold".!.map(_ => Cold) |
-    "slashing".!.map(_ => Slashing)
+  val attackKinds = List(
+    "fire" -> Fire,
+    "radiation" -> Radiation,
+    "bludgeoning" -> Bludgeoning,
+    "cold" -> Cold,
+    "slashing" -> Slashing,
+  )
+
+  def attackKind[_ : P]: P[AttackKind] =
+  P(
+    "fire".parseAs(Fire) |
+    "radiation".parseAs(Radiation) |
+    "bludgeoning".parseAs(Bludgeoning) |
+    "cold".parseAs(Cold) |
+    "slashing".parseAs(Slashing)
   )
 
   sealed trait InfoKind
-  case class Immunes(immuneTo: Seq[AttackKind]) extends InfoKind
-  case class Weaks(weakTo: Seq[AttackKind]) extends InfoKind
-  def listOfImmunes[_ : P]: P[Immunes] = P("immune to " ~ attackKind.rep(min = 1, sep = ", ")).map(Immunes)
-  def listOfWeaks  [_ : P]: P[Weaks] = P("weak to "   ~ attackKind.rep(min = 1, sep = ", ")).map(Weaks)
-  def listOfImmunesAndWeaks[_ : P]: P[Seq[InfoKind]] = P("(" ~ (listOfImmunes | listOfWeaks).rep(sep = "; ") ~ ") ")
+  case object Immunes extends InfoKind // (immuneTo: Seq[AttackKind])
+  case object Weaks extends InfoKind
+
+  def listOfImmunesAndWeaks[_ : P]: P[Seq[(InfoKind, Seq[AttackKind])]] =
+    P("("
+      ~ (
+        ("immune to ".parseAs(Immunes)| "weak to ".parseAs(Weaks))
+          ~ attackKind.rep(min = 1, sep = ", ")
+      ).rep(sep = "; ")
+      ~ ") "
+    )
+
   def groupOfUnits[_ : P]: P[GroupOfUnits] = P(positiveNumber ~ " units each with " ~ positiveNumber ~ " hit points "
     ~ (listOfImmunesAndWeaks| "".!.map(_ => Seq())) ~ "with an attack that does " ~ positiveNumber ~ " " ~ attackKind ~
     " damage at initiative " ~ positiveNumber
@@ -47,18 +71,24 @@ object Day24Parser {
     case (unitsCount: Int, hitPoints: Int, listOfImmunesAndWeaks,
       attackDamage: Int, attackKind: AttackKind,
       initiative: Int) =>
-      val imm = listOfImmunesAndWeaks.collectFirst { case Immunes(seq) => seq }.getOrElse(Seq())
-      val weaks = listOfImmunesAndWeaks.collectFirst { case Weaks(seq) => seq }.getOrElse(Seq())
+      val imm   = listOfImmunesAndWeaks.collectFirst { case (Immunes, seq) => seq }.getOrElse(Seq())
+      val weaks = listOfImmunesAndWeaks.collectFirst { case (Weaks, seq) => seq }.getOrElse(Seq())
       GroupOfUnits(unitsCount, hitPoints, attackKind, attackDamage, imm, weaks, initiative)
   }
 
   sealed trait ArmyKind
   case object ImmuneSystem extends ArmyKind
   case object Infection extends ArmyKind
+
   case class Army(armyKind: ArmyKind, groups: Seq[GroupOfUnits])
 
-  def armyKind[_ : P]: P[ArmyKind] = P( "Immune System".!.map(_ => ImmuneSystem: ArmyKind) | "Infection".!.map(_ => Infection) )
-  def army[_ : P]: P[Army] = P( armyKind ~ ":\n" ~ groupOfUnits.rep(min = 1, sep = "\n")).map(Army.tupled)
+  def armyKind[_ : P]: P[ArmyKind] = P( "Immune System".parseAs(ImmuneSystem) | "Infection".parseAs(Infection) )
+  def army[_ : P]: P[Army] =
+    P(
+      armyKind
+      ~ ":\n"
+        ~ groupOfUnits.rep(min = 1, sep = "\n")
+    ).map(Army.tupled)
   def armies[_ : P]: P[Seq[Army]] = P(army.rep(sep = "\n\n") ~ "\n" ~ End)
 
   def parseArmies(text: String): Seq[Army] = {
@@ -422,9 +452,9 @@ object Day24 extends Utils {
   /** Selects 0..1 group for attack.*/
   def attemptSelectTarget(attacker: AutonomousGroup, otherGroups: List[AutonomousGroup]): (Option[AutonomousGroup], List[AutonomousGroup]) = {
     val withDamage = otherGroups.map(g =>
-      (g, (-estimateDamageForTargetSelection(attacker.groupOfUnits, g.groupOfUnits), -g.groupOfUnits.effectivePower, -g.groupOfUnits.initiative))
+      (g, (estimateDamageForTargetSelection(attacker.groupOfUnits, g.groupOfUnits), g.groupOfUnits.effectivePower, g.groupOfUnits.initiative))
     )
-    val sorted = withDamage.sortBy(_._2).toList
+    val sorted = withDamage.sortBy(_._2)(reverseOrder).toList
     sorted match {
       case Nil =>
         (None, Nil)
@@ -465,9 +495,7 @@ object Day24 extends Utils {
       val target = map(targetId)
       if(attacker.groupOfUnits.unitsCount > 0) {
         val damage = estimateDamageForTargetSelection(attacker.groupOfUnits, target.groupOfUnits)
-        val removeUnits = damage / target.groupOfUnits.hitPoints
-        val restUnits = math.max(0, target.groupOfUnits.unitsCount - removeUnits)
-        val targetState = target.copy(groupOfUnits = target.groupOfUnits.copy(unitsCount = restUnits))
+        val targetState = target.applyDamage(damage)
         attack(tail, map.updated(target.id, targetState))
       } else
         attack(tail, map)
