@@ -42,15 +42,15 @@ class Day9Test extends FlatSpec with Matchers {
       {{<!>},{<!>},{<!>},{<a>}}, 2 groups (since all but the last > are canceled).
 
    */
-  it should "group" in {
-    score(parseSingleGroup("{}")) shouldBe 1
-    score(parseSingleGroup("{{{}}}")) shouldBe 3
-    score(parseSingleGroup("{{},{}}")) shouldBe 3
-    score(parseSingleGroup("{{{},{},{{}}}}")) shouldBe 6
-    score(parseSingleGroup("{<{},{},{{}}>}")) shouldBe 1
-    score(parseSingleGroup("{<a>,<a>,<a>,<a>}")) shouldBe 1
-    score(parseSingleGroup("{{<a>},{<a>},{<a>},{<a>}}")) shouldBe 5
-    score(parseSingleGroup("{{<!>},{<!>},{<!>},{<a>}}")) shouldBe 2
-  }
+//  it should "group" in {
+//    score(parseSingleGroup("{}")) shouldBe 1
+//    score(parseSingleGroup("{{{}}}")) shouldBe 3
+//    score(parseSingleGroup("{{},{}}")) shouldBe 3
+//    score(parseSingleGroup("{{{},{},{{}}}}")) shouldBe 6
+//    score(parseSingleGroup("{<{},{},{{}}>}")) shouldBe 1
+//    score(parseSingleGroup("{<a>,<a>,<a>,<a>}")) shouldBe 1
+//    score(parseSingleGroup("{{<a>},{<a>},{<a>},{<a>}}")) shouldBe 5
+//    score(parseSingleGroup("{{<!>},{<!>},{<!>},{<a>}}")) shouldBe 2
+//  }
 
 }

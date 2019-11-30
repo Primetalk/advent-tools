@@ -1,6 +1,6 @@
 package org.primetalk.advent2017
 
-import org.primetalk.advent.Utils
+import org.primetalk.advent.tools.Utils
 
 import scala.util.matching.Regex
 

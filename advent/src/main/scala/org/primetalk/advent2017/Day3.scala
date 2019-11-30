@@ -1,8 +1,8 @@
 package org.primetalk.advent2017
 
-import org.primetalk.advent
-import org.primetalk.advent.Geom2dUtils.{Direction, Down, Left, Position, Right, Up, Vector2d, manhattanDistance, mul, PosOps}
-import org.primetalk.advent.{Display, ProgUtils}
+import org.primetalk.advent2018
+import org.primetalk.advent2018.Geom2dUtils.{Direction, Down, Left, Position, Right, Up, Vector2d, manhattanDistance, mul, PosOps}
+import org.primetalk.advent2018.{Display, ProgUtils}
 
 /**
   * --- Day 3: Spiral Memory ---
@@ -115,7 +115,7 @@ object Day3 extends ProgUtils {
 //  type Display = Array[Array[Int]]
 
   def newDisplay(size: Vector2d): Display[Int] =
-    advent.Display((-size._1/2, -size._2/2), size)()
+    advent2018.Display((-size._1/2, -size._2/2), size)()
 
   def fillIn(input: Int): Int = {
     val display = newDisplay(displaySize)

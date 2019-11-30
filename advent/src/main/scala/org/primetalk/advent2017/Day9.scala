@@ -1,7 +1,8 @@
 package org.primetalk.advent2017
 
-import org.primetalk.advent.Utils
-import fastparse._, NoWhitespace._
+import fastparse._
+import NoWhitespace._
+import org.primetalk.advent.tools.Utils
 
 object Day9 extends Utils {
 
