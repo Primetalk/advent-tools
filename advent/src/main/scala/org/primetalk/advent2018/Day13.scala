@@ -2,7 +2,7 @@ package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.Geom2dUtils.{Down => DisplayDown, Up => DisplayUp, _}
 import org.primetalk.advent.tools.SequenceUtils.unfold
-import org.primetalk.advent.tools.Utils
+import org.primetalk.advent.tools.{Display, Utils}
 
 object Day13 extends Utils {
 

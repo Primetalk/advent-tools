@@ -1,7 +1,7 @@
 package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.SequenceUtils.{floyd, unfoldN}
-import org.primetalk.advent.tools.Utils
+import org.primetalk.advent.tools.{Display, Utils}
 
 /**
   * --- Day 18: Settlers of The North Pole ---

@@ -3,7 +3,7 @@ package org.primetalk.advent2018
 import org.primetalk.advent.tools.Geom2dUtils._
 import org.primetalk.advent.tools.GraphUtils._
 import org.primetalk.advent.tools.SequenceUtils.unfoldUntil
-import org.primetalk.advent.tools.Utils
+import org.primetalk.advent.tools.{Display, Utils}
 
 /**
   * --- Day 15: Beverage Bandits ---

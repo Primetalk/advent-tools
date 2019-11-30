@@ -1,5 +1,7 @@
 package org.primetalk.advent2018
 
+import org.primetalk.advent.tools.SplitVector
+
 /**
   * --- Day 9: Marble Mania ---
   *

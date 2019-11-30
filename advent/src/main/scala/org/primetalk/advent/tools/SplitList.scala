@@ -1,4 +1,4 @@
-package org.primetalk.advent2018
+package org.primetalk.advent.tools
 
 /** A pair of lists that are considered as left
   * and right parts of a long sequence.

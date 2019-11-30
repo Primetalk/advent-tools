@@ -1,6 +1,6 @@
 package org.primetalk.advent2018
 
-import PrimeNumbers._
+import org.primetalk.advent.tools.PrimeNumbers._
 
 class PrimeNumbersTest extends BaseTest {
 

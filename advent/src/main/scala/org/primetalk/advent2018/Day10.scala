@@ -3,7 +3,7 @@ package org.primetalk.advent2018
 import java.util
 
 import org.primetalk.advent.tools.Geom2dUtils._
-import org.primetalk.advent.tools.Utils
+import org.primetalk.advent.tools.{Display, Utils}
 
 /**
   * --- Day 10: The Stars Align ---

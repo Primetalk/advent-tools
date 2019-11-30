@@ -1,6 +1,6 @@
 package org.primetalk.advent2018
 
-import org.primetalk.advent.tools.{GraphUtils, Utils}
+import org.primetalk.advent.tools.{Display, GraphUtils, Utils}
 import org.primetalk.advent.tools.Geom2dUtils._
 import org.primetalk.advent.tools.GraphUtils.{ReversePath, WeightedGraphAsFunction}
 

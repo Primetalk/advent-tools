@@ -1,4 +1,4 @@
-package org.primetalk.advent2018
+package org.primetalk.advent.tools
 
 /** Vector that is split at some position. */
 case class SplitVector[T](left: Vector[T], right: Vector[T]) {

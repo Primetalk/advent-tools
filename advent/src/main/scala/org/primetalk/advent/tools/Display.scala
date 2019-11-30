@@ -1,7 +1,6 @@
-package org.primetalk.advent2018
+package org.primetalk.advent.tools
 
-import org.primetalk.advent.tools.Geom2dUtils
-import org.primetalk.advent.tools.Geom2dUtils.{PosOps, Position, Rectangle, VecOps, Vector2d, directions8, mainDirections, rectangleByDiagonal}
+import org.primetalk.advent.tools.Geom2dUtils.{PosOps, Position, Rectangle, VecOps, Vector2d, directions8, mainDirections}
 
 import scala.reflect.ClassTag
 

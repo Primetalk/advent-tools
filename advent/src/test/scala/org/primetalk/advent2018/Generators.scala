@@ -1,5 +1,6 @@
 package org.primetalk.advent2018
 
+import org.primetalk.advent.tools.Display
 import org.scalacheck.{Arbitrary, Gen}
 
 import scala.reflect.ClassTag
