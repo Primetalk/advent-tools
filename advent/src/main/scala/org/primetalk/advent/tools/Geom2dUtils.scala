@@ -1,4 +1,4 @@
-package org.primetalk.advent2018
+package org.primetalk.advent.tools
 
 object Geom2dUtils {
   type Position = (Int, Int)

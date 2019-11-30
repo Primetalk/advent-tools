@@ -1,7 +1,7 @@
 package org.primetalk.advent2017
 
 import org.primetalk.advent2018
-import org.primetalk.advent2018.Geom2dUtils.{Direction, Down, Left, Position, Right, Up, Vector2d, manhattanDistance, mul, PosOps}
+import org.primetalk.advent.tools.Geom2dUtils.{Direction, Down, Left, Position, Right, Up, Vector2d, manhattanDistance, mul, PosOps}
 import org.primetalk.advent2018.{Display, ProgUtils}
 
 /**

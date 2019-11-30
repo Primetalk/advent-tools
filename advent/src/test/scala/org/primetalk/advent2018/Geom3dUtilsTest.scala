@@ -1,6 +1,6 @@
 package org.primetalk.advent2018
 
-import Geom3dUtils._
+import org.primetalk.advent.tools.Geom3dUtils._
 
 class Geom3dUtilsTest extends BaseTest {
 

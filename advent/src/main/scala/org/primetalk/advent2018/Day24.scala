@@ -9,7 +9,7 @@ import scala.util.Try
 object Day24Parser  {
   import fastparse._
   import NoWhitespace._
-  import ParsingUtils._
+  import org.primetalk.advent.tools.ParsingUtils._
   sealed trait AttackKind
   case object Fire extends AttackKind
   case object Radiation extends AttackKind

@@ -1,6 +1,6 @@
 package org.primetalk.advent2018
 
-import Geom2dUtils._
+import org.primetalk.advent.tools.Geom2dUtils._
 import org.primetalk.advent.tools.Utils
 
 /**

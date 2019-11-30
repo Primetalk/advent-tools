@@ -1,6 +1,6 @@
 package org.primetalk.advent2018
 
-import ParsingUtils._
+import org.primetalk.advent.tools.ParsingUtils._
 import fastparse._
 import NoWhitespace._
 

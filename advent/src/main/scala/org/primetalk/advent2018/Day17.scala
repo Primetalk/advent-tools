@@ -1,7 +1,7 @@
 package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.Utils
-import org.primetalk.advent2018.Geom2dUtils._
+import org.primetalk.advent.tools.Geom2dUtils._
 
 /**
   * --- Day 17: Reservoir Research ---

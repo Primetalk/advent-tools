@@ -1,6 +1,6 @@
 package org.primetalk.advent2017
 
-import org.primetalk.advent2018.Geom2dUtils
+import org.primetalk.advent.tools.Geom2dUtils
 import org.primetalk.advent2017.Day3._
 import org.scalatest.{FlatSpec, Matchers}
 

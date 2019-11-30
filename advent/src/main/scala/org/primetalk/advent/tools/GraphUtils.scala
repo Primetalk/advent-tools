@@ -1,7 +1,7 @@
 package org.primetalk.advent.tools
 
 import org.primetalk.advent.tools.CollectionUtils.{insertAllIntoSortedVector, insertIntoSortedVector}
-import org.primetalk.advent2018.Geom2dUtils.{PosOps, Position, directions8, mainDirections}
+import Geom2dUtils.{PosOps, Position, directions8, mainDirections}
 
 import scala.annotation.tailrec
 

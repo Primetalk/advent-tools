@@ -1,7 +1,7 @@
 package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.GraphUtils._
-import org.primetalk.advent2018.Geom2dUtils._
+import org.primetalk.advent.tools.Geom2dUtils._
 
 class GraphUtilsTest extends BaseTest {
 
