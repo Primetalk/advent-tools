@@ -95,6 +95,20 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     array(p._2)(p._1)
   }
 
+  /**
+    * Updates the position if it is present. Ignores otherwise.
+    * This might be helpful if we search for some condition in a given area and don't
+    * want to store large array of data.
+    */
+  def safeUpdate(position: Position, v: T): Boolean = {
+    val wasUpdated = isWithinRange(position)
+    val p = position - offset
+    if(wasUpdated) {
+      array(p._2)(p._1) = v
+    }
+    wasUpdated
+  }
+
   def update(position: Position, v: T): Unit = {
     val p = position - offset
     array(p._2)(p._1) = v

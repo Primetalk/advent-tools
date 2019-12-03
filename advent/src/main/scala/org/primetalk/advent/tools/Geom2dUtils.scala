@@ -5,6 +5,32 @@ object Geom2dUtils {
   type Vector2d = (Int, Int)
   type Direction = Vector2d
 
+  case class DirVector(direction: Direction, length: Int) {
+    def toVector2d: Vector2d = direction * length
+    def isHorizontal: Boolean = direction._2 == 0
+    def isVertical: Boolean = direction._1 == 0
+    /** converts line segment to points.
+      * NB! Does not include start position! This is convenient when drawing many segments*/
+    def drawPrependFromStart(start: Position, positions: List[Position] = Nil): List[Position] = {
+      def loop(pos: Position, dir: Direction, len: Int, positions: List[Position]): List[Position] =
+        if(len == 0)
+          positions
+        else {
+          val newPos = pos + dir
+          loop(newPos, dir, len - 1, newPos :: positions)
+        }
+      loop(start, direction, length, positions)
+    }
+  }
+
+  case class LineSegment(start: Position, dirVector: DirVector) {
+    def end: Position = start + dirVector.toVector2d
+    /** converts line segment to points.
+      * NB! Does not include start position! This is convenient when drawing many segments*/
+    def drawPrepend(positions: List[Position] = Nil): List[Position] =
+      dirVector.drawPrependFromStart(start, positions)
+  }
+
   def rectangleByDiagonal(topLeft: Position, bottomRight: Position): Rectangle = {
     Rectangle(topLeft, bottomRight - topLeft + (1, 1))
   }
@@ -64,6 +90,8 @@ object Geom2dUtils {
     /** Rotates as a multiplication of complex numbers. */
     def rotate(o: Vector2d): Vector2d =
       (v._1 * o._1 - v._2 * o._2, v._1 * o._2 + v._2 * o._1)
+
+    def manhattanSize: Int = math.abs(v._1) + math.abs(v._2)
   }
 
   def manhattanDistance(p1: Position, p2: Position): Int = {
@@ -99,4 +127,15 @@ object Geom2dUtils {
     ManhattanEllipse(p - (r,0), p + (r,0))
   }
 
+  def charToDirection(c: Char): Direction = c match {
+    case 'U' => Up
+    case 'D' => Down
+    case 'L' => Left
+    case 'R' => Right
+  }
+
+//  // looks for intersections
+//  def intersections(line1: LineSegment, line2: LineSegment): Seq[Position] = {
+//
+//  }
 }

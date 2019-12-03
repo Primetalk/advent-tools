@@ -28,3 +28,11 @@ mill mill.scalalib.GenIdea/idea
 ```bash
 mill -i advent.repl
 ```
+
+5. Loading daily input
+
+```bash
+curl https://adventofcode.com/2019/day/2/input -o advent/src/main/resources/org/primetalk/advent2019/day2.txt
+```
+
+Unfortunately, this doesn't work. It requires authentication.
