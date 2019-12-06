@@ -1,5 +1,7 @@
 package org.primetalk.advent.tools
 
+import scala.annotation.tailrec
+
 /** A pair of lists that are considered as left
   * and right parts of a long sequence.
   * There are some operations convenient to deal
@@ -30,6 +32,7 @@ case class SplitList[T](left: List[T], right: List[T]) {
 
   /** Go at most n to right or left. */
   def move(n: Int): SplitList[T] = {
+    @tailrec
     def goRight(n: Int, l: List[T], r: List[T]): SplitList[T] = {
       if(n == 0)
         SplitList(l, r)
@@ -40,6 +43,7 @@ case class SplitList[T](left: List[T], right: List[T]) {
           SplitList(l, r)
       }
     }
+    @tailrec
     def goLeft(n: Int, l: List[T], r: List[T]): SplitList[T] = {
       if(n == 0)
         SplitList(l, r)
@@ -58,6 +62,7 @@ case class SplitList[T](left: List[T], right: List[T]) {
       this
   }
 
+  def size: Int = left.size + right.size
 }
 
 object SplitList {
