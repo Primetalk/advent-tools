@@ -7,6 +7,8 @@ import scala.annotation.tailrec
 
 object GraphUtils {
 
+  type Edge[T] = (T, T)
+
   type GraphEdges[T] = Seq[(T, T)]
 
   type Predicate[T] = T => Boolean
@@ -15,6 +17,7 @@ object GraphUtils {
 
   type GraphDependencies[T] = Map[T, Set[T]]
 
+  type Tree[T] = Map[T, T]
   // Seq is considered as Set of vertices.
   // The order is maintained
   type GraphAsFunction[T] = T => Seq[T]
@@ -23,7 +26,7 @@ object GraphUtils {
 
   type ReversePath[T] = List[T]
 
-  def convertEdgesToDependenciesOnlyForTrees[T](edges: GraphEdges[T]): GraphDependencies[T] =
+  def convertEdgesToDirectDependenciesOnlyForTrees[T](edges: GraphEdges[T]): GraphDependencies[T] =
     edges
       .foldLeft(Map[T, Set[T]]()) {
         case (acc, (s,e)) =>
@@ -33,6 +36,24 @@ object GraphUtils {
               e -> (acc.getOrElse(e, Set()) + s)
             )
       }
+
+  def invertEdges[T](edges: GraphEdges[T]): GraphEdges[T] =
+    edges.map{ case (a,b) => (b,a) }
+
+  def convertEdgesToParentToTree[T](edges: GraphEdges[T]): Tree[T] = {
+    @tailrec
+    def loop(rest: List[(T,T)], tree: Tree[T] = Map()): Tree[T] = rest match {
+      case Nil => tree
+      case (c,p)::t =>
+        tree.get(c) match {
+          case Some(existing) =>
+            throw new IllegalArgumentException(s"There are at least two parents for $c: Set($existing, $p)")
+          case None =>
+            loop(t, tree.updated(c, p))
+        }
+    }
+    loop(edges.toList)
+  }
 
   def convertEdgesToUndirectedGraph[T](edges: GraphEdges[T]): GraphDependencies[T] = {
     val edges2 = edges.flatMap { edge => Seq(edge, (edge._2, edge._1)) }
@@ -78,12 +99,13 @@ object GraphUtils {
 
   def topologicalSortFromEdges[T: Ordering](edges: Seq[(T, T)]): List[T] =
     topologicalSortFromDependencies(
-      convertEdgesToDependenciesOnlyForTrees(edges)
+      convertEdgesToDirectDependenciesOnlyForTrees(edges)
     )
 
   /** Starts with a given list of nodes and walks through the given graph until
     * find the connected subgraph.
     */
+  @tailrec
   def renderFunctionalGraph[T](
                                 graphAsFunction: GraphAsFunction[T]
                               )(
@@ -102,6 +124,7 @@ object GraphUtils {
       )
   }
 
+  @tailrec
   def findShortestPaths[T](
                             graphAsFunction: GraphAsFunction[T],
                             finish: Set[T]
@@ -135,12 +158,12 @@ object GraphUtils {
       }
     }
 
-  def findShortestPathsForAllReachablePoints[T](
-                                                 graphAsFunction: GraphAsFunction[T]
-                                               )(
-                                                 toVisit: Vector[(T, Int, ReversePath[T])],
-                                                 distances: Map[T, (Int, ReversePath[T])] = Map() // Int - the length of the path
-                                               ): Map[T, (Int, ReversePath[T])] =
+  @tailrec
+  def findShortestPathsForAllReachablePoints[T]
+  (graphAsFunction: GraphAsFunction[T])
+  (toVisit: Vector[(T, Int, ReversePath[T])],
+   distances: Map[T, (Int, ReversePath[T])] = Map() // Int - the length of the path
+  ): Map[T, (Int, ReversePath[T])] =
     if(toVisit.isEmpty)
       distances
     else {
@@ -166,15 +189,16 @@ object GraphUtils {
   /** Finds all shortest paths.
     * The implementation is not very efficient.
     */
-  def findAllShortestPaths[T](
-                               graphAsFunction: GraphAsFunction[T],
-                               finish: Set[T]
-                             )(
-                               toVisit: Vector[(T, Int, List[ReversePath[T]])],
-                               distances: Map[T, (Int, List[ReversePath[T]])] = Map(),
-                               foundPaths: List[ReversePath[T]] = List(),
-                               lengthLimit: Int = Int.MaxValue
-                             ): (Int, Seq[ReversePath[T]]) =
+  @tailrec
+  def findAllShortestPaths[T]
+  (graphAsFunction: GraphAsFunction[T],
+   finish: Set[T]
+  )(
+    toVisit: Vector[(T, Int, List[ReversePath[T]])],
+    distances: Map[T, (Int, List[ReversePath[T]])] = Map(),
+    foundPaths: List[ReversePath[T]] = List(),
+    lengthLimit: Int = Int.MaxValue
+  ): (Int, Seq[ReversePath[T]]) =
     if(toVisit.isEmpty)
       (lengthLimit, foundPaths)
     else {
@@ -219,15 +243,17 @@ object GraphUtils {
     *                    we only care about paths that are shorter.
     * @return the length of path and all found paths.
     */
-  def findAllShortestPaths2[T](
-                                graphAsFunction: GraphAsFunction[T],
-                                finish: Set[T]
-                              )(
-                                toVisit: Vector[(T, PathInfo[T])],
-                                distances: Map[T, PathInfo[T]] = Map(),
-                                foundPaths: List[ReversePath[T]] = List(),
-                                lengthLimit: Int = Int.MaxValue
-                              ): (Int, Seq[ReversePath[T]]) =
+  @tailrec
+  def findAllShortestPaths2[T]
+  (
+    graphAsFunction: GraphAsFunction[T],
+    finish: Set[T]
+  )(
+    toVisit: Vector[(T, PathInfo[T])],
+    distances: Map[T, PathInfo[T]] = Map(),
+    foundPaths: List[ReversePath[T]] = List(),
+    lengthLimit: Int = Int.MaxValue
+  ): (Int, Seq[ReversePath[T]]) =
     if(toVisit.isEmpty)
       (lengthLimit, foundPaths)
     else {
@@ -429,6 +455,7 @@ object GraphUtils {
 
   /** Collects all nodes connected to the given one. */
   def collectConnectedComponent[T](g: GraphDependencies[T])(n: T): Set[T] = {
+    @tailrec
     def go(toVisit2: Set[T], visited: Set[T], found: Set[T]): Set[T] =
       if(toVisit2.isEmpty)
         found
@@ -440,6 +467,7 @@ object GraphUtils {
     go(Set(n), Set(), Set(n))
   }
 
+  @tailrec
   def findAllConnectedComponents[T](g: GraphDependencies[T])(toVisit: Set[T] = g.keySet, result: List[Set[T]] = Nil): List[Set[T]] =
     if(toVisit.isEmpty)
       result
@@ -447,5 +475,42 @@ object GraphUtils {
       val component = collectConnectedComponent(g)(toVisit.head)
       findAllConnectedComponents(g)(toVisit.diff(component), component :: result)
     }
+
+  /** Builds the path from root to the given node.
+    * Does not include root itself (it's easy to add though - `root::path`.
+    */
+  @tailrec
+  def treePathFromRoot[T](deps: Tree[T], root: T)(target: T, path: List[T] = Nil): List[T] = {
+    if(target == root)
+      path
+    else {
+      val next = deps.getOrElse(target, throw new IllegalArgumentException(s"There is no path from $target"))
+      treePathFromRoot(deps, root)(next, target :: path)
+    }
+  }
+
+  @tailrec
+  def treeCountPathToRoot[T](deps: Tree[T], root: T)(from: T, count: Int = 0): Int = {
+    if(from == root)
+      count
+    else {
+      val next = deps.getOrElse(from, throw new IllegalArgumentException(s"There is no path from $from"))
+      treeCountPathToRoot(deps, root)(next, count + 1)
+    }
+  }
+
+  // finds path in the tree between two nodes.
+  def treePath[T](deps: Tree[T], root: T)(from: T, to: T): SplitList[T] = {
+    val path1 = treePathFromRoot(deps, root)(from)
+    val path2 = treePathFromRoot(deps, root)(to)
+    val pathViaRoot = SplitList(path1, root :: path2)
+    eliminateCommonPathToRoot(pathViaRoot)
+  }
+
+  @tailrec
+  def eliminateCommonPathToRoot[T](splitList: SplitList[T]): SplitList[T] = splitList match {
+    case SplitList(h1 :: t1, h0 :: h2 :: t2) if h1 == h2 =>eliminateCommonPathToRoot(SplitList(t1, h2 :: t2))
+    case _ => splitList
+  }
 }
 

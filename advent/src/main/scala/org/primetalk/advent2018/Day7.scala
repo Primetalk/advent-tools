@@ -231,7 +231,7 @@ object Day7 extends Utils {
         }
     }
 
-    val dependencies = convertEdgesToDependenciesOnlyForTrees(edges)
+    val dependencies = convertEdgesToDirectDependenciesOnlyForTrees(edges)
 
     val occupations = (0 until workersCount).map(w => (w, (0, None))).toMap
     go(State(-1, dependencies, occupations))
