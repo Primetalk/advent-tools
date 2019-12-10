@@ -12,6 +12,7 @@ object Geom2dUtils {
     /** converts line segment to points.
       * NB! Does not include start position! This is convenient when drawing many segments*/
     def drawPrependFromStart(start: Position, positions: List[Position] = Nil): List[Position] = {
+      @scala.annotation.tailrec
       def loop(pos: Position, dir: Direction, len: Int, positions: List[Position]): List[Position] =
         if(len == 0)
           positions
@@ -45,7 +46,32 @@ object Geom2dUtils {
 
     def bottomRight: Position = topLeft + size - (1, 1)
   }
+  /** It's a matrix:
+    *  /     \
+    *  | a b |
+    *  | c d |
+    *  \     /
+    */
+  case class Matrix2d(a: Int, b: Int, c: Int, d: Int)
 
+  // Here is the group of rotations by 90 degrees:
+  val rotateRight = Matrix2d( 0, 1,-1, 0)
+  val rotateLeft  = Matrix2d( 0,-1, 1, 0)
+  val rotateId    = Matrix2d( 1, 0, 0, 1)
+  val rotate180   = Matrix2d(-1, 0, 0,-1)
+
+  val rotations = List(rotateId, rotateRight, rotate180, rotateLeft)
+
+  implicit class Matrix2dOps(rot: Matrix2d) {
+    def apply(p: Vector2d): Vector2d = (
+      rot.a*p._1 + rot.b*p._2,
+      rot.c*p._1 + rot.d*p._2
+    )
+    def apply(other: Matrix2d): Matrix2d = Matrix2d(
+      a = rot.a*other.a+rot.b*other.c, b = rot.a*other.b+rot.b*other.d,
+      c = rot.c*other.a+rot.d*other.c, d = rot.c*other.b+rot.d*other.d
+    )
+  }
   /** Finds bounding rectangle for a collection of points. */
   def boundingRect(positions: Seq[Position]): Rectangle = {
     val xs = positions.map(_._1)
@@ -92,6 +118,17 @@ object Geom2dUtils {
       (v._1 * o._1 - v._2 * o._2, v._1 * o._2 + v._2 * o._1)
 
     def manhattanSize: Int = math.abs(v._1) + math.abs(v._2)
+
+    def r: Double =
+      math.sqrt(v._1*v._1 + v._2*v._2)
+
+    /** Theta is an angle from X axis towards the given vector.
+      * NB! The display has Y axis oriented down. So, in order to get normal
+      * theta we inverse Y.*/
+    def theta: Double = {
+      math.atan2(-v._2, v._1)
+    }
+
   }
 
   def manhattanDistance(p1: Position, p2: Position): Int = {
@@ -134,8 +171,5 @@ object Geom2dUtils {
     case 'R' => Right
   }
 
-//  // looks for intersections
-//  def intersections(line1: LineSegment, line2: LineSegment): Seq[Position] = {
-//
-//  }
+
 }

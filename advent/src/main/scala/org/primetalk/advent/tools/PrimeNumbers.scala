@@ -6,12 +6,14 @@ object PrimeNumbers {
   def primeNumbers(m: Int): Seq[Int] = {
     val offset = 2
     val sieve = (offset to m).toArray[Int]
+    @scala.annotation.tailrec
     def strikeOut(p: Int, step: Int): Unit = {
       if(p <= m) {
         sieve(p - offset) = 0
         strikeOut(p + step, step)
       }
     }
+    @scala.annotation.tailrec
     def go(i: Int): Unit = {
       if(i < m) {
         if(sieve(i - offset) != 0){
@@ -27,6 +29,7 @@ object PrimeNumbers {
   def factoriseToPrimes(n: Int): Seq[Int] = {
     val max = math.sqrt(n + 1).toInt
     val primes = primeNumbers(max)
+    @scala.annotation.tailrec
     def go(divs: List[Int], m: Int, res: List[Int]): List[Int] = divs match {
       case Nil if m == 1 => res
       case Nil => m :: res
@@ -41,6 +44,7 @@ object PrimeNumbers {
   def primeDivisors(n: Int): Seq[Int] =
     factoriseToPrimes(n).distinct
 
+  @scala.annotation.tailrec
   def intPow(n: Int, power: Int, mul: Int = 0): Int = {
     if(power == 0)
       mul
@@ -68,4 +72,14 @@ object PrimeNumbers {
     val allFactors = factoriseToFactorPowers(n).flatMap(_.toSeq)
     (1 +: allFactors.indices.flatMap(i => allFactors.combinations(i + 1).map(_.product))).distinct.sorted
   }
+
+  @scala.annotation.tailrec
+  def greatestCommonDivisor(i: Int, divisor: Int): Int =
+    if(i >= divisor) {
+      val nextDivisor = i % divisor
+      if(nextDivisor == 0)
+        divisor
+      else
+        greatestCommonDivisor(divisor, nextDivisor)
+    } else greatestCommonDivisor(divisor,i)
 }
