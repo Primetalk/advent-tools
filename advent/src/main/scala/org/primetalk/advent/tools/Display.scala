@@ -2,6 +2,7 @@ package org.primetalk.advent.tools
 
 import org.primetalk.advent.tools.Geom2dUtils.{PosOps, Position, Rectangle, VecOps, Vector2d, directions8, mainDirections}
 
+import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
@@ -121,6 +122,7 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     val tl = topLeft - offset
     val br = bottomRight - offset
 
+    @tailrec
     def go(i: Int, j: Int, accum: T): T = {
       if (j > br._2)
         accum
@@ -192,6 +194,11 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   def map[B: ClassTag](f: T => B): Display[B] = {
     val a: Array[Array[B]] = array.map(_.map(f).toArray)
     new Display[B](offset, size)(Some(() => a))
+  }
+
+  def flipY: Display[T] = {
+    val a: Array[Array[T]] = array.reverse
+    new Display[T]((offset._1, -offset._2), size)(Some(() => a))
   }
 }
 

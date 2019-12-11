@@ -58,8 +58,14 @@ trait IntCodeComputer9 {
       case PositionalArg(i) => memory(i)
       case ImmediateArg(i) => i
       case RelativeArg(i) => memory(rb + i)
-
     }
+    def enqueue(i: Word): State =
+      copy(inputs = inputs :+ i)
+    def dequeueOutput: (State, Word) =
+      outputs match {
+        case h::t => (copy(outputs = t), h)
+        case Nil => throw new IllegalStateException("No output")
+      }
   }
 
   sealed trait Arg
@@ -97,7 +103,7 @@ trait IntCodeComputer9 {
 
   def outputEval: (State, Op) => State = (s0, op) => {
     val value = s0.evalArg(op.arg1)
-    println(value)
+//    println(value)
     s0.copy(ip = s0.ip  + opcodes(op.opcode).length, outputs = value :: s0.outputs)
   }
 
@@ -113,7 +119,7 @@ trait IntCodeComputer9 {
   def compareEval(compare: (Word, Word) => Boolean): (State, Op) => State =
     aluEval((a,b) => if(compare(a,b)) 1 else 0)
 
-  def addToRelativeBaseEval: (State, Op) => State = {
+  def relativeBaseAddToEval: (State, Op) => State = {
     case (s0, Op(opcode, List(arg1))) =>
       s0.copy(ip = s0.ip + opcodes(opcode).length, rb = s0.rb + s0.evalArg(arg1))
   }
@@ -134,7 +140,7 @@ trait IntCodeComputer9 {
   val `jump-if-false` = OpCodeInfo(6,  2, jumpIfEval(_ == 0))
   val `less than`     = OpCodeInfo(7,  3, compareEval(_ < _)) // aluEval( if( _ < _ )1 else 0)
   val `equals`        = OpCodeInfo(8,  3, compareEval(_ == _))
-  val addToRelativeBase=OpCodeInfo(9,  1, addToRelativeBaseEval)
+  val addToRelativeBase=OpCodeInfo(9,  1, relativeBaseAddToEval)
   val halt            = OpCodeInfo(99, 0, haltEval)
 
   val opcodes: Map[Int, OpCodeInfo] =
@@ -196,6 +202,14 @@ trait IntCodeComputer9 {
 
   type Program = Seq[Word]
 
+  def runUntilOutputOrFinish(s0: State): State = {
+    if(s0.ip == -1 || s0.outputs.nonEmpty)
+      s0
+    else {
+      val s1 = run1(s0)
+      runUntilOutputOrFinish(s1)
+    }
+  }
   def executeInputOutputProgram(program: Program, inputs: List[Word]): Word = {
     val s0 = State(ip = 0, rb = 0, new SimpleMemory(program), inputs)
     val s1 = runProgram(s0)

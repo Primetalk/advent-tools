@@ -71,6 +71,10 @@ object Geom2dUtils {
       a = rot.a*other.a+rot.b*other.c, b = rot.a*other.b+rot.b*other.d,
       c = rot.c*other.a+rot.d*other.c, d = rot.c*other.b+rot.d*other.d
     )
+    def *(other: Matrix2d): Matrix2d = Matrix2d(
+      a = rot.a*other.a+rot.b*other.c, b = rot.a*other.b+rot.b*other.d,
+      c = rot.c*other.a+rot.d*other.c, d = rot.c*other.b+rot.d*other.d
+    )
   }
   /** Finds bounding rectangle for a collection of points. */
   def boundingRect(positions: Seq[Position]): Rectangle = {
