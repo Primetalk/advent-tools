@@ -171,4 +171,13 @@ object Geom3dUtils {
       (v1._3 - v2._3).abs
   }
 
+  def normalizeDirVector(v: Vector3d): Vector3d = v match {
+    case (x, y, z) =>
+      (
+        if(x == 0) 0 else x/math.abs(x),
+        if(y == 0) 0 else y/math.abs(y),
+        if(z == 0) 0 else z/math.abs(z),
+      )
+  }
+
 }
