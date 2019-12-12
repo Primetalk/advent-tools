@@ -82,4 +82,28 @@ object PrimeNumbers {
       else
         greatestCommonDivisor(divisor, nextDivisor)
     } else greatestCommonDivisor(divisor,i)
+
+  @scala.annotation.tailrec
+  def greatestCommonDivisorLong(i: Long, divisor: Long): Long =
+    if(i >= divisor) {
+      val nextDivisor = i % divisor
+      if(nextDivisor == 0)
+        divisor
+      else
+        greatestCommonDivisorLong(divisor, nextDivisor)
+    } else greatestCommonDivisorLong(divisor,i)
+
+  def leastCommonMultiple(a: Int, b: Int): Long =
+    a.toLong * b / greatestCommonDivisor(a, b)
+  def leastCommonMultipleLong(a: Long, b: Long): Long =
+    a.toLong * b / greatestCommonDivisorLong(a, b)
+
+  def leastCommonMultiple3(a: Int, b: Int, c: Int): Long =
+    leastCommonMultipleLong(leastCommonMultiple(a,b),c)
+
+  def leastCommonMultiple3Long(a: Long, b: Long, c: Long): Long =
+    leastCommonMultipleLong(leastCommonMultipleLong(a,b),c)
+
+  def leastCommonMultipleN(s: Seq[Long]): Long =
+    s.reduce(leastCommonMultipleLong)
 }
