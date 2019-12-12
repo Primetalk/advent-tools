@@ -1,6 +1,6 @@
 package org.primetalk.advent2018
 
-import org.primetalk.advent.tools.SequenceUtils.{floyd, unfoldN}
+import org.primetalk.advent.tools.SequenceUtils.{floydInt, unfoldN}
 import org.primetalk.advent.tools.Utils
 
 /**
@@ -107,6 +107,7 @@ PRE: r0 = ? rx = 0
 
   /** Evaluates the next value of register r3 given it's current value. */
   def evalR3(r3: Word): Word = {
+    @scala.annotation.tailrec
     def go(r2: Word, r3: Word): Word = {
       val r3r = (((r3 + (r2 & 255)) & 16777215L) * 65899L) & 16777215L
       if(r2 < 256)
@@ -133,7 +134,7 @@ PRE: r0 = ? rx = 0
   // 1413889
   lazy val answer2: Long = {
     val initialValueOfR3 = 0L
-    val (start, loop) = floyd(initialValueOfR3)()(evalR3)
+    val (start, loop) = floydInt(initialValueOfR3)()(evalR3)
 //    println("(start, loop) = " + (start, loop) )
     val indexOfLastIterationInLoop = start + loop - 1
     unfoldN(initialValueOfR3, indexOfLastIterationInLoop)(evalR3)

@@ -1,5 +1,7 @@
 package org.primetalk.advent.tools
 
+import scala.annotation.tailrec
+
 object SequenceUtils {
 
   /** Sequence generating function. */
@@ -12,8 +14,9 @@ object SequenceUtils {
     *
     * @return (loopStart, loopLength)
     */
-  def floyd[T](t0: T)(eq: (T, T) => Boolean = (a: T, b: T) => a == b)(f: SequenceGen[T] ): (Int, Int) = {
+  def floydInt[T](t0: T)(eq: (T, T) => Boolean = (a: T, b: T) => a == b)(f: SequenceGen[T] ): (Int, Int) = {
 
+    @tailrec
     def goDoubleSpeed(tortoise: T, hare: T, ν: Int): (T, T, Int) = {
       if(eq(tortoise, hare))
         (tortoise, hare, ν)
@@ -22,6 +25,7 @@ object SequenceUtils {
     }
     val t1 = f(t0)
     val (_, hare, _) = goDoubleSpeed(t1, f(t1), 1)
+    @tailrec
     def goNormalSpeed(tortoise: T, hare: T, μ: Int): (T, T, Int) = {
       if(eq(tortoise, hare))
         (tortoise, hare, μ)
@@ -29,6 +33,7 @@ object SequenceUtils {
         goNormalSpeed(f(tortoise), f(hare), μ + 1)
     }
     val (tortoise2, _, μ) = goNormalSpeed(t0, hare, 0)
+    @tailrec
     def goHare(tortoise: T, hare: T, λ: Int): Int = {
       if(eq(tortoise, hare))
         λ
@@ -36,6 +41,89 @@ object SequenceUtils {
         goHare(tortoise, f(hare), λ + 1)
     }
     val λ = goHare(tortoise2, f(tortoise2), 1)
+    (μ, λ)
+  }
+
+  final def floyd[T](t0: T)(eq: (T, T) => Boolean = (a: T, b: T) => a == b)(f: SequenceGen[T] ): (Long, Long) = {
+
+    @tailrec
+    def goDoubleSpeed(tortoise: T, hare: T, ν: Long): (T, T, Long) = {
+      if(eq(tortoise, hare))
+        (tortoise, hare, ν)
+      else
+        goDoubleSpeed(f(tortoise), f(f(hare)), ν + 1)
+    }
+    val t1 = f(t0)
+    val (_, hare, _) = goDoubleSpeed(t1, f(t1), 1)
+    @tailrec
+    def goNormalSpeed(tortoise: T, hare: T, μ: Long): (T, T, Long) = {
+      if(eq(tortoise, hare))
+        (tortoise, hare, μ)
+      else
+        goNormalSpeed(f(tortoise), f(hare), μ + 1)
+    }
+    val (tortoise2, _, μ) = goNormalSpeed(t0, hare, 0)
+    @tailrec
+    def goHare(tortoise: T, hare: T, λ: Long): Long = {
+      if(eq(tortoise, hare))
+        λ
+      else
+        goHare(tortoise, f(hare), λ + 1)
+    }
+    val λ = goHare(tortoise2, f(tortoise2), 1)
+    (μ, λ)
+  }
+
+  // states should contain 3 elements.
+  // [0] - initial state
+  // [1] - tortoise - any value
+  // [2] - hare - any value
+  @inline
+  def floydMutable[T](states: Array[T])(eq: (T, T) => Boolean = (a: T, b: T) => a == b, copy: (T, T) => Unit)(update: T => Unit): (Long, Long) = {
+    val t0 = 0
+    val tortoise = 1
+    val hare = 2
+    assert(states.length >= 3)
+    @tailrec
+    def goDoubleSpeed(ν: Long): Long = {
+      if(eq(states(tortoise), states(hare)))
+        ν
+      else {
+        update(states(tortoise))
+        update(states(hare))
+        update(states(hare))
+        goDoubleSpeed(ν + 1)
+      }
+    }
+    copy(states(tortoise), states(t0))
+    update(states(tortoise))
+    copy(states(hare), states(tortoise))
+    update(states(hare))
+    goDoubleSpeed(1)
+    @tailrec
+    def goNormalSpeed(μ: Long): Long = {
+      if(eq(states(tortoise), states(hare)))
+        μ
+      else {
+        update(states(tortoise))
+        update(states(hare))
+        goNormalSpeed(μ + 1)
+      }
+    }
+    copy(states(tortoise), states(t0))
+    val μ = goNormalSpeed(0)
+    @tailrec
+    def goHare(λ: Long): Long = {
+      if(eq(states(tortoise), states(hare)))
+        λ
+      else {
+        update(states(hare))
+        goHare(λ + 1)
+      }
+    }
+    copy(states(hare), states(tortoise))
+    update(states(hare))
+    val λ = goHare(1)
     (μ, λ)
   }
 
@@ -62,7 +150,7 @@ object SequenceUtils {
   }
 
   def unfoldWhile[A](z: A)(f: A => A, p: A => Boolean): A = {
-    @annotation.tailrec
+    @tailrec
     def unfoldWhile0(z: A): A = {
       if(p(z)) {
         val next = f(z)
@@ -74,7 +162,7 @@ object SequenceUtils {
     unfoldWhile0(z)
   }
 
-  @annotation.tailrec
+  @tailrec
   final def unfoldUntil[A](f: A => A)(p: A => Boolean)(z: A): A = {
     if(p(z))
       z
@@ -91,7 +179,7 @@ object SequenceUtils {
     *
     * O(N)
     */
-  @annotation.tailrec
+  @tailrec
   final def unfoldWithSuffix[S, T](tail: List[T] = Nil)(f: S => Option[(S, T)])(z: S): List[T] = {
     f(z) match {
       case None => tail
@@ -102,6 +190,7 @@ object SequenceUtils {
   def generateStreamFrom[S](s0: S)(f: S => S): Stream[S] =
     s0 #:: generateStreamFrom(f(s0))(f)
 
+  @tailrec
   def findFixedPoint[A](z: A)(f: A => A): A = {
     val n = f(z)
     if(n == z)
@@ -111,6 +200,7 @@ object SequenceUtils {
   }
 
   /** Finds minimum argument for predicate to hold true. */
+  @tailrec
   def findMinArgForPredicate(p: Int => Boolean)(guessBelow: Int, guessAbove: Int): Int = {
     if(guessAbove == guessBelow + 1)
       guessAbove
