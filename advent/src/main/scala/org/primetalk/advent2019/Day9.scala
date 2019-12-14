@@ -202,13 +202,18 @@ trait IntCodeComputer9 {
 
   type Program = Seq[Word]
 
-  def runUntilOutputOrFinish(s0: State): State = {
-    if(s0.ip == -1 || s0.outputs.nonEmpty)
-      s0
-    else {
-      val s1 = run1(s0)
-      runUntilOutputOrFinish(s1)
-    }
+  def runUntilOutputOrFinish: State => State = runUntilOrFinish(_.outputs.nonEmpty)
+
+  def runUntilOrFinish(predicate: State => Boolean): State => State = {
+    @scala.annotation.tailrec
+    def f(s0: State): State =
+      if(s0.ip == -1 || predicate(s0))
+        s0
+      else {
+        val s1 = run1(s0)
+        f(s1)
+      }
+    f
   }
   def executeInputOutputProgram(program: Program, inputs: List[Word]): Word = {
     val s0 = State(ip = 0, rb = 0, new SimpleMemory(program), inputs)
