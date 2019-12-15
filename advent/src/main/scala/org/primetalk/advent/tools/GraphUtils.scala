@@ -79,6 +79,34 @@ object GraphUtils {
     * @return the nodes in order that do not contradict the dependencies requirements.
     */
   @annotation.tailrec
+  final def topologicalSortSubList[T: Ordering](listToSort: List[T], dependencies: GraphDependencies[T], acc: List[T] = List()): List[T] = {
+    if(dependencies.isEmpty)
+      acc.reverse
+    else {
+      val (noDependencies, hasDependencies) = listToSort.partition(dependencies(_).isEmpty)
+      if (noDependencies.isEmpty) {
+        throw new IllegalArgumentException("Cycle: " + hasDependencies.mkString(","))
+      } else {
+        val found = noDependencies.min // removing just one at a time
+        val nextList = listToSort.filterNot(_ == found)
+        val nextDependencies = dependencies.collect {
+          case (key, values) if key != found =>
+            (key, values - found)
+        }
+        topologicalSortSubList(nextList, nextDependencies, found :: acc)
+      }
+    }
+  }
+
+  /**
+    * Performs topological sort of nodes.
+    * The dependencies are represented by set of direct dependents for each node.
+    *
+    * @param dependencies dependency graph edges
+    * @tparam T Ordering is used to select among independent nodes
+    * @return the nodes in order that do not contradict the dependencies requirements.
+    */
+  @annotation.tailrec
   final def topologicalSortFromDependencies[T: Ordering](dependencies: GraphDependencies[T], acc: List[T] = List()): List[T] = {
     if(dependencies.isEmpty)
       acc.reverse
