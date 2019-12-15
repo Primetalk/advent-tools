@@ -5,28 +5,32 @@ import org.primetalk.advent.tools.Utils
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
+sealed trait Memory[W] {
+  def apply(addr: W): W
+  def update(addr: W, v: W): Unit
+  def deepCopy: Memory[W]
+}
+class SimpleMemory[W: Numeric: ClassTag](initial: Seq[W], maxSize: Int = 1000000) extends Memory[W] {
+
+  private val arr: Array[W] = {
+    val res = Array.fill[W](maxSize)(implicitly[Numeric[W]].zero)
+    Array.copy(initial.toArray, 0, res, 0, initial.size)
+    res
+  }
+
+  override def apply(addr: W): W = arr(implicitly[Numeric[W]].toInt(addr))
+
+  override def update(addr: W, v: W): Unit = {
+    arr(implicitly[Numeric[W]].toInt(addr)) = v
+  }
+  def deepCopy: SimpleMemory[W] = new SimpleMemory[W](arr, maxSize)
+}
+
 trait IntCodeComputer9 {
 
+//  implicit val numeric: Numeric[Word]
   type Word = Long
 
-  sealed trait Memory[W] {
-    def apply(addr: W): W
-    def update(addr: W, v: W): Unit
-  }
-  class SimpleMemory[W: Numeric: ClassTag](initial: Seq[W], maxSize: Int = 1000000) extends Memory[W] {
-
-    private val arr: Array[W] = {
-      val res = Array.fill[W](maxSize)(implicitly[Numeric[W]].zero)
-      Array.copy(initial.toArray, 0, res, 0, initial.size)
-      res
-    }
-
-    override def apply(addr: W): W = arr(implicitly[Numeric[W]].toInt(addr))
-
-    override def update(addr: W, v: W): Unit = {
-      arr(implicitly[Numeric[W]].toInt(addr)) = v
-    }
-  }
 //  class ExpandableMemory[W](arr: Array[W]) extends Memory[W] {
 //    override def apply(addr: W)(implicit n: Numeric[W]): W = arr(n.toInt(addr))
 //
@@ -66,6 +70,10 @@ trait IntCodeComputer9 {
         case h::t => (copy(outputs = t), h)
         case Nil => throw new IllegalStateException("No output")
       }
+
+    def deepCopy: State = State(
+      ip, rb, memory.deepCopy, inputs, outputs
+    )
   }
 
   sealed trait Arg

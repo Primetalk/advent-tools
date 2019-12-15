@@ -26,6 +26,7 @@ object GraphUtils {
 
   type ReversePath[T] = List[T]
 
+//  type GraphAsStatefulFunction =
   def convertEdgesToDirectDependenciesOnlyForTrees[T](edges: GraphEdges[T]): GraphDependencies[T] =
     edges
       .foldLeft(Map[T, Set[T]]()) {
@@ -220,7 +221,7 @@ object GraphUtils {
   @tailrec
   def findAllShortestPaths[T]
   (graphAsFunction: GraphAsFunction[T],
-   finish: Set[T]
+   isFinish: T => Boolean
   )(
     toVisit: Vector[(T, Int, List[ReversePath[T]])],
     distances: Map[T, (Int, List[ReversePath[T]])] = Map(),
@@ -236,7 +237,7 @@ object GraphUtils {
         hs.map(hh => (hh, (length + 1, hPaths.map(hh :: _))))
           .filterNot(_._2._1 > lengthLimit)
       val inFinish: Seq[(T, (Int, List[ReversePath[T]]))] =
-        paths.filter(p => finish.contains(p._1))
+        paths.filter(p => isFinish(p._1))
       val found = inFinish.map(_._2).toList
       val nextLengthLimit = found.headOption.map(_._1).getOrElse(lengthLimit)
       require(nextLengthLimit <= lengthLimit, "length <= lengthLimit")
@@ -254,7 +255,7 @@ object GraphUtils {
       implicit val orderingByDistance: Ordering[(T, Int, List[ReversePath[T]])] = Ordering.by(_._2)
       val nextToVisitSorted = nextToVisit.foldLeft(toVisit.tail)((v, el) =>
         insertIntoSortedVector(v, el))
-      findAllShortestPaths(graphAsFunction, finish)(nextToVisitSorted, nextDistances,
+      findAllShortestPaths(graphAsFunction, isFinish)(nextToVisitSorted, nextDistances,
         found.flatMap(_._2.toList) ::: foundPaths, nextLengthLimit)
     }
 
@@ -275,7 +276,7 @@ object GraphUtils {
   def findAllShortestPaths2[T]
   (
     graphAsFunction: GraphAsFunction[T],
-    finish: Set[T]
+    isFinish: T => Boolean
   )(
     toVisit: Vector[(T, PathInfo[T])],
     distances: Map[T, PathInfo[T]] = Map(),
@@ -287,14 +288,14 @@ object GraphUtils {
     else {
       val (h, path@PathInfo(length, hPath)) = toVisit.head
       if(length >= lengthLimit)
-        findAllShortestPaths2(graphAsFunction, finish)(toVisit.tail, distances,
+        findAllShortestPaths2(graphAsFunction, isFinish)(toVisit.tail, distances,
           foundPaths, lengthLimit)
       else {
         val hs: Seq[T] = graphAsFunction(h)
         val paths: Seq[(T, PathInfo[T])] =
           hs.map(hh => (hh, path.prepend(hh)))
         val inFinish: Seq[(T, PathInfo[T])] =
-          paths.filter(p => finish.contains(p._1))
+          paths.filter(p => isFinish(p._1))
         val found = inFinish.map(_._2).toList
         val nextLengthLimit = found.headOption.map(_.length).getOrElse(lengthLimit)
         require(nextLengthLimit <= lengthLimit, "length <= lengthLimit")
@@ -311,7 +312,7 @@ object GraphUtils {
         implicit val orderingByDistance: Ordering[(T, PathInfo[T])] = Ordering.by(_._2.length)
         val nextToVisitSorted = nextToVisit.foldLeft(toVisit.tail)((v, el) =>
           insertIntoSortedVector(v, el))
-        findAllShortestPaths2(graphAsFunction, finish)(nextToVisitSorted,
+        findAllShortestPaths2(graphAsFunction, isFinish)(nextToVisitSorted,
           nextDistances,
           found.map(_.reversePath) reverse_::: foundPaths, nextLengthLimit)
       }
@@ -360,6 +361,57 @@ object GraphUtils {
       Vector((start, 0, Nil)), Map())
 
   }
+
+  @tailrec
+  final def findAllShortestPaths5[S, T]
+  (
+    setStateAndLookAround: S => Seq[T],
+    newStateMovedTo: (S, T) => S,
+    isFinish: T => Boolean
+  )(
+    toVisit: Vector[(T, Int, ReversePath[T], S)],
+    distances: Map[T, PathInfo[T]] = Map(),
+    foundPaths: List[ReversePath[T]] = List(),
+    lengthLimit: Int = Int.MaxValue
+  ): (Int, Seq[ReversePath[T]]) =
+    if(toVisit.isEmpty)
+      (lengthLimit, foundPaths)
+    else {
+      val (h, length, hPath, droid) = toVisit.head
+      if(length >= lengthLimit)
+        findAllShortestPaths5(setStateAndLookAround, newStateMovedTo, isFinish)(toVisit.tail, distances,
+          foundPaths, lengthLimit)
+      else {
+        //          setDroidState(droid)
+        val hs: Seq[T] = setStateAndLookAround(droid)
+        val paths: Seq[(T, Int, ReversePath[T], S)] =
+          hs.map{ hh =>
+            val hhDroid = newStateMovedTo(droid, hh)
+            (hh, length + 1, hh :: hPath, hhDroid)
+          }
+        val inFinish: Seq[(T, Int, ReversePath[T], S)] =
+          paths.filter(p => isFinish(p._1))
+        val found = inFinish.toList
+        val nextLengthLimit = found.headOption.map(_._2).getOrElse(lengthLimit)
+        require(nextLengthLimit <= lengthLimit, "length <= lengthLimit")
+        val nextToVisit = paths
+          .filterNot { case (hh, len, _, _) =>
+            distances.get(hh).exists(_.length <= len) }
+        val nextDistances = paths.foldLeft(distances) {
+          case (v, (hh, ll, pp, _)) =>
+            v.get(hh) match {
+              case Some(PathInfo(l, _)) if l < ll => v
+              case _ => v.updated(hh, PathInfo(ll, pp))
+            }
+        }
+        implicit val orderingByDistance: Ordering[(T, Int, ReversePath[T], S)] = Ordering.by(_._2)
+        val nextToVisitSorted = nextToVisit.foldLeft(toVisit.tail)((v, el) =>
+          insertIntoSortedVector(v, el))
+        findAllShortestPaths5(setStateAndLookAround, newStateMovedTo, isFinish)(nextToVisitSorted,
+          nextDistances,
+          found.map(_._3) reverse_::: foundPaths, nextLengthLimit)
+      }
+    }
   /** Unconstrained graph for 2d plane. 4 main directions. */
   def d2graph4dir: GraphAsFunction[Position] =
     p => mainDirections.map(_ + p)
@@ -540,5 +592,6 @@ object GraphUtils {
     case SplitList(h1 :: t1, h0 :: h2 :: t2) if h1 == h2 =>eliminateCommonPathToRoot(SplitList(t1, h2 :: t2))
     case _ => splitList
   }
+
 }
 

@@ -134,6 +134,8 @@ object Day13 extends Utils with IntCodeComputer9 {
               case _ =>
                 runUntilNextEvent(joystickPosition)
             }
+          case _ =>
+            throw new IllegalStateException(s"got not enough elements ${s.outputs}")
         }
     }
   }
