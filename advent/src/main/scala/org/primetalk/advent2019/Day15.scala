@@ -49,7 +49,7 @@ object Day15 extends IntCodeComputer9 {
     val Moved: DroidResponse = 1
     val MovedAndArrived: DroidResponse = 2
 
-    private class DroidState {
+    class DroidState {
 
       var labyrinth: State = State(ip = 0, rb = 0, new SimpleMemory[Long](labyrinthProgram, 2000), Nil)
       var position: Position = (0,0)
@@ -80,7 +80,7 @@ object Day15 extends IntCodeComputer9 {
     def setDroidState(n: DroidState): Unit = {
       droidState = n
     }
-    private val display = Display[Char]((-17,-19), (37,21))()
+    private val display = Display[Char]((-21,-19), (41,41))()
     display.fillAll(' ')
     private var targets: Set[Position] = Set()// we don't have targets yet
     display((0,0)) = '.'
@@ -89,6 +89,7 @@ object Day15 extends IntCodeComputer9 {
       droidState.step(ndir) match {
         case HitTheWall =>
           display(droidState.position + dir) = '#'
+          println("------")
           println(display.showDisplay()())
           None
         case Moved =>
@@ -120,29 +121,29 @@ object Day15 extends IntCodeComputer9 {
             Seq(newPos)
           case '#' =>
             Seq()
+          case 'O' =>
+            Seq(newPos)
         }
       }
     }
-
-    def exploreLabirinth: Int = {
-
-      def setStateAndLookAround(s: DroidState): Seq[(Int, Int)] = {
-        setDroidState(s)
-        lookAround
+    private def setStateAndLookAround(s: DroidState): Seq[(Int, Int)] = {
+      setDroidState(s)
+      lookAround
+    }
+    private def newStateMovedTo(s: DroidState, p: Position): DroidState = {
+      val res = s.deepCopy
+      setDroidState(res)
+      val dir = p - s.position
+      tryMovingTo(dir) match {
+        case Some(_) =>
+          res
+        case None =>
+          throw new IllegalStateException("Couldn't move to a position that has been visited before")
       }
-      def newStateMovedTo(s: DroidState, p: Position): DroidState = {
-        val res = s.deepCopy
-        setDroidState(res)
-        val dir = p - s.position
-        tryMovingTo(dir) match {
-          case Some(_) =>
-            res
-          case None =>
-            throw new IllegalStateException("Couldn't move to a position that has been visited before")
-        }
-      }
-      @inline
-      def isFinish(position: Position): Boolean = targets.contains(position)//display(position) == 'O'
+    }
+    @inline
+    private def isFinish(position: Position): Boolean = targets.contains(position)//display(position) == 'O'
+    def exploreLabyrinth(): Int = {
       val res = GraphUtils.findAllShortestPaths5[DroidState, Position](
         setStateAndLookAround,
         newStateMovedTo,
@@ -154,6 +155,34 @@ object Day15 extends IntCodeComputer9 {
       res._1
     }
 
+    def goToOxygenStationState(): (Position, DroidState) = {
+      val res = GraphUtils.findAllShortestPaths5[DroidState, Position](
+        setStateAndLookAround,
+        newStateMovedTo,
+        isFinish
+      )(
+        toVisit = Vector(((0,0), 0, Nil, new DroidState)),
+        distances = Map()
+      )
+      setDroidState(res._3.head._2)
+      println("Oxygen station position: ${droidState.position}")
+      (droidState.position, droidState.deepCopy)
+    }
+    def exploreTheMap(position: Position, droidState: DroidState): Int = {
+      val res = GraphUtils.findAllShortestPaths5[DroidState, Position](
+        setStateAndLookAround,
+        newStateMovedTo,
+        _ => false// we never find the results
+      )(
+        toVisit = Vector((position, 0, Nil, droidState)),
+        distances = Map(position -> PathInfo(0, Nil) )
+      )
+//      for{ el <- res._3.head._1 } {
+//        display(el) = '*'
+//      }
+      println(display.showDisplay()())
+      res._2
+    }
     //    val graph: GraphUtils.GraphAsFunction[Position] = position => {}
 //    def findShortestPath(): Unit = {
 //      GraphUtils.findAllShortestPaths5()
@@ -163,16 +192,20 @@ object Day15 extends IntCodeComputer9 {
 
   lazy val answer1: Int = {
     val l = new Labyrinth
-    l.exploreLabirinth
+    l.exploreLabyrinth()
   }
 
   // Part 2
 
-  lazy val answer2: Int = 2
+  lazy val answer2: Int = {
+    val l = new Labyrinth
+    val (droidPosition, ds) = l.goToOxygenStationState()
+    l.exploreTheMap(droidPosition, ds)
+  }
 
 
   def main(args: Array[String]): Unit = {
-    println("Answer1: " + answer1)
-    println("Answer2: " + answer2)
+//    println("Answer1: " + answer1)
+    println("Answer2: " + answer2) //530//529 too high
   }
 }

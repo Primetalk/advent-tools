@@ -371,18 +371,18 @@ object GraphUtils {
   )(
     toVisit: Vector[(T, Int, ReversePath[T], S)],
     distances: Map[T, PathInfo[T]] = Map(),
-    foundPaths: List[ReversePath[T]] = List(),
+    foundPaths: List[(ReversePath[T], S)] = List(),
+    maxConsideredLength: Int = -1,
     lengthLimit: Int = Int.MaxValue
-  ): (Int, Seq[ReversePath[T]]) =
+  ): (Int, Int, Seq[(ReversePath[T], S)]) =
     if(toVisit.isEmpty)
-      (lengthLimit, foundPaths)
+      (lengthLimit, maxConsideredLength, foundPaths)
     else {
-      val (h, length, hPath, droid) = toVisit.head
+      val (_, length, hPath, droid) = toVisit.head
       if(length >= lengthLimit)
         findAllShortestPaths5(setStateAndLookAround, newStateMovedTo, isFinish)(toVisit.tail, distances,
-          foundPaths, lengthLimit)
+          foundPaths, maxConsideredLength, lengthLimit)
       else {
-        //          setDroidState(droid)
         val hs: Seq[T] = setStateAndLookAround(droid)
         val paths: Seq[(T, Int, ReversePath[T], S)] =
           hs.map{ hh =>
@@ -409,7 +409,9 @@ object GraphUtils {
           insertIntoSortedVector(v, el))
         findAllShortestPaths5(setStateAndLookAround, newStateMovedTo, isFinish)(nextToVisitSorted,
           nextDistances,
-          found.map(_._3) reverse_::: foundPaths, nextLengthLimit)
+          found.map(f => (f._3, f._4)) reverse_::: foundPaths,
+          math.max(length, maxConsideredLength),
+          nextLengthLimit)
       }
     }
   /** Unconstrained graph for 2d plane. 4 main directions. */

@@ -93,7 +93,12 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
 
   def apply(position: Position): T = {
     val p = position - offset
-    array(p._2)(p._1)
+    try {
+      array(p._2)(p._1)
+    } catch {
+      case e: IndexOutOfBoundsException =>
+        throw new IndexOutOfBoundsException(s"$position does not belong to a rectangle at ${offset} with size ${size}")
+    }
   }
 
   /**
