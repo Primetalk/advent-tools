@@ -19,5 +19,14 @@ object Complex {
     def imaginary: Complex = Complex(0, i)
   }
 
+  val Zero = Complex(0, 0)
+
   val Im = Complex(0, 1)
+  val Re1 = Complex(1, 0)
+
+  val angle90: Complex = Im
+
+  val anglesBy90 = Array(Re1, Im, Zero - Re1, Zero - Im)
+  @inline
+  def angle90power(i: Int): Complex = anglesBy90(i % 4)
 }
