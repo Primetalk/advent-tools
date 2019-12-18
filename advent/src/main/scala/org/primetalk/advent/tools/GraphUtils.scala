@@ -1,9 +1,10 @@
 package org.primetalk.advent.tools
 
-import org.primetalk.advent.tools.CollectionUtils.{insertAllIntoSortedVector, insertIntoSortedVector}
+import org.primetalk.advent.tools.CollectionUtils.{insertAllIntoSortedVector, insertIntoSortedList, insertIntoSortedVector}
 import Geom2dUtils.{PosOps, Position, directions8, mainDirections}
 
 import scala.annotation.tailrec
+import scala.collection.immutable
 
 object GraphUtils {
 
@@ -21,6 +22,7 @@ object GraphUtils {
   // Seq is considered as Set of vertices.
   // The order is maintained
   type GraphAsFunction[T] = T => Seq[T]
+  type GraphAsFunctionList[T] = T => List[T]
 
   type WeightedGraphAsFunction[T, W] = T => Seq[(T, W)]
 
@@ -413,6 +415,93 @@ object GraphUtils {
           math.max(length, maxConsideredLength),
           nextLengthLimit)
       }
+    }
+
+  /** Searches within a space with two levels.
+    * Top level state - S1. Low-level state - S2.
+    * Groups by top level state. Keeps only one path to a global state.
+    */
+  @tailrec
+  def findAllShortestPaths6[S1, S2]
+  (
+    graphAsFunction: GraphAsFunctionList[(S1, S2)],
+    isFinish: (S1, S2) => Boolean
+  )(
+    toVisitGlobal: List[(S1, S2, PathInfo[(S1, S2)])],
+    distances: Map[S1, PathInfo[(S1, S2)]] = Map(),
+    currentGlobalState: S1,
+    localToVisit: List[(S2, PathInfo[(S1, S2)])],
+    localDistances: Map[S2, PathInfo[(S1, S2)]] = Map(),
+    foundPaths: List[ReversePath[(S1, S2)]] = List(),
+    lengthLimit: Int = Int.MaxValue
+  ): (Int, Seq[ReversePath[(S1, S2)]]) =
+    localToVisit match {
+      case (h, path@PathInfo(length, hPath))  :: tail =>
+        if (length >= lengthLimit)
+          findAllShortestPaths6(graphAsFunction, isFinish)(toVisitGlobal, distances, currentGlobalState, tail, localDistances,
+            foundPaths, lengthLimit)
+        else {
+          val hs: List[(S1, S2)] = graphAsFunction((currentGlobalState, h))
+          val paths: List[(S1, S2, PathInfo[(S1, S2)])] =
+            hs.map(hh => (hh._1, hh._2, path.prepend(hh)))
+          val inFinish: List[(S1, S2, PathInfo[(S1, S2)])] =
+            paths.filter(p => isFinish(p._1, p._2))
+          val found = inFinish.map(_._3)
+          val nextLengthLimit = found.headOption.map(_.length).getOrElse(lengthLimit)
+          require(nextLengthLimit <= lengthLimit, "length <= lengthLimit")
+          val (pathsLocal, pathsOther) = paths.partition(_._1 == currentGlobalState)
+          val nextToVisitLocal: List[(S2, PathInfo[(S1, S2)])] = pathsLocal
+            .filterNot { case (_, hh, PathInfo(len, _)) =>
+              localDistances.get(hh).exists(_.length <= len)
+            }.map{ case (_, hh, pi) => (hh, pi)}
+          val nextDistancesLocal = pathsLocal.foldLeft(localDistances) {
+            case (v, (_, hh, np@PathInfo(ll, _))) =>
+              v.get(hh) match {
+                case Some(PathInfo(l, _)) if l < ll => v
+                case _ => v.updated(hh, np)
+              }
+          }
+          val nextToVisitGlobal: List[(S1, S2, PathInfo[(S1, S2)])] = pathsOther
+            .filterNot { case (s1, _, PathInfo(len, _)) =>
+              distances.get(s1).exists(_.length <= len)
+            }
+          val nextDistancesGlobal = pathsOther.foldLeft(distances) {
+            case (v, (s1, _, np@PathInfo(ll, _))) =>
+              v.get(s1) match {
+                case Some(PathInfo(l, _)) if l < ll => v
+                case _ => v.updated(s1, np)
+              }
+          }
+
+          implicit val orderingByDistance: Ordering[(S2, PathInfo[(S1, S2)])] = Ordering.by(_._2.length)
+          implicit val orderingByDistanceGlobal: Ordering[(S1, S2, PathInfo[(S1, S2)])] = Ordering.by(_._3.length)
+          val nextToVisitSortedLocal = nextToVisitLocal.foldLeft(tail)((v, el) =>
+            insertIntoSortedList(v, el))
+          val nextToVisitSortedGlobal = nextToVisitGlobal.foldLeft(toVisitGlobal)((v, el) =>
+            insertIntoSortedList(v, el))
+
+          findAllShortestPaths6(graphAsFunction, isFinish)(nextToVisitSortedGlobal, nextDistancesGlobal, currentGlobalState,
+            nextToVisitSortedLocal,
+            nextDistancesLocal,
+            found.map(_.reversePath) reverse_::: foundPaths, nextLengthLimit)
+        }
+
+      case Nil =>
+        toVisitGlobal match {
+          case Nil =>
+            (lengthLimit, foundPaths)
+          case (s1, s2, p) :: tail =>
+            val newGlobalState = s1
+            findAllShortestPaths6(graphAsFunction, isFinish)(tail, distances, newGlobalState,
+              (s2, p) :: Nil,
+              distances.get(newGlobalState) match {
+                case Some(p@PathInfo(_, (_, h2)::t)) =>
+                  Map(h2 -> p)
+                case _ => Map()
+              },
+              foundPaths, lengthLimit)
+
+        }
     }
   /** Unconstrained graph for 2d plane. 4 main directions. */
   def d2graph4dir: GraphAsFunction[Position] =

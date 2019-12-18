@@ -7,6 +7,7 @@ object CollectionUtils {
       if (n > v.length - slice.length)
         -1
       else {
+        @scala.annotation.tailrec
         def compare(pos: Int, i: Int): Boolean = {
           i == slice.length || v(pos) == slice(i) && compare(pos + 1, i + 1)
         }
@@ -24,6 +25,7 @@ object CollectionUtils {
       if (n > v.length - slice.length)
         -1
       else {
+        @scala.annotation.tailrec
         def compare(pos: Int, i: Int): Boolean = {
           i == slice.length || v(pos) == slice(i) && compare(pos + 1, i + 1)
         }
@@ -36,6 +38,7 @@ object CollectionUtils {
     }
   }
   /** Inserts an element into the beginning of the sorted vector. */
+  @scala.annotation.tailrec
   def insertIntoSortedVector[T: Ordering](v: Vector[T], el: T, prefix: List[T] = List()): Vector[T] = {
     lazy val h = v.head
     if(v.isEmpty)
@@ -44,6 +47,18 @@ object CollectionUtils {
       (el :: prefix).foldLeft(v)(_.+:(_))
     else
       insertIntoSortedVector(v.tail, el, h :: prefix)
+  }
+
+  /** Inserts an element into the beginning of the sorted vector. */
+  @scala.annotation.tailrec
+  def insertIntoSortedList[T: Ordering](v: List[T], el: T, prefix: List[T] = List()): List[T] = v match {
+    case Nil =>
+      (el :: prefix).reverse
+    case h :: tail =>
+      if(implicitly[Ordering[T]].gteq(h, el))
+        prefix reverse_::: el :: v
+      else
+        insertIntoSortedList(tail, el, h :: prefix)
   }
 
   /** Insert new elements into the beginning of the sorted vector.
