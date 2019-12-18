@@ -228,6 +228,13 @@ trait IntCodeComputer9 {
     val s1 = runProgram(s0)
     s1.outputs.head
   }
+
+  def getOutputs(program: Seq[Word], inputs: List[Word] = Nil): List[Word] = {
+    val s0 = State(ip = 0, rb = 0, new SimpleMemory[Word](program), inputs)
+    val s1 = runProgram(s0)
+    s1.outputs
+  }
+
 }
 /**
   * https://adventofcode.com/2019/day/9

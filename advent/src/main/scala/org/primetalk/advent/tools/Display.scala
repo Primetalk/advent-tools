@@ -47,6 +47,12 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
       i <- xs
     } yield (i, j)
 
+  def innerPoints: Seq[Position] =
+    for{
+      j <- Range(minY + 1, maxY - 1)
+      i <- Range(minX + 1, maxX - 1)
+    } yield (i, j)
+
   def values: Seq[T] =
     for{
       j <- ys
@@ -97,7 +103,7 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
       array(p._2)(p._1)
     } catch {
       case e: IndexOutOfBoundsException =>
-        throw new IndexOutOfBoundsException(s"$position does not belong to a rectangle at ${offset} with size ${size}")
+        throw new IndexOutOfBoundsException(s"$position does not belong to a rectangle at $offset with size $size")
     }
   }
 
