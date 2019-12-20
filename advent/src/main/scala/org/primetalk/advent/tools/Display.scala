@@ -1,6 +1,7 @@
 package org.primetalk.advent.tools
 
 import org.primetalk.advent.tools.Geom2dUtils.{PosOps, Position, Rectangle, VecOps, Vector2d, directions8, mainDirections}
+import org.primetalk.advent.tools.GraphUtils.Predicate
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
@@ -35,10 +36,16 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     p._1 >= minX && p._1 <= maxX &&
       p._2 >= minY && p._2 <= maxY
 
-  def adjacentPositions(p: Position): Seq[Position] =
+  def toPositionPredicate(predicate: T => Boolean): Position => Boolean =
+    p => isWithinRange(p) && predicate(apply(p))
+
+  def isElementEqualTo(p: Position, el: T): Boolean =
+    isWithinRange(p) && apply(p) == el
+
+  def adjacentPositions(p: Position): List[Position] =
     mainDirections.map(_ + p).filter(isWithinRange)
 
-  def positionsAround(p: Position): Seq[Position] =
+  def positionsAround(p: Position): List[Position] =
     directions8.map(_ + p).filter(isWithinRange)
 
   def points: Seq[Position] =
@@ -107,6 +114,11 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     }
   }
 
+  def get(position: Position): Option[T] =
+    if(isWithinRange(position))
+      Some(apply(position))
+    else
+      None
   /**
     * Updates the position if it is present. Ignores otherwise.
     * This might be helpful if we search for some condition in a given area and don't
@@ -169,7 +181,11 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     }
   }
 
-  /** Fill display with the given value.*/
+  def fill(f: Position => T): Unit = renderFunction(f)
+
+  /** Fill display with the given value.
+    * Faster than renderFunction(_ => value)
+    * */
   def fillAll(value: => T): Unit = {
     def arr = Array.fill(size._1)(value)
     for{
@@ -218,9 +234,19 @@ object Display {
     new Display[T](rect.topLeft, rect.size)()
   }
 
-  def readCharDisplay(lines: Seq[String]): Display[Char] = {
-    val size = (lines.head.length, lines.length)
-    val a = lines.map(_.toCharArray).toArray
+  def readCharDisplay(lines: Seq[String], emptyChar: Char = 0): Display[Char] = {
+    val width = lines.map(_.length).max
+    val size = (width, lines.length)
+    val a = lines.map{l =>
+      val arr = l.toCharArray
+      if(arr.length == width)
+        arr
+      else {
+        val arr2 = Array.fill[Char](width)(emptyChar)
+        arr.copyToArray(arr2)
+        arr2
+      }
+    }.toArray
     val d = Display[Char]((0,0), size)(Some(() => a))
     d
   }
@@ -232,11 +258,17 @@ object Display {
       .forall{ case (a,b) => a.sameElements(b) }
   }
 
-  def showPoints(points: Seq[Position], pointChar: Char): Display[Char] = {
+  def showPoints(points: Seq[Position], pointChar: Char = '.'): Display[Char] = {
     val rect = Geom2dUtils.boundingRect(points)
     val d = Display[Char](rect)
     d.fillAll(' ')
     points.foreach(p => d(p) = pointChar)
+    d
+  }
+
+  def of[T: ClassTag](offset: Vector2d, size: Vector2d)(f: Position => T): Display[T] = {
+    val d = Display[T](offset, size)()
+    d.fill(f)
     d
   }
 }
