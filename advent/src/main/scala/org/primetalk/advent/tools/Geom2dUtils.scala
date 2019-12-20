@@ -37,14 +37,21 @@ object Geom2dUtils {
   }
 
   /** Origin is in top left corner. */
-  case class Rectangle(topLeft: Position, size: Vector2d) {
+  final case class Rectangle(topLeft: Position, size: Vector2d) {
 
     def area: Long =
       size._1 * size._2
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
 
+    @inline
     def bottomRight: Position = topLeft + size - (1, 1)
+
+    def contains(p: Position): Boolean =
+      p._1 >= topLeft._1 &&
+        p._2 >= topLeft._2 &&
+        p._1 <= bottomRight._1 &&
+        p._2 <= bottomRight._2
   }
   /** It's a matrix:
     *  /     \
@@ -93,9 +100,9 @@ object Geom2dUtils {
   val Left: Direction = (-1, 0)
   val Right: Direction = (1, 0)
 
-  lazy val mainDirections: Seq[Direction] = Seq(Up, Left, Down, Right)
-  lazy val mainDirectionsInReadingOrder: Seq[Direction] = Seq(Up, Left, Right, Down)
-  lazy val directions8: Seq[Direction] = mainDirections ++ Seq(Up + Right, Up + Left, Down + Left, Down + Right)
+  lazy val mainDirections: List[Direction] = List(Up, Left, Down, Right)
+  lazy val mainDirectionsInReadingOrder: List[Direction] = List(Up, Left, Right, Down)
+  lazy val directions8: List[Direction] = mainDirections ++ List(Up + Right, Up + Left, Down + Left, Down + Right)
 
   def mul(k: Int): Direction => Vector2d = {
     case (x, y) => (x * k, y * k)
