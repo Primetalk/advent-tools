@@ -4,7 +4,6 @@ import org.primetalk.advent.tools.CollectionUtils.{insertAllIntoSortedVector, in
 import Geom2dUtils.{PosOps, Position, directions8, mainDirections}
 
 import scala.annotation.tailrec
-import scala.collection.immutable
 
 object GraphUtils {
 
@@ -633,7 +632,7 @@ object GraphUtils {
       else {
         val hh = toVisit2.head
         val connected = g.getOrElse(hh, Set()) -- visited - hh
-        go(connected ++: toVisit2.tail, visited + hh, connected ++: found)
+        go(connected ++ toVisit2.tail, visited + hh, connected ++ found)
       }
     go(Set(n), Set(), Set(n))
   }

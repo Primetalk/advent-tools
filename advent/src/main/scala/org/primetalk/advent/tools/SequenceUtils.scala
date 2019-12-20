@@ -7,6 +7,7 @@ object SequenceUtils {
   /** Sequence generating function. */
   type SequenceGen[T] = T => T
   type FiniteSequenceGen[T] = T => Option[T]
+  type Predicate[T] = T => Boolean
   /**
     * Algorithm for finding a loop in a sequence..
     *
@@ -211,6 +212,25 @@ object SequenceUtils {
       else
         findMinArgForPredicate(p)(next, guessAbove)
     }
+  }
+
+  /**
+    * Searches the position when the function drops from true to false.
+    * {{{require(f(low) && !f(high))}}}
+    *
+    * @param low where to start finding the value boundary
+    * @return last position where f is true
+    */
+  @tailrec
+  def findSupremum(f: Int => Boolean, low: Int, high: Int): Int = {
+    //    require(f(low) && !f(high))
+    val next = low + (high - low) / 2 // this avoids overloading
+    if(next == low)
+      low
+    else if(f(next))
+      findSupremum(f, next, high)
+    else
+      findSupremum(f, low, next)
   }
 
 }
