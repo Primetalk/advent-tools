@@ -93,6 +93,40 @@ object PrimeNumbers {
         greatestCommonDivisorLong(divisor, nextDivisor)
     } else greatestCommonDivisorLong(divisor,i)
 
+  def modInverse(a: BigInt, n: BigInt): BigInt = {
+    @scala.annotation.tailrec
+    def loop(t: BigInt = 0, newt: BigInt = 1, r: BigInt = n, newr: BigInt = a): BigInt = {
+      if(newr == 0){
+        if(r > 1)
+          throw new IllegalArgumentException(s"${a} is not invertible module $n")
+        else if(t < 0)
+          t + n
+        else
+          t
+      } else {
+        val quotient = r / newr
+        loop(newt, t - quotient * newt, newr, r - quotient * newr)
+      }
+    }
+    loop()
+  }
+
+  /** Find 1/n (% mod). GCD(n, mod) == 1 */
+  def inverse(n: BigInt, mod: BigInt): Long = {
+    (mod + 1) / n
+    @scala.annotation.tailrec
+    def loop(k: Long): Long = {
+      val candidate = (mod*k + 1) / n
+      if(candidate*n % mod == BigInt(1) )
+        candidate.toLong
+      else {
+        println(s"looping $k")
+        loop(k + 1)
+      }
+
+    }
+    loop(1)
+  }
   def leastCommonMultiple(a: Int, b: Int): Long =
     a.toLong * b / greatestCommonDivisor(a, b)
   def leastCommonMultipleLong(a: Long, b: Long): Long =
