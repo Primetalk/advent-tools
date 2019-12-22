@@ -258,22 +258,23 @@ object Day22 extends Utils {
 
   // fast binary power algorithm
   def modPower(a: BigInt, n: BigInt, mod: BigInt): BigInt = {
-    @scala.annotation.tailrec
-    def loop(current: BigInt, n: BigInt, mul: BigInt): BigInt = {
-      if(n == 1) {
-        current * mul % mod
-      } else {
-        val nextN = n / 2
-        val p2 = current * current % mod
-        loop(p2, nextN,
-          if(n % 2 == 1)
-            current * mul  % mod
-          else
-            mul
-        )
-      }
-    }
-    loop(a, n, 1)
+    a.modPow(n, mod)
+//    @scala.annotation.tailrec
+//    def loop(current: BigInt, n: BigInt, mul: BigInt): BigInt = {
+//      if(n == 1) {
+//        current * mul % mod
+//      } else {
+//        val nextN = n / 2
+//        val p2 = current * current % mod
+//        loop(p2, nextN,
+//          if(n % 2 == 1)
+//            current * mul  % mod
+//          else
+//            mul
+//        )
+//      }
+//    }
+//    loop(a, n, 1)
   }
 
   /** This is a representation of a formula:

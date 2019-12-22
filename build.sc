@@ -11,7 +11,8 @@ object advent extends SbtModule {
 //  def mainClass = Some("org.primetalk.advent.day1")
   override def ivyDeps = Agg(
     ivy"com.lihaoyi::fastparse:2.1.0",
-    ivy"ru.primetalk::rewritable-tree:0.1.0"
+    ivy"ru.primetalk::rewritable-tree:0.1.0",
+    ivy"org.typelevel::spire::0.16.2"
   )
   object test extends Tests {
     def testFrameworks =  Seq(
