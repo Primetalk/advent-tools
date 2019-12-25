@@ -4,6 +4,7 @@ import org.primetalk.advent.tools.Geom2dUtils.{PosOps, Position, Rectangle, VecO
 import org.primetalk.advent.tools.GraphUtils.Predicate
 
 import scala.annotation.tailrec
+import scala.collection.immutable
 import scala.reflect.ClassTag
 
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
@@ -45,10 +46,15 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   def adjacentPositions(p: Position): List[Position] =
     mainDirections.map(_ + p).filter(isWithinRange)
 
+  def mainPositionsAround(p: Position): List[Position] =
+    adjacentPositions(p)
+
   def positionsAround(p: Position): List[Position] =
     directions8.map(_ + p).filter(isWithinRange)
 
-  def points: Seq[Position] =
+  def points: Seq[Position] = pointsLeftToRightTopToBottomYGrowsDown
+
+  def pointsLeftToRightTopToBottomYGrowsDown: Seq[(Int, Int)] =
     for{
       j <- ys
       i <- xs
@@ -214,6 +220,18 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
       next = rules(apply(p), v)
     } {
       d(p) = next
+    }
+    d
+  }
+
+  /** Transform this display according to cellular automaton rules. */
+  def produceByLocalRulesFromMainDirections(rules: (T, Seq[T]) => T): Display[T] = {
+    val d = new Display[T](offset, size)()
+    for{
+      p <- points
+      v = mainPositionsAround(p).map(apply)
+    } {
+      d(p) = rules(apply(p), v)
     }
     d
   }
