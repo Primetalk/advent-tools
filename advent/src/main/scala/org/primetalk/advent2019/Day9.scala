@@ -74,6 +74,26 @@ trait IntCodeComputer9 {
     def deepCopy: State = State(
       ip, rb, memory.deepCopy, inputs, outputs
     )
+
+    lazy val nextCommand: Op = {
+      val i0 = readRel(0)
+      val opcode = (i0 % 100).toInt
+      val info = opcodes.getOrElse(opcode, throw new IllegalArgumentException(s"Unknown opcode $opcode at $ip"))
+
+      val positions = Map(1 -> 100, 2 -> 1000, 3 -> 10000, 4 -> 100000)
+      def mode(i: Int): Int = ((i0 / positions(i)) % 10).toInt
+
+      val args = (1 to info.argCount).map(i =>
+        readArg(i, mode(i))
+      ).toList
+      Op(opcode, args)
+    }
+
+    def isNextCommandReadingInput: Boolean = nextCommand.opcode == input.code
+
+    def isBlockedOnInput: Boolean =
+      inputs.isEmpty && isNextCommandReadingInput
+
   }
 
   sealed trait Arg
@@ -171,20 +191,7 @@ trait IntCodeComputer9 {
     }
   }
 
-  def readOp(s: State): Op = {
-
-    val i0 = s.readRel(0)
-    val opcode = (i0 % 100).toInt
-    val info = opcodes.getOrElse(opcode, throw new IllegalArgumentException(s"Unknown opcode $opcode at ${s.ip}"))
-
-    val positions = Map(1 -> 100, 2 -> 1000, 3 -> 10000, 4 -> 100000)
-    def mode(i: Int): Int = ((i0 / positions(i)) % 10).toInt
-
-    val args = (1 to info.argCount).map(i =>
-      s.readArg(i, mode(i))
-    ).toList
-    Op(opcode, args)
-  }
+  def readOp(s: State): Op = s.nextCommand
 
   def eval(s0: State, op: Op): State = {
     val info = opcodes.getOrElse(op.opcode, throw new IllegalArgumentException(s"Unknown opcode $op"))
@@ -223,6 +230,10 @@ trait IntCodeComputer9 {
       }
     f
   }
+
+  def runUntilBlockedOnInputOrFinish: State => State =
+    runUntilOrFinish(_.isBlockedOnInput)
+
   def executeInputOutputProgram(program: Program, inputs: List[Word]): Word = {
     val s0 = State(ip = 0, rb = 0, new SimpleMemory(program), inputs)
     val s1 = runProgram(s0)
@@ -234,7 +245,6 @@ trait IntCodeComputer9 {
     val s1 = runProgram(s0)
     s1.outputs
   }
-
 }
 /**
   * https://adventofcode.com/2019/day/9
