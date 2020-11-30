@@ -69,10 +69,10 @@ object Day6 {
     res
   }
 
-  def from(distribution: Distribution): Stream[Distribution] =
-    Stream.cons(distribution, from(redistribute(distribution)))
+  def from(distribution: Distribution): LazyList[Distribution] =
+    LazyList.cons(distribution, from(redistribute(distribution)))
 
-  def findFirstDuplicateCount[T](stm: Stream[T]): Int = {
+  def findFirstDuplicateCount[T](stm: LazyList[T]): Int = {
     val (set2, _) =
       stm
         .scanLeft((Set[T](), false)){
@@ -90,7 +90,7 @@ object Day6 {
 
   // Part 2
 
-  def findFirstDuplicateCount2[T](stm: Stream[T]): Int = {
+  def findFirstDuplicateCount2[T](stm: LazyList[T]): Int = {
     val (_, Some(dist), lst2) =
       stm
         .scanLeft((Set[T](), None: Option[T], List[T]())){

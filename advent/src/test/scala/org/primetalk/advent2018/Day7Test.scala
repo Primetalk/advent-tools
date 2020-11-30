@@ -1,9 +1,10 @@
 package org.primetalk.advent2018
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import Day7._
 
-class Day7Test extends FlatSpec with Matchers {
+class Day7Test extends AnyFlatSpec with Matchers {
 
   behavior of "Day7Test"
   val exampleEdges: Array[(Char, Char)] =
@@ -17,11 +18,11 @@ class Day7Test extends FlatSpec with Matchers {
       |""".stripMargin.split('\n').map(parse)
 
   it should "perform example in 15 steps" in {
-    runWork(exampleEdges, 2, _ - 'A' + 1) should be(15)
+    runWork(exampleEdges.toIndexedSeq, 2, _ - 'A' + 1) should be(15)
   }
 
   it should "one worker should yield the same string" in {
-    runWork(exampleEdges, 1, _ => 1) should be(6)
+    runWork(exampleEdges.toIndexedSeq, 1, _ => 1) should be(6)
   }
 
   // BGKDMJCNEQRSTUZWHYLPAFIVXO

@@ -2,6 +2,8 @@ package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.Utils
 
+import scala.annotation.tailrec
+
 /**
   * --- Day 16: Chronal Classification ---
   *
@@ -189,6 +191,7 @@ Ignoring the opcode numbers, how many samples in your puzzle input behave like t
   type OpCode = Int
 
   def guessOpcodes(opPerTestCase: Seq[(TestCase, Seq[OperationMicroCode])]): Map[OpCode, OperationMicroCode] = {
+    @tailrec
     def go(uncertain: Map[OpCode, Seq[OperationMicroCode]], currentCodes: Map[OpCode, OperationMicroCode]): Map[OpCode, OperationMicroCode] = {
       if(uncertain.isEmpty)
         currentCodes
@@ -199,10 +202,11 @@ Ignoring the opcode numbers, how many samples in your puzzle input behave like t
         val newOperations = uniques.values.flatten.toSet
         go(
           uncertain
-            .mapValues(_.filterNot(newOperations.contains))
+            .view.mapValues(_.filterNot(newOperations.contains))
             .filterNot(_._2.isEmpty)
+            .toMap
           ,
-          currentCodes ++ uniques.mapValues(_.head)
+          currentCodes ++ uniques.view.mapValues(_.head)
         )
       }
     }

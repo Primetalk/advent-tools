@@ -3,6 +3,7 @@ package org.primetalk.advent2018
 import org.primetalk.advent.tools.SequenceUtils.{unfoldUntil, unfoldWhile}
 import org.primetalk.advent.tools.{PrimeNumbers, Utils}
 
+import scala.annotation.tailrec
 import scala.util.Try
 
 /**
@@ -105,9 +106,9 @@ trait Day19DeviceEmulator {
 
   case class OperationMicroCode(opname: OpName, aMicro: ArgMicroCodeType, bMicro: ArgMicroCodeType, f: (Word, Word) => Word)
 
-  def cmpGreaterThan(a: Word, b: Word): Word = if (a > b) 1 else 0
+  def cmpGreaterThan(a: Word, b: Word): Word = if (a > b) 1L else 0L
 
-  def cmpEqual(a: Word, b: Word): Word = if (a == b) 1 else 0
+  def cmpEqual(a: Word, b: Word): Word = if (a == b) 1L else 0L
 
   val operations = Seq(
     OperationMicroCode("addr", RegisterArg, RegisterArg, _ + _),
@@ -133,7 +134,7 @@ trait Day19DeviceEmulator {
   def evalInput(iKind: ArgMicroCodeType, registers: Registers)(input: Int): Word = iKind match {
     case ImmediateArg => input
     case RegisterArg => registers.values(input)
-    case IgnoreArg => -100
+    case IgnoreArg => -100L
   }
 
   def update(c: Int, registers: Registers)(value: Word): Registers =
@@ -184,19 +185,20 @@ abstract class Day19 extends Day19Program {
 What value is left in register 0 when the background process halts?
    */
   lazy val answer1: Long = {
-    val finalRegisters = eval(inputProgram)(Registers(Seq(0,0,0,0,0,0), initialIpSelector, 0))
+    val finalRegisters = eval(inputProgram)(Registers(Seq(0L,0,0,0,0,0), initialIpSelector, 0L))
     finalRegisters.values.head
   }
 
-  def instr(r: Registers) = inputProgram(r.ip.toInt)
+  def instr(r: Registers): OperationBinary = inputProgram(r.ip.toInt)
 
   /** For debug purposes.*/
   def runInfinitely(): Nothing = {
-    val initialRegisters = Registers(Seq(1, 0, 0, 0, 0, 0), initialIpSelector, 0)
+    val initialRegisters = Registers(Seq(1L, 0, 0, 0, 0, 0), initialIpSelector, 0L)
     val step = executeOneInstruction(inputProgram) _
+    @tailrec
     def go(r: Registers): Nothing = {
       var nextR = step(r) // var is intentional, so that we can modify it during debug session.
-      println(r + "\t" + instr(r) + "\t" + Try(nextR))
+      println(r.toString + "\t" + instr(r).toString + "\t" + Try(nextR).toString)
       go(nextR)
     }
     go(initialRegisters)
@@ -207,7 +209,7 @@ What value is left in register 0 when the background process halts?
   // 16533001
   // 16533000 - sum of divisors
   lazy val answer2: Long = {
-    val initialRegisters = Registers(Seq(1, 0, 0, 0, 0, 0), initialIpSelector, 0)
+    val initialRegisters = Registers(Seq(1L, 0, 0, 0, 0, 0), initialIpSelector, 0L)
     val step = executeOneInstruction(inputProgram) _
     val rBeforeLoop: Registers = unfoldUntil(step)(_.ip == 1)(initialRegisters)
     val r2: Word = rBeforeLoop.values(2)

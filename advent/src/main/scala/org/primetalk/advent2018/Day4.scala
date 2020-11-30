@@ -2,6 +2,8 @@ package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.Utils
 
+import scala.annotation.tailrec
+
 /**
   * --- Day 4: Repose Record ---
   *
@@ -152,7 +154,7 @@ object Day4 extends Utils {
       }
 
   def minutesAsleep(sleepingRecords: List[SleepingRecord]): Int = {
-//    val arr = Array.ofDim[Boolean](60)
+    @tailrec
     def go(sleeping: Boolean, count: Int, previousPos: Int, records: List[SleepingRecord]): Int =
       records match {
         case Nil    =>
@@ -169,8 +171,8 @@ object Day4 extends Utils {
     go(sleeping = false, 0,0,sleepingRecords)
   }
 
- def minutesAsleep2(sleepingRecords: List[SleepingRecord]): Set[Int] = {
-//    val arr = Array.ofDim[Boolean](60)
+  def minutesAsleep2(sleepingRecords: List[SleepingRecord]): Set[Int] = {
+    @tailrec
     def go(sleeping: Boolean, minutes: Set[Int], previousPos: Int, records: List[SleepingRecord]): Set[Int] =
       records match {
         case Nil    =>
@@ -193,7 +195,7 @@ object Day4 extends Utils {
     val shifts: Map[Date, Int] = guardShifts(records)
     val dateTi: Map[Date, List[SleepingRecord]] = dateTimes(records)
 
-    val dateToMinutes: Map[Date, Int] = dateTi.mapValues(minutesAsleep3)
+    val dateToMinutes: Map[Date, Int] = dateTi.view.mapValues(minutesAsleep3).toMap
     dateToMinutes.toList
       .map{ case (date, mins) =>
         (shifts(date), mins) // TODO: id from previous date
@@ -203,7 +205,7 @@ object Day4 extends Utils {
   lazy val shifts: Map[Date, Int] = guardShifts(inputTimeTable)
   lazy val dateTi: Map[Date, List[SleepingRecord]] = dateTimes(inputTimeTable)
 
-  lazy val dateToMinutes: Map[Date, Int] = dateTi.mapValues(minutesAsleep)
+  lazy val dateToMinutes: Map[Date, Int] = dateTi.view.mapValues(minutesAsleep).toMap
 
 
   lazy val guardToDatesToSleepingMinutes: Map[Int, Map[Date,Set[Int]]] =
@@ -222,7 +224,7 @@ object Day4 extends Utils {
     val shifts: Map[Date, Int] = guardShifts(inputTimeTable)
     val dateTi: Map[Date, List[SleepingRecord]] = dateTimes(inputTimeTable)
 
-    val dateToMinutes: Map[Date, Int] = dateTi.mapValues(minutesAsleep)
+    val dateToMinutes: Map[Date, Int] = dateTi.view.mapValues(minutesAsleep).toMap
 //    dateToMinutes
 //      .map{ case (date, mins) =>
 //        (shifts(date), mins) // TODO: id from previous date
@@ -233,12 +235,12 @@ object Day4 extends Utils {
 
     val datesForId: Set[Date] = shifts.toList.filter(_._2 == id).map(_._1).toSet
     val dateToRecordsForId: Map[Date, List[SleepingRecord]] =
-      dateTi.filterKeys(datesForId.contains)
+      dateTi.view.filterKeys(datesForId.contains).toMap
     val filtered = dateToRecordsForId.toList.sortBy(a => a._1.month*31 + a._1.day)
 
     println(filtered.map{ case (date, lst) => "" + date + ":" + minutesAsleep2(lst).toSeq.sorted}.mkString("\n"))
 
-    val eachMinutes: Map[Date, Set[Int]] = dateToRecordsForId.mapValues(minutesAsleep2)
+    val eachMinutes: Map[Date, Set[Int]] = dateToRecordsForId.view.mapValues(minutesAsleep2).toMap
     val minutesWithCounts = (0 until 60).map{ min => min->eachMinutes.count(_._2.contains(min))}
     println(minutesWithCounts.mkString("\n"))
     val min = minutesWithCounts.maxBy(_._2)

@@ -81,8 +81,8 @@ object Day3 extends ProgUtils {
     case s@State(_, dir, _, _, _, _) => throw new IllegalArgumentException("Unknown direction " + dir + " in state " + s)
   }
 
-  def spiralProgram: Stream[Operation] =
-    infiniteProgram(Stream(jumpEdge, rotate90))
+  def spiralProgram: LazyList[Operation] =
+    infiniteProgram(LazyList(jumpEdge, rotate90))
 
   val input: Int = 312051
 

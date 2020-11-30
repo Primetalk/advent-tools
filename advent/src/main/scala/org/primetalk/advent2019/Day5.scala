@@ -109,7 +109,7 @@ object Day5 extends Utils {
     readResourceAsString("day5.txt").trim
 
   lazy val inputText: Seq[String] =
-    inputString.split(',')
+    inputString.split(',').toIndexedSeq
 
   def seqOfInts: Seq[Int] =
     inputText.map(_.toInt)

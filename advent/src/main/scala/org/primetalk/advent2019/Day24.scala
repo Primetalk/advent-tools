@@ -289,7 +289,7 @@ object Day24 extends Utils {
 //    case _ => throw new IllegalArgumentException(s"Unexpected char $char")
   }
   def step(d: Display[Char]): Display[Char] = {
-    println
+    println()
     println(d.showDisplay()())
     val res = d.produceByLocalRulesFromMainDirections{
       case (c, nei) =>

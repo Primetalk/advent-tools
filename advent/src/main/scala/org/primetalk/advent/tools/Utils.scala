@@ -7,20 +7,33 @@ import scala.util.matching.Regex
 
 trait Utils {
 
-  def readResource(resourceName: String): Iterator[String] = {
+  def readResource(resourceName: String): Iterator[String] =
+    readResourceLines(resourceName).iterator
+
+  def readResourceLines(resourceName: String): IndexedSeq[String] = {
     val resource: URL = getClass.getResource(resourceName)
-    Source.fromURL(resource, "UTF-8").getLines
+    val src = Source.fromURL(resource, "UTF-8")
+    try {
+      src.getLines().toIndexedSeq
+    } finally {
+      src.close()
+    }
   }
 
   def readResourceAsString(resourceName: String): String = {
     val resource: URL = getClass.getResource(resourceName)
-    Source.fromURL(resource, "UTF-8").mkString
+    val src = Source.fromURL(resource, "UTF-8")
+    try {
+      src.mkString
+    } finally {
+      src.close()
+    }
   }
 
   val newLineRegex: Regex = "\n".r
 
-  def splitLines(text: String): Seq[String] =
-    newLineRegex.split(text)
+  def splitLines(text: String): IndexedSeq[String] =
+    newLineRegex.split(text).toIndexedSeq
 
   def parseIntsNewLineSeparated(text: String): Seq[Int] =
     splitLines(text).map(_.toInt)

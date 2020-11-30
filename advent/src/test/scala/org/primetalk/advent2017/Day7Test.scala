@@ -1,8 +1,8 @@
 package org.primetalk.advent2017
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class Day7Test extends FlatSpec {
+class Day7Test extends AnyFlatSpec {
 
 
   import Day7._

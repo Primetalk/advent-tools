@@ -3,9 +3,8 @@ package org.primetalk.advent2019
 import org.primetalk.advent.tools.GraphUtils
 import org.primetalk.advent.tools.GraphUtils.{Tree, convertEdgesToDirectDependenciesOnlyForTrees, treePath}
 import org.primetalk.advent2019.Day6.{Id, edges, rootId}
-import org.scalatest.{FlatSpec, Matchers}
 
-class Day6Test extends FlatSpec with Matchers {
+class Day6Test extends BaseTest {
 
   behavior of "Day6Test"
 

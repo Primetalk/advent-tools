@@ -103,7 +103,7 @@ object Day9 {
         .mkString(" ")
   }
 
-  case class TurnState(deskState: DeskState, nextPlayers: Stream[Int], marblesInput: List[Marble])
+  case class TurnState(deskState: DeskState, nextPlayers: LazyList[Int], marblesInput: List[Marble])
 
   def score(state: TurnState): Score =
     state.deskState.scores.values.max
@@ -122,7 +122,7 @@ object Day9 {
     val initialState1 = DeskState(0, 0 +: SplitVector.empty)
     val ts = TurnState(
       initialState1,
-      Stream.continually(Range(0, players).toStream).flatten.tail,
+      LazyList.continually(LazyList(Range(0, players):_*)).flatten.tail,
       (1 to lastMarble).map(_.toLong).toList
     )
     go(ts)

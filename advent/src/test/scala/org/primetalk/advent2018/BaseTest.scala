@@ -1,6 +1,7 @@
 package org.primetalk.advent2018
 
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-abstract class BaseTest extends FlatSpec with Matchers with PropertyChecks
+abstract class BaseTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks

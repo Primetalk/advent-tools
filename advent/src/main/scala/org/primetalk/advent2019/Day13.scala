@@ -81,6 +81,8 @@ object Day13 extends Utils with IntCodeComputer9 {
     outputs.foreach{
       case List(x, y, i) =>
         display((x.toInt, y.toInt)) = tileMap(i.toInt).char
+      case other =>
+        throw new IllegalArgumentException(s"$other")
     }
     println(display.showDisplay()())
     display.values.count(_ == blockTile.char)

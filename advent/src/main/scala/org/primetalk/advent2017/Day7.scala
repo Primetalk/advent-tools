@@ -90,8 +90,8 @@ object Day7 extends Utils {
     */
   val regex: Regex = "^([a-z]+) \\((\\d+)\\)(\\s->\\s([a-z, ]+))?$".r("id", "weight", "arrow", "children")
 
-  def parseCommaSeparated(str: String): Seq[String] = {
-    str.split(", ")
+  def parseCommaSeparated(str: String): IndexedSeq[String] = {
+    str.split(", ").toIndexedSeq
   }
 
   def parse(str: String): Line = {

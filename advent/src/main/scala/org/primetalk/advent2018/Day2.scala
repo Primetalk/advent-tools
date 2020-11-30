@@ -64,8 +64,9 @@ object Day2 extends Utils {
       .toCharArray
       .toSeq
       .groupBy(identity)
-      .mapValues(_.length)
+      .view.mapValues(_.length)
       .map(identity)
+      .toMap
 
   /** What numbers of characters is present in the given string.
     * For instance some characters can be seen 2 times, others - 3 times. And none of characters can be seen 5 times.

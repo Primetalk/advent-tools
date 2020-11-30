@@ -1,9 +1,8 @@
 package org.primetalk.advent2019
 
-import org.scalatest.{FlatSpec, Matchers}
 import Day22._
 
-class Day22Test extends FlatSpec with Matchers {
+class Day22Test extends BaseTest {
 
   behavior of "Day22Test"
 

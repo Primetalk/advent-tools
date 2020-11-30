@@ -3,10 +3,10 @@ package org.primetalk.advent2018
 trait ProgUtils {
   type State
   type Operation = State => State
-  type Program = Stream[Operation]
+  type Program = LazyList[Operation]
 
-  def infiniteProgram(prog: Stream[Operation]): Stream[Operation] =
-    Stream.continually(prog).flatten
+  def infiniteProgram(prog: LazyList[Operation]): LazyList[Operation] =
+    LazyList.continually(prog).flatten
 
   def findFirst(program: Program, p: State => Boolean): State => Option[State] = initial =>
     program

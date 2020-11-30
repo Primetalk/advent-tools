@@ -2,9 +2,8 @@ package org.primetalk.advent2019
 
 import org.primetalk.advent.tools.SequenceUtils
 import org.primetalk.advent2019.ImmutableMoon.MoonState
-import org.scalatest.{FlatSpec, Matchers}
 
-class Day12Test extends FlatSpec with Matchers {
+class Day12Test extends BaseTest {
 
   behavior of "Day12Test"
 

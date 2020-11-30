@@ -73,6 +73,8 @@ object Day23 extends Utils {
         case y :: x :: addr :: t =>
           st = s1.copy(outputs = t)
           List(Packet(addr, x, y))
+        case other =>
+          throw new IllegalArgumentException(s"$other")
       }
     }
   }

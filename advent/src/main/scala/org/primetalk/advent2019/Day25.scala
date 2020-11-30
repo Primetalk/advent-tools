@@ -58,7 +58,7 @@ object Day25 extends Utils with IntCodeComputer9  {
   lazy val inputTextFromResource : String =
     readResourceAsString("day25.txt")
 
-  val asciiProgram: Seq[Long] = inputTextFromResource.split(",").map(_.toLong)
+  val asciiProgram: Seq[Long] = inputTextFromResource.split(",").map(_.toLong).toIndexedSeq
 
   sealed trait Instruction
   case object Wonder extends Instruction

@@ -1,10 +1,8 @@
 package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.Display
-import org.scalatest.FlatSpec
-import org.scalatest.prop.PropertyChecks
 
-class DisplayTest extends FlatSpec with PropertyChecks with Generators {
+class DisplayTest extends BaseTest with Generators {
 
   behavior of "DisplayTest"
 

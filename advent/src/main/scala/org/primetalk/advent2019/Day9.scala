@@ -23,7 +23,7 @@ class SimpleMemory[W: Numeric: ClassTag](initial: Seq[W], maxSize: Int = 1000000
   override def update(addr: W, v: W): Unit = {
     arr(implicitly[Numeric[W]].toInt(addr)) = v
   }
-  def deepCopy: SimpleMemory[W] = new SimpleMemory[W](arr, maxSize)
+  def deepCopy: SimpleMemory[W] = new SimpleMemory[W](arr.toIndexedSeq, maxSize)
 }
 
 trait IntCodeComputer9 {
@@ -145,15 +145,17 @@ trait IntCodeComputer9 {
   }
 
   def compareEval(compare: (Word, Word) => Boolean): (State, Op) => State =
-    aluEval((a,b) => if(compare(a,b)) 1 else 0)
+    aluEval((a,b) => if(compare(a,b)) 1L else 0L)
 
   def relativeBaseAddToEval: (State, Op) => State = {
     case (s0, Op(opcode, List(arg1))) =>
       s0.copy(ip = s0.ip + opcodes(opcode).length, rb = s0.rb + s0.evalArg(arg1))
+    case other =>
+      throw new IllegalArgumentException(s"$other")
   }
 
   def haltEval: (State, Op) => State = (s0, op) => {
-    s0.copy(ip = -1)
+    s0.copy(ip = -1L)
   }
 
   case class OpCodeInfo(code: Int, argCount: Int, eval: (State, Op) => State) {

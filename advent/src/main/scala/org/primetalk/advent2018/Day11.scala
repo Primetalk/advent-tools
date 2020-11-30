@@ -3,6 +3,8 @@ package org.primetalk.advent2018
 import org.primetalk.advent.tools.Display
 import org.primetalk.advent.tools.Geom2dUtils._
 
+import scala.annotation.tailrec
+
 /**
   * --- Day 11: Chronal Charge ---
   *
@@ -112,18 +114,19 @@ object Day11  {
   def sumsMaxBySum(size: Int)(display: Display[Int]): (Position, Int) = {
     System.gc()
     val points = for {
-      y <- (display.minY to (display.maxY - size)).toStream
+      y <- LazyList(display.minY to (display.maxY - size): _ *)
       x <- display.minX to (display.maxX - size)
     } yield (x,y)
+    @tailrec
     def go(
-      points: Stream[Position],
+      points: LazyList[Position],
       previousPos: Position,
       previousSum: Int, // using it for speedup sum calculations.
       maxPos: Position,
       maxValue: Int
     ): (Position, Int) =
       points match {
-        case Stream() => (maxPos, maxValue)
+        case LazyList() => (maxPos, maxValue)
         case p #:: tail =>
           val sum = if(p._2 != previousPos._2)
             display.inclusiveRectSum(p, p + (size - 1, size - 1))

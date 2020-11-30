@@ -77,7 +77,9 @@ object Day13 extends Utils {
   def showWithCarts(display: Display[Char], carts: CartStates): Unit = {
     val mapByY = carts.map(c => (c.position._2, c))
       .groupBy(_._1)
+      .view
       .mapValues(_.map(_._2).toSet)
+      .toMap
     for{
       y <- display.ys
     } {

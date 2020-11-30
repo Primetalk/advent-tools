@@ -1,9 +1,10 @@
 package org.primetalk.advent2018
 
 import org.primetalk.advent2018.Day2._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class Day2Test extends FlatSpec with Matchers {
+class Day2Test extends AnyFlatSpec with Matchers {
 /*
   * abcdef contains no letters that appear exactly two or three times.
   * bababc contains two a and three b, so it counts for both.

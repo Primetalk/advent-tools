@@ -2,9 +2,10 @@ package org.primetalk.advent2017
 
 import org.primetalk.advent.tools.Geom2dUtils
 import org.primetalk.advent2017.Day3._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class Day3Test extends FlatSpec with Matchers {
+class Day3Test extends AnyFlatSpec with Matchers {
 
   "findUltimatePosition" should "work in simple cases" in {
     findUltimatePosition(1) shouldBe Geom2dUtils.origin

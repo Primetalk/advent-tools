@@ -1,8 +1,6 @@
 package org.primetalk.advent2019
 
-import org.scalatest.{FlatSpec, Matchers}
-
-class Day3Test extends FlatSpec with Matchers {
+class Day3Test extends BaseTest {
 
   "min cross distance 1" should "be 6"  in {
     val w1 = "R8,U5,L5,D3"

@@ -112,7 +112,7 @@ object Day23 extends Utils {
       bots.map(bot => manhattanSphere(bot.position, bot.radius)).toArray
     def countBotsThatIntersectParallelepiped(p: ManhattanParallelepiped): Int =
       spheres.count(sp => p.intersect(sp).nonEmpty)
-    val points = spheres.flatMap(p => Seq(p.topLeft, p.bottomRight))
+    val points = spheres.flatMap(p => Seq(p.topLeft, p.bottomRight)).toIndexedSeq
     val initialArea = boundingParallelepiped(points)
     // to speedup we may start with 976, because it yields the same results.
     val found1 =

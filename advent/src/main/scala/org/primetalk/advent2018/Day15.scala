@@ -517,7 +517,9 @@ object Day15 extends Utils {
       val mapByY =
         units.values
           .map(u => (u.position._2, u)).groupBy(_._1)
+          .view
           .mapValues(_.map(_._2).toSet)
+          .toMap
       for{
         y <- immutableMaze.ys
       } {
@@ -557,7 +559,7 @@ object Day15 extends Utils {
   }
 
   def playGame(gameInput: String): Int = {
-    val lines = gameInput.split("\n")
+    val lines = gameInput.split("\n").toIndexedSeq
     val mazeWithUnits = readMazeWithUnits(lines)
     val units = findAllUnits(mazeWithUnits).map(u => (u.id, u)).toMap
     val immutableMaze = readMaze(lines)

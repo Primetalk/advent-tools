@@ -59,7 +59,7 @@ object PrimeNumbers {
 
   def factoriseToFactorPowers(n: Int): Seq[Factor] = {
     factoriseToPrimes(n).groupBy(identity)
-      .mapValues(_.size)
+      .view.mapValues(_.size)
       .map{ case (i,p) => Factor(i,p) }
       .toSeq
   }

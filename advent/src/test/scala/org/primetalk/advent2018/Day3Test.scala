@@ -1,9 +1,10 @@
 package org.primetalk.advent2018
 
 import org.primetalk.advent2018.Day2._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class Day3Test extends FlatSpec with Matchers {
+class Day3Test extends AnyFlatSpec with Matchers {
 
   "examples" should "match" in {
     counts("abcdef") shouldBe Set(1)

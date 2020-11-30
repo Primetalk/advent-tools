@@ -244,7 +244,7 @@ object Day22 extends Utils {
 //    val shuffleImpl2 = formulas.reduce(_.andThen(_))
     val totalFormula = sequenceOfShuffleTechniques.foldLeft((ResidualFormula(1, 0, mod), factoryOrdered) ){ case ((formula, deck), shuffle) =>
       val res = getShuffleImplForward(shuffle)(formula)
-      println(shuffle + ": " + res)
+      println(s"$shuffle: $res")
       val deck1 = res.toDeck
       val deck2 = getShuffleImpl(shuffle)(deck)
       assert(util.Arrays.equals(deck1, deck2))

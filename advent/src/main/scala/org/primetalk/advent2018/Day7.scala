@@ -170,8 +170,8 @@ object Day7 extends Utils {
         time = time + advanceInterval,
         currentTurnOccupation =
           currentTurnOccupation
-            .mapValues { case (t, c) => (math.max(0, t - advanceInterval), c) }
-            .map(identity)
+            .view.mapValues { case (t, c) => (math.max(0, t - advanceInterval), c) }
+            .toMap
       )
     }
 
@@ -181,9 +181,9 @@ object Day7 extends Utils {
       else
         copy(
           dependencies = dependencies
-            .mapValues(_ -- tasksCompletedOnLastTurn)
+            .view.mapValues(_ -- tasksCompletedOnLastTurn)
             .filterKeys(k => !tasksCompletedOnLastTurn.contains(k))
-            .map(identity)
+            .toMap
         )
     }
 

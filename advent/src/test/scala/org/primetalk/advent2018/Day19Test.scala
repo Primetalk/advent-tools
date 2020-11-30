@@ -16,7 +16,7 @@ class Day19Test extends BaseTest {
           |seti 8 0 4
           |seti 9 0 5
           |""".stripMargin
-      val lines: Seq[String] = program.split("\n")
+      val lines: Seq[String] = program.split("\n").toIndexedSeq
 
       val finalRegisters: Registers = eval(inputProgram.toVector)(Registers(Seq(0,0,0,0,0,0), initialIpSelector, 0))
       finalRegisters.values shouldBe Seq(6, 5, 6, 0, 0, 9)

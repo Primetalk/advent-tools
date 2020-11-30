@@ -188,7 +188,7 @@ object SequenceUtils {
     }
   }
 
-  def generateStreamFrom[S](s0: S)(f: S => S): Stream[S] =
+  def generateStreamFrom[S](s0: S)(f: S => S): LazyList[S] =
     s0 #:: generateStreamFrom(f(s0))(f)
 
   @tailrec

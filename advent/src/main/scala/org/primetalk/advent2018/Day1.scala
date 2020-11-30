@@ -2,6 +2,7 @@ package org.primetalk.advent2018
 
 import org.primetalk.advent.tools.Utils
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 
 /**
@@ -88,44 +89,47 @@ object Day1 extends Utils {
     * @return Frequency
     */
   def task1(input: String): Int =
-    frequency(input.split("\n").map(_.toInt))
+    frequency(input.split("\n").map(_.toInt).toIndexedSeq)
 
   lazy val answer1: Int = frequency(seqOfChanges)
 
   // Part 2
 
-  // 2.1 Stream-based implementation
-  def frequencyStream(freq: Int, changes: => Stream[Change]): Stream[Int] =
-    Stream.cons(freq, changes match {
-      case Stream.Empty => Stream.Empty
-      case _ => frequencyStream(freq + changes.head, changes.tail)
-    })
+  // 2.1 LazyList-based implementation
+  def frequencyStream(freq: Int, changes: => LazyList[Change]): LazyList[Int] =
+    LazyList.cons(freq,
+      if(changes.isEmpty)
+        LazyList.empty
+      else
+        frequencyStream(freq + changes.head, changes.tail)
+    )
 
   /** Generating infinite repetition of the original listOfChanges */
-  def infiniteChanges: Stream[Change] =
-    Stream(seqOfChanges :_*) #::: infiniteChanges
+  def infiniteChanges: LazyList[Change] =
+    LazyList(seqOfChanges :_*) #::: infiniteChanges
 
-  /** Stream of all frequencies.
+  /** LazyList of all frequencies.
     * Also inefficient.
     */
-  def frequencies: Stream[Int]  =
+  def frequencies: LazyList[Int]  =
     frequencyStream(0, infiniteChanges)
 
   /** Inefficient algorithm that produces immutable data structures. */
-  def frequencySeen(alreadySeenFrequences: Set[Int], lst: List[Int], frequencyStream: Stream[Int]): Stream[(Set[Int], List[Int])] =
-    frequencyStream match {
-      case h #:: (tl: Stream[Int]) =>
-        if(alreadySeenFrequences.contains(h))
-          (alreadySeenFrequences, h :: lst) #:: frequencySeen(alreadySeenFrequences,  h :: lst, tl)
-        else
-          (alreadySeenFrequences + h, lst) #:: frequencySeen(alreadySeenFrequences + h, lst, tl)
-    }
+  def frequencySeen(alreadySeenFrequences: Set[Int], lst: List[Int], frequencyStream: LazyList[Int]): LazyList[(Set[Int], List[Int])] = {
+    val h = frequencyStream.head
+    val tl = frequencyStream.tail
+    if(alreadySeenFrequences.contains(h))
+      (alreadySeenFrequences, h :: lst) #:: frequencySeen(alreadySeenFrequences,  h :: lst, tl)
+    else
+      (alreadySeenFrequences + h, lst) #:: frequencySeen(alreadySeenFrequences + h, lst, tl)
+  }
 
   def firstFrequency: Option[Int] =
     frequencySeen(Set(), Nil, frequencies).find(_._2.nonEmpty).map(_._2.head)
 
-  // 2.2. Stream-based + mutable map for visited
-  def duplicateFrequencySearchViaStream(currentFrequency: Int, visitedFrequencies:  mutable.TreeSet[Int], changes: Stream[Change]): Int = {
+  // 2.2. LazyList-based + mutable map for visited
+  @tailrec
+  def duplicateFrequencySearchViaStream(currentFrequency: Int, visitedFrequencies:  mutable.TreeSet[Int], changes: LazyList[Change]): Int = {
     if(visitedFrequencies.contains(currentFrequency))
       currentFrequency // found
     else {
@@ -136,7 +140,7 @@ object Day1 extends Utils {
   }
 
   // 2.3
-  /** A fast implementation without Stream and with mutable map of visited frequencies.
+  /** A fast implementation without LazyList and with mutable map of visited frequencies.
     * Produces next frequency inside the algorithm.
     */
   def duplicateFrequencySearch(currentFrequency: Int, visitedFrequencies:  mutable.TreeSet[Int], changes: Seq[Change], allChanges: Seq[Change]): Int = {

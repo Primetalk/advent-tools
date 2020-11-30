@@ -198,7 +198,7 @@ object Day10 extends Utils {
   def answer1: Int = {
     val baseShift = 10000
     val state1 = initialStates.map(advanceTimeByNForOnePoint(_, baseShift))
-    val states = Stream.iterate(state1)(advanceTimeBy1Many)
+    val states = LazyList.iterate(state1)(advanceTimeBy1Many)
     val limitSize = 10000
     val areasWithIndices: Seq[((Seq[PointState], Long), Int)] = states.map(s => (s, boundingRect(s.map(_.p)).area)).take(limitSize).zipWithIndex
     var prevSize = Long.MaxValue

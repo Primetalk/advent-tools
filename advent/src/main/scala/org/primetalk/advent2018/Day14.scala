@@ -3,6 +3,8 @@ package org.primetalk.advent2018
 import scala.collection.mutable
 import org.primetalk.advent.tools.TimeMeasurementUtils._
 
+import scala.annotation.tailrec
+
 /**
   * --- Day 14: Chocolate Charts ---
   *
@@ -101,6 +103,7 @@ object Day14 {
   // Part 2
   def produceArray(expecting: Array[Char], i: Int, j: Int, v: mutable.ArrayBuffer[Char]): Int = {
     val checkEveryCount = 1000000
+    @tailrec
     def go(i: Int, j: Int, v: mutable.ArrayBuffer[Char]): Int = {
         (if(v.size % checkEveryCount == 0) v.indexOfSlice(expecting) else -1) match {
           case pos if pos >= 0 => pos
@@ -117,7 +120,7 @@ object Day14 {
             go(nextI, nextJ, v)
       }
     }
-    go(i, j, mutable.ArrayBuffer(v : _ *))
+    go(i, j, mutable.ArrayBuffer.from(v))
 
   }
 
@@ -125,8 +128,9 @@ object Day14 {
 //    val checkEveryCount = 1000000
     val lenToCheck = expecting.length + 2
     import org.primetalk.advent.tools.CollectionUtils._
+    @tailrec
     def go(i: Int, j: Int, v: mutable.ArrayBuffer[Char]): Int = {
-      v.indexOfSliceAfterN(expecting, v.size - lenToCheck) match {
+      v.indexOfSlice(expecting, v.size - lenToCheck) match {
         case pos if pos >= 0 => pos
         case _ =>
           val a = v(i) - '0'
@@ -141,7 +145,7 @@ object Day14 {
           go(nextI, nextJ, v)
       }
     }
-    go(i, j, mutable.ArrayBuffer(v : _ *))
+    go(i, j, mutable.ArrayBuffer.from(v))
 
   }
 

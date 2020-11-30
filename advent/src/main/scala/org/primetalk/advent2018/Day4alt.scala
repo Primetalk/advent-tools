@@ -128,7 +128,7 @@ object Day4alt extends Utils {
   // 21083
   def answer1: Int = {
     val m = collectMinutes(events)
-    val totalMinutes = m.mapValues(mm => mm.values.sum).map(identity)
+    val totalMinutes = m.view.mapValues(mm => mm.values.sum).toMap
     val max = totalMinutes.values.max
     val maxId = totalMinutes.filter(_._2 == max).head._1
     val timetableForId: Map[Min, Int] = m(maxId)
