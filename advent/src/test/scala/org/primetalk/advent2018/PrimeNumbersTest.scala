@@ -16,8 +16,8 @@ class PrimeNumbersTest extends BaseTest {
   }
 
   it should "factoriseToFactorPowers" in {
-    factoriseToFactorPowers(10) shouldBe Seq(Factor(2, 1), Factor(5, 1))
-    factoriseToFactorPowers(20) shouldBe Seq(Factor(2, 2), Factor(5, 1))
+    factoriseToFactorPowers(10).toSet shouldBe Set(Factor(2, 1), Factor(5, 1))
+    factoriseToFactorPowers(20).toSet shouldBe Set(Factor(2, 2), Factor(5, 1))
   }
 
   it should "primeNumbers" in {
