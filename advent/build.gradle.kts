@@ -13,8 +13,8 @@ val scalaTestVersion  = "3.2.3"
 
 dependencies {
     implementation("org.scala-lang:scala-library:$scalaVersion")
-    implementation("com.lihaoyi:fastparse_2.13:2.3.0")
-    implementation("ru.primetalk:rewritable-tree_2.12:0.1.0")
+    implementation("com.lihaoyi:fastparse_$scalaMinorVersion:2.3.0")
+    implementation("ru.primetalk:rewritable-tree_$scalaMinorVersion:0.1.0")
 //    implementation("org.typelevel:spire_$scalaMinorVersion:0.16.2")
 
     testImplementation("org.scalatest:scalatest-flatspec_$scalaMinorVersion:$scalaTestVersion")
