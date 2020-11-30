@@ -17,11 +17,19 @@ cd advent-tools
 mill advent.compile
 ```
 
+A new build script is added to the project - `build.gradle.kts`.
+
+```bash
+./gradlew :advent:compileScala
+```
+
 3. Generate IntelliJ Idea project
 
 ```bash
 mill mill.scalalib.GenIdea/idea
 ```
+
+Idea can import the project from gradle script.
 
 4. REPL
 
