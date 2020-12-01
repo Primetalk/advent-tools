@@ -142,7 +142,7 @@ import org.primetalk.advent.tools.GraphUtils.PathInfo
 object Day15 extends IntCodeComputer9 {
 
   val labyrinthProgram: Seq[Word] = Seq(
-    3,1033,1008,1033,1,1032,1005,1032,31,1008,1033,2,1032,1005,1032,58,1008,1033,3,1032,1005,1032,81,1008,1033,4,1032,1005,1032,104,99,102,1,1034,1039,102,1,1036,1041,1001,1035,-1,1040,1008,1038,0,1043,
+    3L,1033,1008,1033,1,1032,1005,1032,31,1008,1033,2,1032,1005,1032,58,1008,1033,3,1032,1005,1032,81,1008,1033,4,1032,1005,1032,104,99,102,1,1034,1039,102,1,1036,1041,1001,1035,-1,1040,1008,1038,0,1043,
     102,-1,1043,1032,1,1037,1032,1042,1105,1,124,1002,1034,1,1039,1002,1036,1,1041,1001,1035,1,1040,1008,1038,0,1043,1,1037,1038,1042,1106,0,124,1001,1034,-1,1039,1008,1036,0,1041,1002,1035,1,1040,1001,1038,0,1043,102,1,1037,1042,1106,0,124,1001,
     1034,1,1039,1008,1036,0,1041,101,0,1035,1040,1002,1038,1,1043,
     1002,1037,1,1042,1006,1039,217,1006,1040,217,1008,1039,40,1032,1005,1032,217,1008,1040,40,1032,1005,1032,217,1008,1039,37,1032,1006,1032,165,1008,1040,33,1032,1006,1032,165,1102,1,2,1044,1105,1,224,
@@ -164,22 +164,22 @@ object Day15 extends IntCodeComputer9 {
   class Labyrinth {
     type NumDir = Word
 
-    val north: NumDir = 1
-    val south: NumDir = 2
-    val west: NumDir = 3
-    val east: NumDir = 4
+    val north: NumDir = 1L
+    val south: NumDir = 2L
+    val west: NumDir = 3L
+    val east: NumDir = 4L
 
     val mapDirs: Map[Vector2d, NumDir] = Map(Up -> north, Down -> south, Left -> west, Right -> east)
 
     type DroidResponse = Word
 
-    val HitTheWall: DroidResponse = 0
-    val Moved: DroidResponse = 1
-    val MovedAndArrived: DroidResponse = 2
+    val HitTheWall: DroidResponse = 0L
+    val Moved: DroidResponse = 1L
+    val MovedAndArrived: DroidResponse = 2L
 
     class DroidState {
 
-      var labyrinth: State = State(ip = 0, rb = 0, new SimpleMemory[Long](labyrinthProgram, 2000), Nil)
+      var labyrinth: State = State(ip = 0L, rb = 0L, new SimpleMemory[Long](labyrinthProgram, 2000), Nil)
       var position: Position = (0,0)
       def step(input: NumDir): Word = {
         val s0 = labyrinth.copy(inputs = List(input))

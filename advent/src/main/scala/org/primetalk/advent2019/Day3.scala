@@ -2,6 +2,8 @@ package org.primetalk.advent2019
 
 import org.primetalk.advent.tools.{Display, Geom2dUtils, Utils}
 import org.primetalk.advent.tools.Geom2dUtils._
+
+import scala.annotation.tailrec
 /**
   * https://adventofcode.com/2019/day/3
   *
@@ -117,6 +119,7 @@ object Day3 extends Utils {
 
   def renderWire(w: List[DirVector]): Display[Char] = {
     val d = Display[Char](Rectangle((-maxSize,-maxSize), (2*maxSize + 1,2*maxSize + 1)))
+    @tailrec
     def loop(pos: Position, rest: List[DirVector]): Display[Char] = rest match {
       case Nil => d
       case h :: t =>
@@ -164,6 +167,7 @@ object Day3 extends Utils {
   // Part 2
   // converts wires to positions.
   def wireToPoints(w: List[DirVector]): List[Position] = {
+    @tailrec
     def loop(pos: Position, rest: List[DirVector], positions: List[Position]): List[Position] = rest match {
       case Nil => positions.reverse
       case h :: t =>

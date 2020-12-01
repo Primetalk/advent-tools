@@ -278,8 +278,8 @@ object Day20 extends Utils {
     val d = readDisplay(lines)
     println(d.showDisplay()())
     val portals = findPortals(d)
-    val (start:: Nil) = portals.find(_.name == "AA").toList.flatMap(_.ends)
-    val (finish::Nil) = portals.find(_.name == "ZZ").toList.flatMap(_.ends)
+    val start:: Nil = portals.find(_.name == "AA").toList.flatMap(_.ends)
+    val finish::Nil = portals.find(_.name == "ZZ").toList.flatMap(_.ends)
     val (l, rp) = GraphUtils.findAllShortestPaths2[Position](graph1(d, portals), _ == finish)(
       Vector((start, PathInfo(0, Nil))),
       Map()
@@ -315,8 +315,8 @@ object Day20 extends Utils {
   lazy val answer2: Int = {
     val d = readDisplay(lines)
     val portals = findPortals(d)
-    val (start:: Nil) = portals.find(_.name == "AA").toList.flatMap(_.ends)
-    val (finish::Nil) = portals.find(_.name == "ZZ").toList.flatMap(_.ends)
+    val start:: Nil = portals.find(_.name == "AA").toList.flatMap(_.ends)
+    val finish::Nil = portals.find(_.name == "ZZ").toList.flatMap(_.ends)
     val (l, rp) = GraphUtils.findAllShortestPaths2[(Level, Position)](graph2(d, portals), _ == (0, finish))(
       Vector(((0, start), PathInfo(0, Nil))),
       Map()

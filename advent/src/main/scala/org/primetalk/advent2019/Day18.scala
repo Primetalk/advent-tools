@@ -331,7 +331,7 @@ object Day18 extends Utils {
       case (S1(ks, activeDroid), positions) =>
 
         val p = positions(activeDroid)
-        d.adjacentPositions(p).toList.flatMap { pp =>
+        d.adjacentPositions(p).flatMap { pp =>
           val l = d(pp)
           l match {
             case '.' | '@' =>

@@ -1,6 +1,6 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.{SequenceUtils, Utils}
+import org.primetalk.advent.tools.Utils
 
 /**
   *
@@ -56,7 +56,7 @@ object Day8 extends Utils {
   val width = 25
   val height = 6
   val layerLength: Int = width*height
-  val layers = inputString.sliding(layerLength, layerLength).toList
+  val layers: List[String] = inputString.sliding(layerLength, layerLength).toList
 
 
   lazy val answer1: Int = {

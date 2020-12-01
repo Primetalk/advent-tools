@@ -304,7 +304,7 @@ object Day24 extends Utils {
     val start = biodiversityRating(initialDisplay)
     val f: Int => Int = (show _).andThen(step).andThen(biodiversityRating)
     val (s, l) = SequenceUtils.floyd(start)()(f)
-    (s + l)
+    s + l
   }
 
   // Part 2

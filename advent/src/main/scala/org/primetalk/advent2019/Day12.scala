@@ -37,7 +37,7 @@ object ImmutableMoon {
     MoonState((1, 3, -3))
   )
 
-  val initialState = SimulationState(0, initialMoons)
+  val initialState: SimulationState = SimulationState(0, initialMoons)
 
   val count: Int = initialMoons.size
 

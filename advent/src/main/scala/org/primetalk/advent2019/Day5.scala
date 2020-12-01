@@ -2,6 +2,8 @@ package org.primetalk.advent2019
 
 import org.primetalk.advent.tools.Utils
 
+import scala.annotation.tailrec
+
 /**
   *
   * https://adventofcode.com/2019/day/5
@@ -149,7 +151,7 @@ object Day5 extends Utils {
 
   def inputEval: (State, Op) => State = (s0, op) => {
     s0.inputs match {
-      case (value::nextInputs) =>
+      case value :: nextInputs =>
         op.arg1 match {
           case PositionalArg(i) =>
             s0.memory(i) = value
@@ -186,15 +188,15 @@ object Day5 extends Utils {
     def length: Int = argCount + 1
   }
 
-  val add             = OpCodeInfo(1,  3, aluEval(_ + _))
-  val mul             = OpCodeInfo(2,  3, aluEval(_ * _))
-  val input           = OpCodeInfo(3,  1, inputEval)
-  val output          = OpCodeInfo(4,  1, outputEval)
-  val `jump-if-true`  = OpCodeInfo(5,  2, jumpIfEval(_ != 0))
-  val `jump-if-false` = OpCodeInfo(6,  2, jumpIfEval(_ == 0))
-  val `less than`     = OpCodeInfo(7,  3, compareEval(_ < _)) // aluEval( if( _ < _ )1 else 0)
-  val `equals`        = OpCodeInfo(8,  3, compareEval(_ == _))
-  val halt            = OpCodeInfo(99, 0, haltEval)
+  val add            : OpCodeInfo = OpCodeInfo(1,  3, aluEval(_ + _))
+  val mul            : OpCodeInfo = OpCodeInfo(2,  3, aluEval(_ * _))
+  val input          : OpCodeInfo = OpCodeInfo(3,  1, inputEval)
+  val output         : OpCodeInfo = OpCodeInfo(4,  1, outputEval)
+  val `jump-if-true` : OpCodeInfo = OpCodeInfo(5,  2, jumpIfEval(_ != 0))
+  val `jump-if-false`: OpCodeInfo = OpCodeInfo(6,  2, jumpIfEval(_ == 0))
+  val `less than`    : OpCodeInfo = OpCodeInfo(7,  3, compareEval(_ < _)) // aluEval( if( _ < _ )1 else 0)
+  val `equals`       : OpCodeInfo = OpCodeInfo(8,  3, compareEval(_ == _))
+  val halt           : OpCodeInfo = OpCodeInfo(99, 0, haltEval)
 
   val opcodes: Map[Int, OpCodeInfo] =
     Seq(
@@ -239,6 +241,7 @@ object Day5 extends Utils {
     eval(s0, op)
   }
 
+  @tailrec
   def runProgram(s0: State): State =
     if(s0.ip == -1)
       s0

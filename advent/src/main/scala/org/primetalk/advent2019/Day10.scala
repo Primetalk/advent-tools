@@ -1,6 +1,6 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.{Display, PrimeNumbers, SequenceUtils, Utils}
+import org.primetalk.advent.tools.{Display, PrimeNumbers, Utils}
 import org.primetalk.advent.tools.Geom2dUtils._
 
 /**

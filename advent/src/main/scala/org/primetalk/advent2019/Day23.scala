@@ -52,7 +52,7 @@ object Day23 extends Utils {
   case class Packet(address: Word, X: Word, Y: Word)
   type Packets = List[Packet]
   class SingleComputer(val address: Word) extends IntCodeComputer9 {
-    private var st: State = State(0, 0, new SimpleMemory[Day23.Word](program), address :: Nil, Nil)
+    private var st: State = State(0L, 0L, new SimpleMemory[Day23.Word](program), address :: Nil, Nil)
     def runUntilInputIsEmptyOrPacket(queue: List[Packet]): List[Packet] = {
       require(queue.forall(_.address == address), "Invalid address on incoming packet")
       val xys = queue.flatMap{ p => List(p.X, p.Y)}
@@ -62,7 +62,7 @@ object Day23 extends Utils {
 
       val s0 =
         if(st.inputs.isEmpty) {
-          st.copy(inputs = -1 :: Nil)
+          st.copy(inputs = -1L :: Nil)
         } else
           st
       val s1 = runUntilOrFinish(s => s.inputs.isEmpty || s.outputs.size == 3)(s0)

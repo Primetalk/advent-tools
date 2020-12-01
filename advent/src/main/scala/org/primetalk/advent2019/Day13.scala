@@ -47,7 +47,7 @@ import scala.annotation.tailrec
   */
 object Day13 extends Utils with IntCodeComputer9 {
 
-  val arcadeCabinetProgram: Program = Seq(1,380,379,385,1008,2119,168858,381,1005,381,12,99,109,2120,1102,1,0,383,1102,0,1,382,21001,382,0,1,21002,383,1,2,21101,37,0,0,1105,1,578,4,382,4,383,204,1,1001,382,1,382,1007,382,37,381,1005,381,22,1001,383,1,383,1007,383,20,381,1005,381,18,
+  val arcadeCabinetProgram: Program = Seq(1L,380,379,385,1008,2119,168858,381,1005,381,12,99,109,2120,1102,1,0,383,1102,0,1,382,21001,382,0,1,21002,383,1,2,21101,37,0,0,1105,1,578,4,382,4,383,204,1,1001,382,1,382,1007,382,37,381,1005,381,22,1001,383,1,383,1007,383,20,381,1005,381,18,
     1006,385,69,99,104,-1,104,0,4,386,3,384,1007,384,0,381,1005,381,94,107,0,384,381,1005,381,108,1106,0,161,107,1,392,381,1006,381,161,1101,0,-1,384,1106,0,119,1007,392,35,381,1006,381,161,1102,1,1,384,21001,392,0,1,21101,0,18,2,21101,0,0,3,21102,138,1,0,1105,1,549,1,392,384,392,
     21001,392,0,1,21102,18,1,2,21102,1,3,3,21102,1,161,0,1106,0,549,1101,0,0,384,20001,388,390,1,21001,389,0,2,21102,180,1,0,1105,1,578,1206,1,213,1208,1,2,381,1006,381,205,20001,388,390,1,20102,1,389,2,21102,1,205,0,1105,1,393,1002,390,-1,390,1102,1,1,384,21002,388,1,1,
     20001,389,391,2,21101,228,0,0,1105,1,578,1206,1,261,1208,1,2,381,1006,381,253,21002,388,1,1,20001,389,391,2,21101,253,0,0,1106,0,393,1002,391,-1,391,1102,1,1,384,1005,384,161,20001,388,390,1,20001,389,391,2,21101,279,0,0,1106,0,578,1206,1,316,1208,1,2,381,
@@ -63,11 +63,11 @@ object Day13 extends Utils with IntCodeComputer9 {
 
   case class Tile(i: Int, char: Char)
 
-  val emptyTile = Tile(0, ' ') //  0 is an empty tile. No game object appears in this tile.
-  val wallTile = Tile(1, '#') //  1 is a wall tile. Walls are indestructible barriers.
-  val blockTile = Tile(2, '%') //  2 is a block tile. Blocks can be broken by the ball.
-  val horizontalPaddle = Tile(3, '-') //  3 is a horizontal paddle tile. The paddle is indestructible.
-  val ballTile = Tile(4, 'O') //  4 is a ball tile. The ball moves diagonally and bounces off objects.
+  val emptyTile: Tile = Tile(0, ' ') //  0 is an empty tile. No game object appears in this tile.
+  val wallTile: Tile = Tile(1, '#') //  1 is a wall tile. Walls are indestructible barriers.
+  val blockTile: Tile = Tile(2, '%') //  2 is a block tile. Blocks can be broken by the ball.
+  val horizontalPaddle: Tile = Tile(3, '-') //  3 is a horizontal paddle tile. The paddle is indestructible.
+  val ballTile: Tile = Tile(4, 'O') //  4 is a ball tile. The ball moves diagonally and bounces off objects.
 
   val tiles: List[Tile] = List(emptyTile, wallTile, blockTile, horizontalPaddle, ballTile)
   val tileMap: Map[Int, Tile] = tiles.map(t => (t.i, t)).toMap
@@ -75,7 +75,7 @@ object Day13 extends Utils with IntCodeComputer9 {
   lazy val answer1: Int = {
     val display = new Display[Char]((0,0), (37,37))()
     display.fillAll(emptyTile.char)
-    val s0 = State(ip = 0, rb = 0, new SimpleMemory(arcadeCabinetProgram), Nil)
+    val s0 = State(ip = 0L, rb = 0L, new SimpleMemory(arcadeCabinetProgram), Nil)
     val s1 = runProgram(s0)
     val outputs = s1.outputs.reverse.sliding(3, 3)
     outputs.foreach{
@@ -94,7 +94,7 @@ object Day13 extends Utils with IntCodeComputer9 {
   case object GameOver extends Event
 
   sealed trait Strategy {
-    val initialPosition: List[Word] = List(0)
+    val initialPosition: List[Word] = List(0L)
     // returns joystick position
     def handleEvent(event: Event): List[Word]
   }
@@ -127,11 +127,11 @@ object Day13 extends Utils with IntCodeComputer9 {
 
     private var s: State = {
       val memory = new SimpleMemory(arcadeCabinetProgram)
-      memory(0) = 2
-      State(ip = 0, rb = 0, memory, List(0))
+      memory(0) = 2L
+      State(ip = 0L, rb = 0L, memory, List(0L))
     }
 
-    private[Day13] var score: Word = 0
+    private[Day13] var score: Word = 0L
 
     def updateDisplay(x: Word, y: Word, i: Word): Unit = {
       display((x.toInt, y.toInt)) = tileMap(i.toInt).char

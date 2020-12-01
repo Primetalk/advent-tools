@@ -1,6 +1,6 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.{GraphUtils, SequenceUtils, Utils}
+import org.primetalk.advent.tools.{GraphUtils, Utils}
 
 /**
   *
@@ -135,9 +135,9 @@ object Day14 extends Utils {
   lazy val inputText: Seq[String] =
     inputTextFromResource.toSeq
 
-  val ORE = IngredientKind("ORE")
+  val ORE: IngredientKind = IngredientKind("ORE")
 
-  val FUEL = IngredientKind("FUEL")
+  val FUEL: IngredientKind = IngredientKind("FUEL")
 
   def allReactions: Seq[Reaction] =
     inputText.map(parse(_, reaction(_)).get.value) :+
@@ -180,7 +180,7 @@ object Day14 extends Utils {
 
   // Part 2
 
-  lazy val basicOrePerFuel = answer1
+  lazy val basicOrePerFuel: Long = answer1
 
   @scala.annotation.tailrec
   def amountOfFuelForOre(targetOre: Long, spentOre: Long = 0L, haveFuel: Long = 0L): Long = {

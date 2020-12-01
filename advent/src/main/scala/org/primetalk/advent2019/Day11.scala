@@ -145,7 +145,7 @@ object Day11 extends Utils with IntCodeComputer9 {
   lazy val answer1: Int = {
     val display = new Display[Char]((-80,-80), (161,161))()
     display.fillAll(emptyChar)
-    val brain = State(ip = 0, rb = 0, new SimpleMemory(robotBrainProgram), Nil)
+    val brain = State(ip = 0L, rb = 0L, new SimpleMemory(robotBrainProgram), Nil)
     val s0 = RobotState((0,0), Up, brain)
     val s1 = runRobotUntilHalt(display)(s0)
     display.values.count(_ != emptyChar)
@@ -155,7 +155,7 @@ object Day11 extends Utils with IntCodeComputer9 {
     val display = new Display[Char]((0,-5), (43,6))()
     display.fillAll(emptyChar)
     display((0,0)) = whiteChar
-    val brain = State(ip = 0, rb = 0, new SimpleMemory(robotBrainProgram), Nil)
+    val brain = State(ip = 0L, rb = 0L, new SimpleMemory(robotBrainProgram), Nil)
     val s0 = RobotState((0,0), Up, brain)
     val s1 = runRobotUntilHalt(display)(s0)
     println(display.flipY.showDisplay()())

@@ -1,8 +1,7 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.{Display, GraphUtils, Utils}
+import org.primetalk.advent.tools.Utils
 import org.primetalk.advent.tools.Geom2dUtils._
-import org.primetalk.advent.tools.GraphUtils.{PathInfo, ReversePath}
 
 import scala.util.Random
 
@@ -95,7 +94,7 @@ object Day25 extends Utils with IntCodeComputer9  {
   }
   class AsciiComputer(program: Seq[Long]) {
     val id: Int = Random.nextInt()
-    var state: State = State(ip = 0, rb = 0, new SimpleMemory[Word](program), Nil)
+    var state: State = State(ip = 0L, rb = 0L, new SimpleMemory[Word](program), Nil)
     var pos: Position = (0,0)
     var items: List[String] = Nil
     def enter(lines: List[String]): List[String] = {

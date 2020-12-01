@@ -2,8 +2,6 @@ package org.primetalk.advent2019
 
 import org.primetalk.advent.tools.{SequenceUtils, Utils}
 
-import scala.collection.mutable
-
 /**
   *
   * https://adventofcode.com/2019/day/1

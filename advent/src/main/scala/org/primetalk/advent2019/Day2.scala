@@ -1,6 +1,8 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.{SequenceUtils, Utils}
+import org.primetalk.advent.tools.Utils
+
+import scala.annotation.tailrec
 
 /**
   *
@@ -129,6 +131,7 @@ object Day2 extends Utils {
       evalIII(s0, op)
   }
 
+  @tailrec
   def runProgram(s0: State): State =
     if(s0.ip == -1)
       s0
@@ -165,6 +168,8 @@ object Day2 extends Utils {
       else
         Sent(noun, verb + 1)
   }
+
+  @tailrec
   def loop(s: Sent, target: Int): Sent = {
     s match {
       case Sent(99, 99) => s

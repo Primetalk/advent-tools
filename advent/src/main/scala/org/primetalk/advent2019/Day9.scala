@@ -76,7 +76,7 @@ trait IntCodeComputer9 {
     )
 
     lazy val nextCommand: Op = {
-      val i0 = readRel(0)
+      val i0 = readRel(0L)
       val opcode = (i0 % 100).toInt
       val info = opcodes.getOrElse(opcode, throw new IllegalArgumentException(s"Unknown opcode $opcode at $ip"))
 
@@ -162,16 +162,16 @@ trait IntCodeComputer9 {
     def length: Int = argCount + 1
   }
 
-  val add             = OpCodeInfo(1,  3, aluEval(_ + _))
-  val mul             = OpCodeInfo(2,  3, aluEval(_ * _))
-  val input           = OpCodeInfo(3,  1, inputEval)
-  val output          = OpCodeInfo(4,  1, outputEval)
-  val `jump-if-true`  = OpCodeInfo(5,  2, jumpIfEval(_ != 0))
-  val `jump-if-false` = OpCodeInfo(6,  2, jumpIfEval(_ == 0))
-  val `less than`     = OpCodeInfo(7,  3, compareEval(_ < _)) // aluEval( if( _ < _ )1 else 0)
-  val `equals`        = OpCodeInfo(8,  3, compareEval(_ == _))
-  val addToRelativeBase=OpCodeInfo(9,  1, relativeBaseAddToEval)
-  val halt            = OpCodeInfo(99, 0, haltEval)
+  val add               : OpCodeInfo = OpCodeInfo(1,  3, aluEval(_ + _))
+  val mul               : OpCodeInfo = OpCodeInfo(2,  3, aluEval(_ * _))
+  val input             : OpCodeInfo = OpCodeInfo(3,  1, inputEval)
+  val output            : OpCodeInfo = OpCodeInfo(4,  1, outputEval)
+  val `jump-if-true`    : OpCodeInfo = OpCodeInfo(5,  2, jumpIfEval(_ != 0))
+  val `jump-if-false`   : OpCodeInfo = OpCodeInfo(6,  2, jumpIfEval(_ == 0))
+  val `less than`       : OpCodeInfo = OpCodeInfo(7,  3, compareEval(_ < _)) // aluEval( if( _ < _ )1 else 0)
+  val `equals`          : OpCodeInfo = OpCodeInfo(8,  3, compareEval(_ == _))
+  val addToRelativeBase : OpCodeInfo = OpCodeInfo(9,  1, relativeBaseAddToEval)
+  val halt              : OpCodeInfo = OpCodeInfo(99, 0, haltEval)
 
   val opcodes: Map[Int, OpCodeInfo] =
     Seq(
@@ -237,13 +237,13 @@ trait IntCodeComputer9 {
     runUntilOrFinish(_.isBlockedOnInput)
 
   def executeInputOutputProgram(program: Program, inputs: List[Word]): Word = {
-    val s0 = State(ip = 0, rb = 0, new SimpleMemory(program), inputs)
+    val s0 = State(ip = 0L, rb = 0L, new SimpleMemory(program), inputs)
     val s1 = runProgram(s0)
     s1.outputs.head
   }
 
   def getOutputs(program: Seq[Word], inputs: List[Word] = Nil): List[Word] = {
-    val s0 = State(ip = 0, rb = 0, new SimpleMemory[Word](program), inputs)
+    val s0 = State(ip = 0L, rb = 0L, new SimpleMemory[Word](program), inputs)
     val s1 = runProgram(s0)
     s1.outputs
   }
@@ -309,8 +309,8 @@ trait IntCodeComputer9 {
 object Day9 extends Utils with IntCodeComputer9 {
 
   val i = 1125899906842624L
-  val printItself: Program = Seq(109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99)
-  val mainProgram: Program = Seq(1102,34463338,34463338,63,1007,63,34463338,63,1005,63,53,1101,0,3,1000,109,988,209,12,9,1000,209,6,209,3,203,0,1008,1000,1,63,1005,63,65,1008,1000,2,63,1005,63,904,1008,1000,0,63,1005,63,58,4,25,104,0,99,4,0,104,0,99,4,17,104,0,99,0,0,1102,1,24,1017,1101,0,36,1006,1101,0,30,1011,1101,26,0,1018,1101,32,0,1015,1101,34,0,1004,1101,0,37,1002,1101,25,0,1012,1102,38,1,1010,1101,29,0,1019,1101,308,0,1029,1102,1,696,1027,1102,1,429,1022,
+  val printItself: Program = Seq(109L,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99)
+  val mainProgram: Program = Seq(1102L,34463338,34463338,63,1007,63,34463338,63,1005,63,53,1101,0,3,1000,109,988,209,12,9,1000,209,6,209,3,203,0,1008,1000,1,63,1005,63,65,1008,1000,2,63,1005,63,904,1008,1000,0,63,1005,63,58,4,25,104,0,99,4,0,104,0,99,4,17,104,0,99,0,0,1102,1,24,1017,1101,0,36,1006,1101,0,30,1011,1101,26,0,1018,1101,32,0,1015,1101,34,0,1004,1101,0,37,1002,1101,25,0,1012,1102,38,1,1010,1101,29,0,1019,1101,308,0,1029,1102,1,696,1027,1102,1,429,1022,
     1102,1,21,1005,1102,1,33,1013,1101,39,0,1008,1102,20,1,1009,1101,0,652,1025,1102,313,1,1028,1101,0,31,1003,1102,661,1,1024,1101,35,0,1016,1101,0,23,1000,1102,28,1,1014,1102,0,1,1020,1102,27,1,1007,1101,0,1,1021,1102,22,1,1001,1101,703,0,1026,1101,0,422,1023,109,-5,2101,0,9,63,1008,63,31,63,1005,63,205,1001,64,1,64,1105,1,207,4,187,1002,64,2,64,109,6,2102,1,3,63,1008,63,37,63,1005,63,227,1105,1,233,4,213,1001,64,1,64,1002,64,2,64,109,11,21108,40,40,3,1005,1015,255,4,239,
     1001,64,1,64,1106,0,255,1002,64,2,64,109,-3,21107,41,40,2,1005,1011,275,1001,64,1,64,1105,1,277,4,261,1002,64,2,64,109,4,2107,28,-6,63,1005,63,297,1001,64,1,64,
     1106,0,299,4,283,1002,64,2,64,109,15,2106,0,0,4,305,1106,0,317,1001,64,1,64,1002,64,2,64,109,-23,2108,22,4,63,1005,63,337,1001,64,1,64,1105,1,339,4,323,1002,64,2,64,109,6,21101,42,0,0,1008,1011,40,63,1005,63,363,1001,64,1,64,1105,1,365,4,345,1002,64,2,64,109,-17,1207,7,21,63,1005,63,381,1105,1,387,4,371,1001,64,1,64,1002,64,2,64,109,14,1201,-1,0,63,1008,63,25,63,1005,63,407,1105,1,413,4,393,1001,64,1,64,1002,64,2,64,109,15,2105,1,0,1001,64,1,64,1105,1,431,4,419,
@@ -322,14 +322,14 @@ object Day9 extends Utils with IntCodeComputer9 {
 
   lazy val answer1: Word = {
     val in = 1
-    val s0 = State(ip = 0, rb = 0, memory = new SimpleMemory(mainProgram), inputs = in :: Nil)
+    val s0 = State(ip = 0L, rb = 0L, memory = new SimpleMemory(mainProgram), inputs = in :: Nil)
     val s1 = runProgram(s0)
     s1.outputs.head
   }
 
   lazy val answer2: Long =  {
     val in = 2
-    val s0 = State(ip = 0, rb = 0, memory = new SimpleMemory(mainProgram), inputs = in :: Nil)
+    val s0 = State(ip = 0L, rb = 0L, memory = new SimpleMemory(mainProgram), inputs = in :: Nil)
     val s1 = runProgram(s0)
     s1.outputs.head
   }
