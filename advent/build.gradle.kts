@@ -34,3 +34,10 @@ dependencies {
 tasks.test {
     maxParallelForks = 2
 }
+
+tasks.register<JavaExec>("Day2002"){
+    group = "run"
+    description = "Run Day2002"
+    classpath = sourceSets.main.get().runtimeClasspath
+    main = "org.primetalk.advent2020.Day2002"
+}
