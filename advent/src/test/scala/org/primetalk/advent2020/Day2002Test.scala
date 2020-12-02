@@ -7,6 +7,11 @@ class Day2002Test extends BaseTest {
   "parse" should "parse test" in {
     parse("6-10 z: zhzzzzfzzzzzzzzzpzz") shouldBe Record(6, 10, 'z', "zhzzzzfzzzzzzzzzpzz")
   }
+
+  "parse2" should "parse test" in {
+    parse2("6-10 z: zhzzzzfzzzzzzzzzpzz") shouldBe Record(6, 10, 'z', "zhzzzzfzzzzzzzzzpzz")
+  }
+
   behavior of "Day2002Test"
 
 

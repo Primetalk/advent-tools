@@ -3,6 +3,7 @@ package org.primetalk.advent2020
 import org.primetalk.advent.tools.Utils
 
 import scala.annotation.tailrec
+import scala.util.matching.Regex
 
 /**
   *
@@ -57,7 +58,11 @@ object Day2002 extends Utils {
   lazy val inputTextFromResource: IndexedSeq[String] =
     readResourceLines("day2.txt")
 
-  lazy val records: List[Record] = inputTextFromResource.map(parse).toList
+  lazy val records: List[Record] =
+    inputTextFromResource
+      .map(parse)
+      .toList
+
   case class Record(min: Int, max: Int, char: Char, password: String)
 
   // 15-16 f: ffffffffffffffhf
@@ -70,6 +75,13 @@ object Day2002 extends Utils {
       b.charAt(0),
       c.trim
     )
+  }
+
+  val RecordRegex: Regex = raw"([0-9]+)-([0-9]+)\s(.):\s(.+)".r
+
+  def parse2: String => Record = {
+    case RecordRegex(min, max, char, password) =>
+      Record(min.toInt, max.toInt, char.charAt(0), password)
   }
 
   def min(n: Int, char: Char): String => Boolean = s => {
