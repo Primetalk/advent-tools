@@ -12,7 +12,15 @@ class Day16Test extends BaseTest {
   }
   it should "phase" in {
     Day16.phase(Day16.parse("12345678")) shouldBe Day16.parse("48226158")
-    Day16.phase(Day16.parse("48226158")) shouldBe Day16.parse("48226158")
+//    Day16.phase(Day16.parse("48226158")) shouldBe Day16.parse("48226158")
+  }
+
+  "answer1" should "be known" in {
+    Day16.answer1 shouldBe "63794407"
+  }
+
+  "answer2" should "be known" in {
+    Day16.answer2 shouldBe "77247538"
   }
 
 }
