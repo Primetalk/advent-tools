@@ -77,6 +77,7 @@ import scala.annotation.tailrec
 object Day2007 extends Utils {
   import fastparse._
   import NoWhitespace._
+  import org.primetalk.advent.tools.ParsingUtils._
 
   case class Bag(color: String)
   case class BagQuantity(count: Int, bag: Bag)
@@ -84,29 +85,20 @@ object Day2007 extends Utils {
 
   val input: IndexedSeq[String] = readResourceLines("day7.txt")
 
-  def spaces[_ : P]: P[Unit] =
-    P(" ".rep)
-
   def parseNoOtherBags[_ : P]: P[List[BagQuantity]] =
-    P("no other bags".!).map(_ => Nil)
-
-  def parseInt[_ : P]: P[Int] = P(
-    CharPred(CharPredicates.isDigit).rep(1).!
-      .map(_.toInt)
-  )
+    "no other bags".parseAs(Nil)
 
   def bagKeyWord[_ : P]: P[Unit] =
     P("bags" | "bag")
 
-  def word[_ : P]: P[String] = P(!bagKeyWord ~ CharPred(CharPredicates.isLetter).rep(1).! ~ spaces)
-
   def words[_ : P]: P[Seq[String]] =
-    P((!bagKeyWord ~ word).rep(1))
+    P((!bagKeyWord ~ word).rep(1, sep = spaces) ~ spaces)
 
   def bag[_ : P]: P[Bag] = P(words ~ bagKeyWord)
     .map(words => Bag(words.mkString(" ")))
+
   def bagQuantity[_ : P]: P[BagQuantity] = P(
-    spaces ~ parseInt ~ spaces ~ bag
+    spaces.? ~ positiveNumber ~ spaces ~ bag
   ).map{ case (cnt, bag) => BagQuantity(cnt, bag)}
 
   def rule[_ : P]: P[Rule] = P(bag ~ spaces ~ "contain"~ spaces ~
@@ -116,16 +108,17 @@ object Day2007 extends Utils {
   def parseRule(s: String): Rule =
     parse(s, rule(_)).get.value
 
-  lazy val rules: List[Rule] =
-    input.map(parseRule).toList
+  def rules(input: List[String]): List[Rule] =
+    input.map(parseRule)
 
-  lazy val edges: List[(Bag, Bag)] = for{
-        r <- rules
-        ch <- r.contents
-      } yield (ch.bag, r.bag)
+  def edges(rules: List[Rule]): List[(Bag, Bag)] =
+    for {
+      r <- rules
+      ch <- r.contents
+    } yield (ch.bag, r.bag)
 
   lazy val parents: Map[Bag, List[Bag]] =
-    edges
+    edges(rules(input.toList))
       .groupBy(_._1)
       .view.mapValues(_.map(_._2))
       .toMap
@@ -143,7 +136,7 @@ object Day2007 extends Utils {
 
   // Part 2
   lazy val children: Map[Bag, List[BagQuantity]] = {
-    rules
+    rules(input.toList)
       .map(r => (r.bag, r.contents))
       .toMap
   }

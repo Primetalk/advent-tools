@@ -4,9 +4,19 @@ import fastparse._
 
 /**
   * A few building blocks are defined for building custom parsers.
+  * It's recommended to use NoWhitespace and explicit spaces.
+  * Because in advent the format is fixed and it's more robust.
+  * {{{
+  *     import fastparse._
+  *     import NoWhitespace._
+  *     import org.primetalk.advent.tools.ParsingUtils._
+  * }}}
   */
 object ParsingUtils {
   type WhitespaceParser = P[_] => P[Unit]
+
+  def spaces[_ : P](implicit whitespace: WhitespaceParser): P[Unit] =
+    P(" ".rep(1))
 
   def positiveNumber[_ : P](implicit whitespace: WhitespaceParser): P[Int] =
     P(CharPred(CharPredicates.isDigit).rep(1).!).map(_.toInt)
@@ -14,9 +24,19 @@ object ParsingUtils {
   def integer[_ : P](implicit whitespace: WhitespaceParser): P[Int] =
     P( ("-".? ~ CharPred(CharPredicates.isDigit).rep(1)).!).map(_.toInt)
 
+  def word[_ : P](implicit whitespace: WhitespaceParser): P[String] = P(
+    CharPred(CharPredicates.isLetter).rep(1).!
+  )
+
   implicit class StringOps(str: String) {
+    /** Parses constant string as a fixed value.
+      * Typically - enum value or ADT.
+      */
     def parseAs[T, _ : P](value: T)(implicit whitespace: WhitespaceParser): P[T] =
-      P(str.!).map(_ => value)
+      P(
+        str.!
+          .map(_ => value)
+      )
   }
 
   /*
