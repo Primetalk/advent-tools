@@ -637,6 +637,25 @@ object GraphUtils {
     go(Set(n), Set(), Set(n))
   }
 
+  /**
+    * Searches for end vertices that are reachable from `toVisit`.
+    * End vertices do not have further edges.
+    */
+  @tailrec
+  def topLevels[T](g: GraphDependencies[T])(toVisit: List[T], visited: Set[T] = Set.empty, result: Set[T] = Set.empty): Set[T] = toVisit match {
+    case Nil => result
+    case head :: tail =>
+      g.get(head) match {
+        case None =>
+          topLevels(g)(tail, visited + head, result + head)
+        case Some(s) if s.isEmpty =>
+          topLevels(g)(tail, visited + head, result + head)
+        case Some(next) =>
+          topLevels(g)(next.diff(visited).toList reverse_::: tail,
+            visited + head, result + head)
+      }
+  }
+
   @tailrec
   def findAllConnectedComponents[T](g: GraphDependencies[T])(toVisit: Set[T] = g.keySet, result: List[Set[T]] = Nil): List[Set[T]] =
     if(toVisit.isEmpty)
