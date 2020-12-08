@@ -116,18 +116,6 @@ object Day2008 extends Utils {
   }
   val program: IndexedSeq[Op] = parseProgram(readResourceAsString("day8.txt"))
 
-  val programExample: IndexedSeq[Op] = IndexedSeq(
-      nop(+0),
-      acc(+1),
-      jmp(+4),
-      acc(+3),
-      jmp(-3),
-      acc(-99),
-      acc(+1),
-      jmp(-4),
-      acc(+6),
-  )
-
   case class State(pointer: Int = 0, acc: Int = 0)
 
   def evalOp(op: Op)(st0: State): State = op match {
