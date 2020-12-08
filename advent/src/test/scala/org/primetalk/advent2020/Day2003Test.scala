@@ -6,13 +6,9 @@ class Day2003Test extends BaseTest {
 
   behavior of "Day2003"
 
-
-  it should "answer1" in {
-    answer1 shouldBe 0
-  }
-
-  it should "answer2" in {
-    answer2 shouldBe 0
+  it should "answers" in {
+    answer1 shouldBe 259
+    answer2 shouldBe 2224913600L
   }
 /*
 ..##.......
