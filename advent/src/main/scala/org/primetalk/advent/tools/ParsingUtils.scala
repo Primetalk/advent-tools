@@ -18,11 +18,20 @@ object ParsingUtils {
   def spaces[_ : P](implicit whitespace: WhitespaceParser): P[Unit] =
     P(" ".rep(1))
 
+  def decimalDigits[_ : P](implicit whitespace: WhitespaceParser): P[String] =
+    P( CharPred(CharPredicates.isDigit).rep(1).!)
+
   def positiveNumber[_ : P](implicit whitespace: WhitespaceParser): P[Int] =
-    P(CharPred(CharPredicates.isDigit).rep(1).!).map(_.toInt)
+    P(decimalDigits.map(_.toInt))
 
   def integer[_ : P](implicit whitespace: WhitespaceParser): P[Int] =
-    P( ("-".? ~ CharPred(CharPredicates.isDigit).rep(1)).!).map(_.toInt)
+    P( (("-"|"+").? ~ decimalDigits).!).map(_.toInt)
+
+  // sign is mandatory
+  def signedInt[_ : P](implicit whitespace: WhitespaceParser): P[Int] = P(
+    (("-"|"+") ~ decimalDigits).!
+      .map(_.toInt)
+  )
 
   def word[_ : P](implicit whitespace: WhitespaceParser): P[String] = P(
     CharPred(CharPredicates.isLetter).rep(1).!
