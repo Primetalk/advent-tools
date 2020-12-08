@@ -2,6 +2,7 @@ package org.primetalk.advent.tools
 
 import scala.annotation.tailrec
 
+//noinspection NonAsciiCharacters
 object SequenceUtils {
 
   /** Sequence generating function. */
@@ -139,9 +140,9 @@ object SequenceUtils {
     unfold0(z)
   }
 
-  def unfoldN[A](z: A, n: Int)(f: A => A): A = {
+  final def unfoldN[A](z: A, n: Long)(f: A => A): A = {
     @annotation.tailrec
-    def unfoldN0(z: A, n: Int): A = {
+    def unfoldN0(z: A, n: Long): A = {
       if(n == 0)
         z
       else
@@ -150,7 +151,7 @@ object SequenceUtils {
     unfoldN0(z, n)
   }
 
-  def unfoldWhile[A](z: A)(f: A => A, p: A => Boolean): A = {
+  final def unfoldWhile[A](z: A)(f: A => A, p: A => Boolean): A = {
     @tailrec
     def unfoldWhile0(z: A): A = {
       if(p(z)) {
@@ -192,7 +193,7 @@ object SequenceUtils {
     s0 #:: generateStreamFrom(f(s0))(f)
 
   @tailrec
-  def findFixedPoint[A](z: A)(f: A => A): A = {
+  final def findFixedPoint[A](z: A)(f: A => A): A = {
     val n = f(z)
     if(n == z)
       z
