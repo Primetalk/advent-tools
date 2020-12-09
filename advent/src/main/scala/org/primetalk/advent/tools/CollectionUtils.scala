@@ -73,4 +73,16 @@ object CollectionUtils {
   def descending[T](implicit ordering: Ordering[T]): Ordering[T] =
     ordering.reverse
 
+  /** Returns a collection of partial sums.
+    * {{{
+    * partialSums(List(1,2,3)) == List(1,3,6)
+    * }}}
+    */
+  def partialSums(longs: List[Long]): List[Long] =
+    longs.scan(0L)(_ + _).tail
+  /** returns index >=0 if found,
+    * and -insertion point - 1 <0 otherwise
+    */
+  def binarySearchInSortedArray(sortedArray: Array[Long], value: Long): Int =
+    java.util.Arrays.binarySearch(sortedArray, value)
 }

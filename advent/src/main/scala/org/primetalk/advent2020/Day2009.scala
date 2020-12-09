@@ -1,6 +1,6 @@
 package org.primetalk.advent2020
 
-import org.primetalk.advent.tools.Utils
+import org.primetalk.advent.tools.{CollectionUtils, Utils}
 
 /**
   * https://adventofcode.com/2020/day/9
@@ -95,9 +95,13 @@ import org.primetalk.advent.tools.Utils
   */
 object Day2009 extends Utils {
 
-  val input: IndexedSeq[Long] = parseLongsNewLineSeparated(readResourceAsString("day9.txt"))
+  val input: IndexedSeq[Long] =
+    parseLongsNewLineSeparated(
+      readResourceAsString("day9.txt")
+    )
 
   val preambleSize = 25
+  //50047984L
   lazy val answer1: Long = {
     input.sliding(preambleSize + 1).filterNot{ seq =>
       val last = seq.last
@@ -116,23 +120,18 @@ object Day2009 extends Utils {
   // 5316155L, 5391796L, 5407707L
   lazy val answer2: Long = {
     val ans1 = answer1//50047984L
-    val partialSums: Array[Long] = input.toList.foldLeft(List(0L)){
-      case (lst@head::_, v) =>
-        (v + head)::lst
-    }
-      .reverse
-      .tail //remove first 0
+    val partialSums: Array[Long] = CollectionUtils
+      .partialSums(input.toList)
       .toArray
-    val inputArray = input.toArray
     (
       for{
         i <- partialSums.indices
         firstSum = partialSums(i)
         nextSum = ans1 + firstSum
         j = java.util.Arrays.binarySearch(partialSums, nextSum)
-        if j >= 0
-        if j > i + 1
-        slice = inputArray.slice(i + 1, j + 1)
+        if j >= 0    // found
+        if j > i + 1 // slice is more than two elements
+        slice = input.slice(i + 1, j + 1)
       } yield {
         println(s"i = $i, min slice = ${slice.min}, j = $j, arr(j) = ${slice.max}, firstSum = $firstSum, nextSum = $nextSum")
         slice.min + slice.max
