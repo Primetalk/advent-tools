@@ -1,10 +1,8 @@
 package org.primetalk.advent.tools
 
-import org.primetalk.advent.tools.Geom2dUtils.{PosOps, Position, Rectangle, VecOps, Vector2d, directions8, mainDirections}
-import org.primetalk.advent.tools.GraphUtils.Predicate
+import org.primetalk.advent.tools.Geom2dUtils.{Direction, PosOps, Position, Rectangle, VecOps, Vector2d, directions8, mainDirections}
 
 import scala.annotation.tailrec
-import scala.collection.immutable
 import scala.reflect.ClassTag
 
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
@@ -13,7 +11,7 @@ import scala.reflect.ClassTag
 // TODO: Remove state. Mutable array could be provided from outside as an implicit context
 // TODO: Use refined type for array size,vector size.
 case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => Array[Array[T]]] = None) {
-  lazy val rect = Rectangle(offset, size)
+  lazy val rect: Rectangle = Rectangle(offset, size)
 
   // initial: () => T = () => {implicitly[Numeric[T]].zero}
   /** We only allocate array when it's needed*/
@@ -91,6 +89,23 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     positionsAround(p)
       .map(apply)
   }
+
+  /** Performs search in the given direction.
+    * If found, returns the position.
+    */
+  @tailrec
+  final def searchInDirection(pos: Position, dir: Direction, pred: T => Boolean): Option[Position] = {
+    val nextPos = pos + dir
+    if(isWithinRange(nextPos)){
+      val c = apply(nextPos)
+      if(pred(c))
+        Some(nextPos)
+      else
+        searchInDirection(nextPos, dir, pred)
+    } else
+      None
+  }
+
   /** Enumerates all positions on edges.
     * O(N+M)
     * The order is not guaranteed.
@@ -232,6 +247,18 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
       v = mainPositionsAround(p).map(apply)
     } {
       d(p) = rules(apply(p), v)
+    }
+    d
+  }
+
+  def produceByGlobalRules(rules: ((Int, Int), T) => T): Display[T] = {
+    val d = new Display[T](offset, size)()
+    for{
+      p <- points
+      c = apply(p)
+      next = rules(p,c)
+    } {
+      d(p) = next
     }
     d
   }
