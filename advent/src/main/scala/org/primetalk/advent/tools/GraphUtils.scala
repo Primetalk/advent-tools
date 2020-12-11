@@ -318,6 +318,33 @@ object GraphUtils {
           found.map(_.reversePath) reverse_::: foundPaths, nextLengthLimit)
       }
     }
+
+  // NB! This is not debugged. Takes memory! Too many found paths!
+  //
+  @tailrec
+  def allGamiltonPaths[T]
+  (
+    graphAsFunction: GraphAsFunction[T],
+    isFinish: T => Boolean
+  )(
+    toVisit: Vector[(T, ReversePath[T], Set[T])],
+    foundPaths: List[ReversePath[T]] = List()
+  ): Seq[ReversePath[T]] = if(toVisit.isEmpty) foundPaths
+  else {
+    val (h, hPath, visited) =  toVisit.head
+    val tail = toVisit.tail
+      val hs: Seq[T] = graphAsFunction(h)
+        .filterNot(visited.contains)
+      val paths: List[(T, ReversePath[T], Set[T])] =
+          hs.map(hh => (hh, hh :: hPath, visited + hh)).toList
+      val (inFinish: List[(T, ReversePath[T], Set[T])], notInFinish: List[(T, ReversePath[T], Set[T])]) =
+        paths.partition(p => isFinish(p._1))
+      val found: List[ReversePath[T]] = inFinish.map(_._2)
+      allGamiltonPaths(graphAsFunction, isFinish)(
+        tail :++ notInFinish,
+        found reverse_::: foundPaths)
+    }
+
   /** Wrapper for calling findAllShortestPaths2. */
   def findAllShortestPaths3[T](
                                 graph: GraphAsFunction[T],
