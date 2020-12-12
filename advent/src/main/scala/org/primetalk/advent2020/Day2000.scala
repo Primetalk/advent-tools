@@ -7,6 +7,7 @@ object Day2000 {
 
   lazy val answer1: Int = 0
 
+  //Part 2
   lazy val answer2: Int = 0
 
   def main(args: Array[String]): Unit = {
