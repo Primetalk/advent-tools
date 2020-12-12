@@ -62,10 +62,10 @@ object Geom2dUtils {
   case class Matrix2d(a: Int, b: Int, c: Int, d: Int)
 
   // Here is the group of rotations by 90 degrees:
-  val rotateRight = Matrix2d( 0, 1,-1, 0)
-  val rotateLeft  = Matrix2d( 0,-1, 1, 0)
-  val rotateId    = Matrix2d( 1, 0, 0, 1)
-  val rotate180   = Matrix2d(-1, 0, 0,-1)
+  val rotateRight: Matrix2d = Matrix2d( 0, 1,-1, 0)
+  val rotateLeft : Matrix2d = Matrix2d( 0,-1, 1, 0)
+  val rotateId   : Matrix2d = Matrix2d( 1, 0, 0, 1)
+  val rotate180  : Matrix2d = Matrix2d(-1, 0, 0,-1)
 
   val rotations = List(rotateId, rotateRight, rotate180, rotateLeft)
 
@@ -100,6 +100,11 @@ object Geom2dUtils {
   val Left: Direction = (-1, 0)
   val Right: Direction = (1, 0)
 
+  val North: Direction = Up
+  val South: Direction = Down
+  val West: Direction = Left
+  val East: Direction = Right
+
   lazy val mainDirections: List[Direction] = List(Up, Left, Down, Right)
   lazy val mainDirectionsInReadingOrder: List[Direction] = List(Up, Left, Right, Down)
   lazy val directions8: List[Direction] = mainDirections ++ List(Up + Right, Up + Left, Down + Left, Down + Right)
@@ -127,6 +132,18 @@ object Geom2dUtils {
     /** Rotates as a multiplication of complex numbers. */
     def rotate(o: Vector2d): Vector2d =
       (v._1 * o._1 - v._2 * o._2, v._1 * o._2 + v._2 * o._1)
+
+    /** Only 90 degree proportional works */
+    def rotateByDegree(deg: Int): Vector2d = {
+      val positive = (deg + 360) % 360
+      val mat = positive match {
+        case 0 => rotateId
+        case 90 => rotateRight
+        case 180 => rotate180
+        case 270 => rotateLeft
+      }
+      mat.apply(v)
+    }
 
     def manhattanSize: Int = math.abs(v._1) + math.abs(v._2)
 
