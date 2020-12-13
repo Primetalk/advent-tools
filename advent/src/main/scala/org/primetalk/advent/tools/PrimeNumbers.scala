@@ -93,8 +93,23 @@ object PrimeNumbers {
         greatestCommonDivisorLong(divisor, nextDivisor)
     } else greatestCommonDivisorLong(divisor,i)
 
-  def modInverse(a: BigInt, n: BigInt): BigInt = {
-    a.modInverse(n)
+  @scala.annotation.tailrec
+  def greatestCommonDivisorBigInt(i: BigInt, divisor: BigInt): BigInt =
+    if(i >= divisor) {
+      val nextDivisor = i % divisor
+      if(nextDivisor == 0)
+        divisor
+      else
+        greatestCommonDivisorBigInt(divisor, nextDivisor)
+    } else greatestCommonDivisorBigInt(divisor,i)
+
+  def modInverse(a: BigInt, modulo: BigInt): BigInt = {
+    try {
+      a.modInverse(modulo)
+    } catch {
+      case e:ArithmeticException =>
+        throw new IllegalArgumentException(s"Couldn't invert $a in modulo $modulo", e)
+    }
 //    @scala.annotation.tailrec
 //    def loop(t: BigInt = 0, newt: BigInt = 1, r: BigInt = n, newr: BigInt = a): BigInt = {
 //      if(newr == 0){
@@ -130,8 +145,12 @@ object PrimeNumbers {
 //  }
   def leastCommonMultiple(a: Int, b: Int): Long =
     a.toLong * b / greatestCommonDivisor(a, b)
+
   def leastCommonMultipleLong(a: Long, b: Long): Long =
     a.toLong * b / greatestCommonDivisorLong(a, b)
+
+  def leastCommonMultipleBigInt(a: BigInt, b: BigInt): BigInt =
+    a * b / greatestCommonDivisorBigInt(a, b)
 
   def leastCommonMultiple3(a: Int, b: Int, c: Int): Long =
     leastCommonMultipleLong(leastCommonMultiple(a,b),c)
@@ -141,4 +160,37 @@ object PrimeNumbers {
 
   def leastCommonMultipleN(s: Seq[Long]): Long =
     s.reduce(leastCommonMultipleLong)
+
+  def leastCommonMultipleNBigInt(s: Seq[BigInt]): BigInt =
+    s.reduce(leastCommonMultipleBigInt)
+
+  case class RemainderAndModulo(r: BigInt, m: BigInt)
+
+  /** Solves the following system of equations:
+    * {{{
+    *   { x ≡ r_i (mod a_i)
+    *   where
+    *         GCD(a_i, a_j) = 1
+    *         0 &lt;= r_i &lt; a_i
+    * }}}
+    *
+    * Solution:
+    * {{{
+    * M = ∏_i a_i
+    * M_i = M/a_i
+    * M_i&#94;-1 ≡ 1/M_i (mod a_i)
+    * x = ∑_i r_i * M_i * M_i&#94;-1
+    * }}}
+    */
+  def chineeseReminderTheorem(equations: List[RemainderAndModulo]): BigInt = {
+    val a = equations.map(_.m)
+    val M = leastCommonMultipleNBigInt(a)
+    equations.map{
+      case RemainderAndModulo(r_i, a_i) =>
+        val M_i = M/a_i
+        val `M_i^-1` = modInverse(M_i, a_i)
+        r_i * M_i * `M_i^-1` % M
+    }
+      .sum % M
+  }
 }
