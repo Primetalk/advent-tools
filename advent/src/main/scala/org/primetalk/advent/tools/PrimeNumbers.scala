@@ -1,5 +1,7 @@
 package org.primetalk.advent.tools
 
+import scala.annotation.tailrec
+
 object PrimeNumbers {
 
   val bigPrimeNumber1: Int = 1_000_000_000 + 7
@@ -58,9 +60,11 @@ object PrimeNumbers {
       intPow(n, power - 1, mul * n)
   }
 
-  case class Factor(n: Int, power: Int) {
-    def value: Int = intPow(n, power)
-    def toSeq: Seq[Int] = Seq.fill(power)(n)
+  case class Factor(prime: Int, power: Int) {
+    def value: Int = intPow(prime, power)
+    /** \phi(prime&#94;power) = prime&#94;power - prime&#94;(power-1) */
+    def euler: Int = intPow(prime, power) - intPow(prime, power - 1)
+    def toSeq: Seq[Int] = Seq.fill(power)(prime)
   }
 
   def factoriseToFactorPowers(n: Int): Seq[Factor] = {
@@ -79,6 +83,10 @@ object PrimeNumbers {
     (1 +: allFactors.indices.flatMap(i => allFactors.combinations(i + 1).map(_.product))).distinct.sorted
   }
 
+  /**
+    * Solves the equation
+    *  i * x + divisor * y = d
+    */
   @scala.annotation.tailrec
   def greatestCommonDivisorInt(i: Int, divisor: Int): Int =
     if(i >= divisor) {
@@ -163,4 +171,22 @@ object PrimeNumbers {
   def leastCommonMultipleN[T: Integral](s: Seq[T]): T =
     s.reduce((a,b) => leastCommonMultiple(a,b))
 
+  type FactorizedNumber = List[Factor]
+
+  @tailrec
+  def factorizedNumberValue(n: FactorizedNumber, result: Long = 1L): Long = n match {
+    case Nil =>
+      result
+    case ::(head, tail) =>
+      factorizedNumberValue(tail, head.value * result)
+  }
+  /** Euler function can be easily calculated for
+    * factorized numbers.
+    * NB! factors should be such that: GCD(p_i, p_j) = 1
+    * there exists similar formula for an alternative case where GCD = d
+    * in this case
+    * phi(m*n) = phi(m) * phi(n) * d/phi(d)
+    */
+  def euler(n: FactorizedNumber): Long =
+    n.map(_.euler.toLong).product
 }

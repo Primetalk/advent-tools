@@ -1,6 +1,9 @@
 package org.primetalk.advent.tools
 
+import org.primetalk.advent.tools.PrimeNumbers.Factor
+
 object ModuloArithmetics {
+
   def modInverse(a: BigInt, modulo: BigInt): BigInt = {
     try {
       a.modInverse(modulo)
