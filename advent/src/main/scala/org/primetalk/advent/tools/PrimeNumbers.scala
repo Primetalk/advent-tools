@@ -2,6 +2,9 @@ package org.primetalk.advent.tools
 
 object PrimeNumbers {
 
+  val bigPrimeNumber1: Int = 1_000_000_000 + 7
+  val bigPrimeNumber2: Int = 1_000_000_000 + 9
+
   /** Finds prime numbers up to m. */
   def primeNumbers(m: Int): Seq[Int] = {
     val offset = 2
@@ -26,7 +29,7 @@ object PrimeNumbers {
     sieve.toSeq.filterNot(_ == 0)
   }
 
-  def factoriseToPrimes(n: Int): Seq[Int] = {
+  def factoriseToPrimes(n: Int): List[Int] = {
     val max = math.sqrt(n + 1).toInt
     val primes = primeNumbers(max)
     @scala.annotation.tailrec
@@ -44,10 +47,13 @@ object PrimeNumbers {
   def primeDivisors(n: Int): Seq[Int] =
     factoriseToPrimes(n).distinct
 
+  /** Relatively slow int power.
+    * Doesn't use logarithm.
+    */
   @scala.annotation.tailrec
   def intPow(n: Int, power: Int, mul: Int = 0): Int = {
     if(power == 0)
-      mul
+      1
     else
       intPow(n, power - 1, mul * n)
   }
@@ -58,8 +64,8 @@ object PrimeNumbers {
   }
 
   def factoriseToFactorPowers(n: Int): Seq[Factor] = {
-    factoriseToPrimes(n).groupBy(identity)
-      .view.mapValues(_.size)
+    factoriseToPrimes(n)
+      .groupMapReduce(identity)(_ => 1)(_ + _)
       .map{ case (i,p) => Factor(i,p) }
       .toSeq
   }
@@ -74,14 +80,14 @@ object PrimeNumbers {
   }
 
   @scala.annotation.tailrec
-  def greatestCommonDivisor(i: Int, divisor: Int): Int =
+  def greatestCommonDivisorInt(i: Int, divisor: Int): Int =
     if(i >= divisor) {
       val nextDivisor = i % divisor
       if(nextDivisor == 0)
         divisor
       else
-        greatestCommonDivisor(divisor, nextDivisor)
-    } else greatestCommonDivisor(divisor,i)
+        greatestCommonDivisorInt(divisor, nextDivisor)
+    } else greatestCommonDivisorInt(divisor,i)
 
   @scala.annotation.tailrec
   def greatestCommonDivisorLong(i: Long, divisor: Long): Long =
@@ -94,23 +100,19 @@ object PrimeNumbers {
     } else greatestCommonDivisorLong(divisor,i)
 
   @scala.annotation.tailrec
-  def greatestCommonDivisorBigInt(i: BigInt, divisor: BigInt): BigInt =
-    if(i >= divisor) {
+  def greatestCommonDivisor[T: Integral](i: T, divisor: T): T = {
+    val num = Integral[T]
+    import num._
+    if (i >= divisor) {
       val nextDivisor = i % divisor
-      if(nextDivisor == 0)
+      if (nextDivisor == zero)
         divisor
       else
-        greatestCommonDivisorBigInt(divisor, nextDivisor)
-    } else greatestCommonDivisorBigInt(divisor,i)
+        greatestCommonDivisor(divisor, nextDivisor)
+    } else greatestCommonDivisor(divisor, i)
+  }
 
-  def modInverse(a: BigInt, modulo: BigInt): BigInt = {
-    try {
-      a.modInverse(modulo)
-    } catch {
-      case e:ArithmeticException =>
-        throw new IllegalArgumentException(s"Couldn't invert $a in modulo $modulo", e)
-    }
-//    @scala.annotation.tailrec
+//    @scala.annotation.tailrec mod inverse
 //    def loop(t: BigInt = 0, newt: BigInt = 1, r: BigInt = n, newr: BigInt = a): BigInt = {
 //      if(newr == 0){
 //        if(r > 1)
@@ -125,7 +127,6 @@ object PrimeNumbers {
 //      }
 //    }
 //    loop()
-  }
 
 //  /** Find 1/n (% mod). GCD(n, mod) == 1 */
 //  def inverse(n: BigInt, mod: BigInt): Long = {
@@ -143,54 +144,23 @@ object PrimeNumbers {
 //    }
 //    loop(1)
 //  }
-  def leastCommonMultiple(a: Int, b: Int): Long =
-    a.toLong * b / greatestCommonDivisor(a, b)
+  def leastCommonMultipleInt(a: Int, b: Int): Long =
+    a.toLong * b / greatestCommonDivisorInt(a, b)
 
   def leastCommonMultipleLong(a: Long, b: Long): Long =
     a.toLong * b / greatestCommonDivisorLong(a, b)
 
-  def leastCommonMultipleBigInt(a: BigInt, b: BigInt): BigInt =
-    a * b / greatestCommonDivisorBigInt(a, b)
+  def leastCommonMultiple[T: Integral](a: T, b: T): T = {
+    val num = Integral[T]
+    import num._
 
-  def leastCommonMultiple3(a: Int, b: Int, c: Int): Long =
-    leastCommonMultipleLong(leastCommonMultiple(a,b),c)
+    a * b / greatestCommonDivisor(a, b)
+  }
 
   def leastCommonMultiple3Long(a: Long, b: Long, c: Long): Long =
     leastCommonMultipleLong(leastCommonMultipleLong(a,b),c)
 
-  def leastCommonMultipleN(s: Seq[Long]): Long =
-    s.reduce(leastCommonMultipleLong)
+  def leastCommonMultipleN[T: Integral](s: Seq[T]): T =
+    s.reduce((a,b) => leastCommonMultiple(a,b))
 
-  def leastCommonMultipleNBigInt(s: Seq[BigInt]): BigInt =
-    s.reduce(leastCommonMultipleBigInt)
-
-  case class RemainderAndModulo(r: BigInt, m: BigInt)
-
-  /** Solves the following system of equations:
-    * {{{
-    *   { x ≡ r_i (mod a_i)
-    *   where
-    *         GCD(a_i, a_j) = 1
-    *         0 &lt;= r_i &lt; a_i
-    * }}}
-    *
-    * Solution:
-    * {{{
-    * M = ∏_i a_i
-    * M_i = M/a_i
-    * M_i&#94;-1 ≡ 1/M_i (mod a_i)
-    * x = ∑_i r_i * M_i * M_i&#94;-1
-    * }}}
-    */
-  def chineeseReminderTheorem(equations: List[RemainderAndModulo]): BigInt = {
-    val a = equations.map(_.m)
-    val M = leastCommonMultipleNBigInt(a)
-    equations.map{
-      case RemainderAndModulo(r_i, a_i) =>
-        val M_i = M/a_i
-        val `M_i^-1` = modInverse(M_i, a_i)
-        r_i * M_i * `M_i^-1` % M
-    }
-      .sum % M
-  }
 }

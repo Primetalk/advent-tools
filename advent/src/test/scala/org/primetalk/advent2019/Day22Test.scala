@@ -1,6 +1,7 @@
 package org.primetalk.advent2019
 
 import Day22._
+import org.primetalk.advent.tools.ModuloArithmetics.modPower
 
 class Day22Test extends BaseTest {
 

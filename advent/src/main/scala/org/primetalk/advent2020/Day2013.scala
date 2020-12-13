@@ -1,6 +1,6 @@
 package org.primetalk.advent2020
 
-import org.primetalk.advent.tools.PrimeNumbers
+import org.primetalk.advent.tools.{ModuloArithmetics, PrimeNumbers}
 
 /**
   * https://adventofcode.com/2020/day/13
@@ -155,9 +155,9 @@ object Day2013 {
       .filterNot(_._1 == "x")
       .map{ case (s, off) => ModWithOffset(s.toInt, off)}
 
-    PrimeNumbers.chineeseReminderTheorem(idsWithOffset.map{
+    ModuloArithmetics.chineseReminderTheorem(idsWithOffset.map{
       case ModWithOffset(mod, offset) =>
-        PrimeNumbers.RemainderAndModulo(mod - offset % mod, mod)
+        ModuloArithmetics.RemainderAndModulo(mod - offset % mod, mod)
     })
   }
   // 5698553329712096788, 397684832159296775, 556100168221141L

@@ -196,7 +196,7 @@ object Day10 extends Utils {
     val quarterDirections = for{
       i <- 1 to n
       j <- 1 to n
-      if PrimeNumbers.greatestCommonDivisor(i,j) == 1
+      if PrimeNumbers.greatestCommonDivisorInt(i,j) == 1
     } yield (i, j)
     val dirs = for{
       r <- rotations

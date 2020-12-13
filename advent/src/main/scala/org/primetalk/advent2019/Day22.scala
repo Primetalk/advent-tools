@@ -1,8 +1,9 @@
 package org.primetalk.advent2019
 
-import java.util
+import org.primetalk.advent.tools.ModuloArithmetics.{modInverse, modPower}
 
-import org.primetalk.advent.tools.{PrimeNumbers, Utils}
+import java.util
+import org.primetalk.advent.tools.{ModuloArithmetics, PrimeNumbers, Utils}
 
 import scala.annotation.tailrec
 
@@ -256,27 +257,6 @@ object Day22 extends Utils {
 
   // Part 2
 
-  // fast binary power algorithm
-  def modPower(a: BigInt, n: BigInt, mod: BigInt): BigInt = {
-    a.modPow(n, mod)
-//    @scala.annotation.tailrec
-//    def loop(current: BigInt, n: BigInt, mul: BigInt): BigInt = {
-//      if(n == 1) {
-//        current * mul % mod
-//      } else {
-//        val nextN = n / 2
-//        val p2 = current * current % mod
-//        loop(p2, nextN,
-//          if(n % 2 == 1)
-//            current * mul  % mod
-//          else
-//            mul
-//        )
-//      }
-//    }
-//    loop(a, n, 1)
-  }
-
   /** This is a representation of a formula:
     * {{{
     * j = (m * i + offset) % mod
@@ -321,10 +301,10 @@ object Day22 extends Utils {
 
     // fast binary power algorithm
     def powerSubst(n: Long): ResidualFormula = {
-      ResidualFormula(modPower(m, n, mod), (modPower(m, n, mod) - 1)*PrimeNumbers.modInverse(m - 1,mod)*offset % mod, mod)
+      ResidualFormula(modPower(m, n, mod), (modPower(m, n, mod) - 1) * modInverse(m - 1,mod)*offset % mod, mod)
     }
     def inverse: ResidualFormula = {
-      val invM = PrimeNumbers.modInverse(m, mod)
+      val invM = modInverse(m, mod)
       ResidualFormula(invM, (mod - offset) * invM % mod, mod)
     }
 
@@ -357,7 +337,11 @@ object Day22 extends Utils {
       ResidualFormula((mod - m) % mod, (mod - 1  - offset) % mod, mod)
   }
 
-  /** Find 1/n (% mod). GCD(n, mod) == 1 */
+  /** Find 1/n (% mod).
+    * NB! GCD(n, mod) == 1
+    *
+    * Otherwise use BigInt.modInverse
+    */
   def inverse(n: Long, mod: BigInt): Long = {
     modPower(n, mod - 2, mod).toLong // Fermat's little theorem
     //PrimeNumbers.modInverse(n, mod)
