@@ -33,6 +33,9 @@ object ParsingUtils {
       .map(_.toInt)
   )
 
+  def positiveLong[_ : P](implicit whitespace: WhitespaceParser): P[Long] =
+    P(decimalDigits.map(_.toLong))
+
   def word[_ : P](implicit whitespace: WhitespaceParser): P[String] = P(
     CharPred(CharPredicates.isLetter).rep(1).!
   )
