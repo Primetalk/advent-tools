@@ -53,11 +53,19 @@ object PrimeNumbers {
     * Doesn't use logarithm.
     */
   @scala.annotation.tailrec
-  def intPow(n: Int, power: Int, mul: Int = 0): Int = {
+  def intPow(n: Int, power: Int, mul: Int = 1): Int = {
     if(power == 0)
-      1
+      mul
     else
       intPow(n, power - 1, mul * n)
+  }
+
+  @scala.annotation.tailrec
+  def longPow(n: Long, power: Int, mul: Long = 1): Long = {
+    if(power == 0)
+      mul
+    else
+      longPow(n, power - 1, mul * n)
   }
 
   case class Factor(prime: Int, power: Int) {
