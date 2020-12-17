@@ -11,6 +11,20 @@ import scala.reflect.ClassTag
 // TODO: Remove state. Mutable array could be provided from outside as an implicit context
 // TODO: Use refined type for array size,vector size.
 case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => Array[Array[T]]] = None) {
+
+  def offsetByInPlace(offset2: Vector2d): Display[T] =
+    new Display[T](offset + offset2, size)(Some(() => array))
+
+  def enlargeBy(n: Int): Display[T] = {
+    val res = new Display[T](offset - (n,n), size + (n*2, n*2))()
+    for{
+      p <- points
+    }{
+      res(p) = apply(p)
+    }
+    res
+  }
+
   lazy val rect: Rectangle = Rectangle(offset, size)
 
   // initial: () => T = () => {implicitly[Numeric[T]].zero}

@@ -138,6 +138,17 @@ object Geom3dUtils {
 
   val origin: Position = (0, 0, 0)
 
+  val directions26: List[Position] =
+    (
+      for{
+        x <- -1 to 1
+        y <- -1 to 1
+        z <- -1 to 1
+        if x!=0 || y != 0 || z != 0
+      } yield (x,y,z)
+      ).toList
+
+  assert(directions26.size == 26)
   implicit class PosOps(p: Position) {
     def +(vector: Vector3d): Position =
       (p._1 + vector._1, p._2 + vector._2, p._3 + vector._3)
