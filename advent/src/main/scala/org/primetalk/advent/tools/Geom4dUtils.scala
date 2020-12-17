@@ -1,5 +1,7 @@
 package org.primetalk.advent.tools
 
+import org.primetalk.advent.tools.Geom3dUtils.Vector3d
+
 object Geom4dUtils {
   type Vector4d = (Int, Int, Int, Int)
 
@@ -17,13 +19,22 @@ object Geom4dUtils {
   }
 
   implicit class VecOps(v: Vector4d) {
+    def +(vector: Vector4d): Vector4d =
+      (v._1 + vector._1, v._2 + vector._2, v._3 + vector._3, v._4 + vector._4)
+
+    def -(vector: Vector4d): Vector4d =
+      (v._1 - vector._1, v._2 - vector._2, v._3 - vector._3, v._4 + vector._4)
 
     def *(k: Int): Vector4d = v match {
-      case (x, y, z, xx) => (x * k, y * k, z * k, xx * k)
+      case (x, y, z, w) => (x * k, y * k, z * k, w * k)
     }
 
     def /(k: Int): Vector4d = v match {
-      case (x, y, z, xx) => (x / k, y / k, z / k, xx / k)
+      case (x, y, z, w) => (x / k, y / k, z / k, w / k)
+    }
+
+    def part3d: Vector3d = v match {
+      case (x, y, z, _) => (x, y, z)
     }
   }
 
@@ -34,4 +45,17 @@ object Geom4dUtils {
       (v1._4 - v2._4).abs
   }
 
+
+  val directions80: List[Vector4d] =
+    (
+      for{
+        x <- -1 to 1
+        y <- -1 to 1
+        z <- -1 to 1
+        w <- -1 to 1
+        if x!=0 || y != 0 || z != 0 || w != 0
+      } yield (x,y,z,w)
+      ).toList
+
+  assert(directions80.size == 80)
 }
