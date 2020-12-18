@@ -77,77 +77,56 @@ object Day2018 extends Utils {
   val lines: IndexedSeq[String] = readResourceLines("day18.txt")
 
   import fastparse._
-  import NoWhitespace._
+  import SingleLineWhitespace._
   import org.primetalk.advent.tools.ParsingUtils._
 
-  sealed trait Op
-  case object Add extends Op
-  case object Mul extends Op
-
-  def op[_:P]: P[Op] = P(
-    "+".parseAs(Add)|
-      "*".parseAs(Mul)
-  )
-
   def factor[_:P]: P[BigInt] = P(
-    "(" ~/ ws ~ expr~ ws ~ ")" ~/ ws |
-      positiveBigInt ~/ ws
+    "(" ~/ expr ~ ")"  |
+      positiveBigInt
   )
 
   def expr[_:P]: P[BigInt] = P(
-    (factor ~ (op ~/ ws ~/ factor).rep).map{
-      case (a, lst) =>
-        lst.foldLeft(a){
-          case (res, (Add, b)) => res + b
-          case (res, (Mul, b)) => res * b
-        }
-    } |
-      factor
+    (factor ~ (CharIn("+*").! ~/ factor).rep)
+      .map{
+        case (firstNumber, opNumberPairs) =>
+          opNumberPairs.foldLeft(firstNumber){
+            case (res, ("+", b)) => res + b
+            case (res, ("*", b)) => res * b
+          }
+      }
   )
 
-  def line[_:P]: P[BigInt] =
-    P(expr ~ End)
+  def parseEvalLine(string: String): BigInt =
+    parse(string, expr(_)).get.value
 
-  def parseLine(string: String): BigInt = {
-    parse(string, line(_)).get.value
-  }
-
-  lazy val answer1: BigInt = lines.map(parseLine).sum
+  lazy val answer1: BigInt = lines.map(parseEvalLine).sum
 
   //Part 2
   def factor2[_:P]: P[BigInt] = P(
-    "(" ~/ ws ~ mul~ ws ~ ")" ~/ ws |
-      positiveBigInt ~/ ws
+    "(" ~/ mul ~ ")" |
+      positiveBigInt
   )
 
   def add[_:P]: P[BigInt] = P(
-    (factor2 ~ ("+" ~/ ws ~/ factor2).rep).map{
-      case (a, lst) =>
-        lst.foldLeft(a){
-          case (res, b) => res + b
-        }
+    (factor2 ~ ("+" ~/ factor2).rep).map{
+      case (first, opNumberPairs) =>
+        opNumberPairs.foldLeft(first)(_ + _)
     }
   )
 
   def mul[_:P]: P[BigInt] = P(
-    (add ~ ("*" ~/ ws ~/ add).rep).map{
-      case (a, lst) =>
-        lst.foldLeft(a){
-          case (res, b) => res * b
-        }
+    (add ~ ("*" ~/ add).rep).map{
+      case (first, opNumberPairs) =>
+        opNumberPairs.foldLeft(first)(_ * _)
     }
   )
 
-  def line2[_:P]: P[BigInt] = P(mul ~ End)
+  def parseEvalLine2(string: String): BigInt =
+    parse(string, mul(_)).get.value
 
-  def parseLine2(string: String): BigInt = {
-    parse(string, line2(_)).get.value
-  }
-
-  lazy val answer2: BigInt = lines.map(parseLine2).sum
+  lazy val answer2: BigInt = lines.map(parseEvalLine2).sum
 
   def main(args: Array[String]): Unit = {
-
 //    println(parse("2 + 2", line(_)))
 //    println(parseLine("2 * 3 + (4 * 5)"))
 //    println(parseLine("5 + (8 * 3 + 9 + 3 * 4 * 3)"))
