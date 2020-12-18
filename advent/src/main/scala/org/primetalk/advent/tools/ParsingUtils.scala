@@ -18,6 +18,9 @@ object ParsingUtils {
   def spaces[_ : P](implicit whitespace: WhitespaceParser): P[Unit] =
     P(" ".rep(1))
 
+  def ws[_ : P](implicit whitespace: WhitespaceParser): P[Unit] =
+    P(" ".rep)
+
   def decimalDigits[_ : P](implicit whitespace: WhitespaceParser): P[String] =
     P( CharPred(CharPredicates.isDigit).rep(1).!)
 
@@ -35,6 +38,9 @@ object ParsingUtils {
 
   def positiveLong[_ : P](implicit whitespace: WhitespaceParser): P[Long] =
     P(decimalDigits.map(_.toLong))
+
+  def positiveBigInt[_ : P](implicit whitespace: WhitespaceParser): P[BigInt] =
+    P(decimalDigits.map(BigInt.apply))
 
   def word[_ : P](implicit whitespace: WhitespaceParser): P[String] = P(
     CharPred(CharPredicates.isLetter).rep(1).!
