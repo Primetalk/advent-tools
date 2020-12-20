@@ -5,12 +5,20 @@ import org.primetalk.advent.tools.Geom2dUtils.{Direction, PosOps, Position, Rect
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
+/**
+  * Display is oriented (x: left->right, y: top->down.).
+  *
+  * @param offset - top-left corner. ys increase down, xs increase right
+  */
 // TODO: DisplayView - rotation on n*90; shift; constrain size; flip up/down
 // DONE showDisplay
 // TODO: DrawDisplay on canvas (Scala.js)
 // TODO: Remove state. Mutable array could be provided from outside as an implicit context
 // TODO: Use refined type for array size,vector size.
 case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => Array[Array[T]]] = None) {
+
+  def resetOffsetInPlace: Display[T] =
+    Display((0,0), size)(Some(() => array))
 
   def offsetByInPlace(offset2: Vector2d): Display[T] =
     new Display[T](offset + offset2, size)(Some(() => array))
@@ -19,6 +27,17 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     val res = new Display[T](offset - (n,n), size + (n*2, n*2))()
     for{
       p <- points
+    }{
+      res(p) = apply(p)
+    }
+    res
+  }
+
+  def shrinkBy(n: Int): Display[T] = {
+    val res = new Display[T](offset + (n,n), size - (n*2, n*2))()
+    for{
+      p <- points
+      if res.isWithinRange(p)
     }{
       res(p) = apply(p)
     }
@@ -42,12 +61,10 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   val maxYplusExtra1: Int = minY + size._2
   val maxY: Int = maxYplusExtra1 - 1
 
-  def xs = Range(minX, maxXplusExtra1)
-  def ys = Range(minY, maxYplusExtra1)
+  def xs: Range.Exclusive = rect.xs
+  def ys: Range.Exclusive = rect.ys
 
-  def isWithinRange(p: Position): Boolean =
-    p._1 >= minX && p._1 <= maxX &&
-      p._2 >= minY && p._2 <= maxY
+  def isWithinRange(p: Position): Boolean = rect.isWithinRange(p)
 
   def toPositionPredicate(predicate: T => Boolean): Position => Boolean =
     p => isWithinRange(p) && predicate(apply(p))
@@ -65,6 +82,9 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     directions8.map(_ + p).filter(isWithinRange)
 
   def points: Seq[Position] = pointsLeftToRightTopToBottomYGrowsDown
+  def lazyPoints: LazyList[Position] =
+    LazyList(points:_*)
+
 
   def pointsLeftToRightTopToBottomYGrowsDown: Seq[(Int, Int)] =
     for{
@@ -139,6 +159,20 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
         (minY + 1).until(maxY).map((maxX, _))
   }
 
+  // Up, Left, Down, Right
+  def edgePositionsByDirClockwise(dir: Direction): IndexedSeq[Position] = dir match {
+    case Geom2dUtils.Up =>
+      xs.map((_, minY))
+    case Geom2dUtils.Right =>
+      ys.map((maxX, _))
+    case Geom2dUtils.Left =>
+      ys.map((minX, _)).reverse
+    case Geom2dUtils.Down =>
+      xs.map((_, maxY)).reverse
+    case _ =>
+      throw new IllegalArgumentException(s"There is no edge at direction $dir")
+  }
+
   def apply(position: Position): T = {
     val p = position - offset
     try {
@@ -207,6 +241,31 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     d
   }
 
+  def rotateClockwise90: Display[T] = {
+    val d = Display[T]((-maxY, minX), size.transpose)()
+    for{
+      p <- points
+      x = p._1
+      y = p._2
+      pp = (-y, x)
+    } {
+      d(pp) = apply(p)
+    }
+    d
+  }
+
+  def rotateCounterClockwise90: Display[T] = {
+    val d = Display[T]((maxY, -minX), size.transpose)()
+    for{
+      p <- points
+      x = p._1
+      y = p._2
+      pp = (y, -x)
+    } {
+      d(pp) = apply(p)
+    }
+    d
+  }
   /** Draws the function on this display. */
   def renderFunction(f: Position => T): Unit = {
     for{
@@ -282,10 +341,41 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     new Display[B](offset, size)(Some(() => a))
   }
 
+  def flatten[A: ClassTag](implicit ev: T <:< Display[A]): Display[A] = {
+    val tl = apply(offset)
+    val res = Display[A](tl.offset + (offset._1 * tl.size._1, offset._2 * tl.size._2), (tl.size._1 * size._1, tl.size._2 * size._2))()
+    res.fill { p =>
+      val pp = p - tl.offset
+      val x = pp._1 / tl.size._1
+      val y = pp._2 / tl.size._2
+      val tile = apply((x,y))
+      tile((pp._1 % tl.size._1, pp._2 % tl.size._2) + tl.offset)
+    }
+    res
+  }
+
   def flipY: Display[T] = {
     val a: Array[Array[T]] = array.reverse
     new Display[T]((offset._1, -offset._2), size)(Some(() => a))
   }
+
+  case class Pattern(relativePositions: List[Position], value: T) {
+
+    def matchesAtPosition(topLeft: Position): Boolean =
+      relativePositions
+        .forall { rp =>
+          val p = topLeft + rp
+          isWithinRange(p) &&
+            apply(p) == value
+        }
+
+    def findAll: LazyList[Position] =
+      lazyPoints.filter(matchesAtPosition)
+  }
+
+  /** Counts number of elements that satisfy the given predicate. */
+  def count(predicate: T => Boolean): Int =
+    points.count((apply _).andThen(predicate))
 }
 
 object Display {

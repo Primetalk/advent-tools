@@ -52,6 +52,22 @@ object Geom2dUtils {
         p._2 >= topLeft._2 &&
         p._1 <= bottomRight._1 &&
         p._2 <= bottomRight._2
+
+    val minX: Int = topLeft._1
+    val maxXplusExtra1: Int = minX + size._1
+    val maxX: Int = maxXplusExtra1 - 1
+
+    val minY: Int = topLeft._2
+    val maxYplusExtra1: Int = minY + size._2
+    val maxY: Int = maxYplusExtra1 - 1
+
+    def xs = Range(minX, maxXplusExtra1)
+    def ys = Range(minY, maxYplusExtra1)
+
+    def isWithinRange(p: Position): Boolean =
+      p._1 >= minX && p._1 <= maxX &&
+        p._2 >= minY && p._2 <= maxY
+
   }
   /** It's a matrix:
     *  /     \
