@@ -185,7 +185,7 @@ object Day2010 extends Utils {
       if(splt.right.isEmpty)
         cnt
       else {
-        if (splt.right.head - splt.left.head > 3)
+        if (splt.right.head - splt.leftReversed.head > 3)
           0L
         else {
           val cnt1 = count(splt.move(1), cnt)

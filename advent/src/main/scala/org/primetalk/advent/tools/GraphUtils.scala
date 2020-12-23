@@ -719,13 +719,13 @@ object GraphUtils {
   def treePath[T](deps: Tree[T], root: T)(from: T, to: T): SplitList[T] = {
     val path1 = treePathFromRoot(deps, root)(from)
     val path2 = treePathFromRoot(deps, root)(to)
-    val pathViaRoot = SplitList(path1, root :: path2)
+    val pathViaRoot = SplitList(path1, root :: path2, -1, -1)
     eliminateCommonPathToRoot(pathViaRoot)
   }
 
   @tailrec
   def eliminateCommonPathToRoot[T](splitList: SplitList[T]): SplitList[T] = splitList match {
-    case SplitList(h1 :: t1, h0 :: h2 :: t2) if h1 == h2 =>eliminateCommonPathToRoot(SplitList(t1, h2 :: t2))
+    case SplitList(h1 :: t1, h0 :: h2 :: t2, lc, rc) if h1 == h2 =>eliminateCommonPathToRoot(SplitList(t1, h2 :: t2, lc - 1, rc - 1))
     case _ => splitList
   }
 
