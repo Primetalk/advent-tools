@@ -2,6 +2,9 @@ package org.primetalk.advent2020
 
 /**
   * https://adventofcode.com/2020/day/00
+  * {{{
+  *
+  * }}}
   */
 object Day2000 {
 
