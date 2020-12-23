@@ -198,8 +198,17 @@ object Day2023 {
     else
       findDownwards(current.down, pred)
 
+  def build5(elements: Array[Int]): Array[Int] = {
+    val N = elements.length
+    val next = new Array[Int](N)
+    (0 until N).foreach{ i =>
+      next(elements(i) - 1) = elements(if( i < N - 1) i + 1 else 0) - 1
+    }
+    next
+  }
+
   lazy val answer2: Long = {
-//    val inputString = "389125467" // test string
+    //    val inputString = "389125467" // test string
     val input2: Node = build((inputString.toList.map(_ - '0') ++ (10 to maxValue)).toArray)
     val last = SequenceUtils.unfoldN(input2, 10_000_000)(move4)
     val one = findDownwards(last, _.id == 1)
@@ -208,9 +217,40 @@ object Day2023 {
     a.id.toLong * b.id.toLong
   }
 
+  lazy val answer2_2: Long = {
+
+    val elements = (inputString.toList.map(_ - '0') ++ (10 to maxValue)).toArray
+    //    val inputString = "389125467" // test string
+    val next = build5(elements)
+    def move5(current: Int): Int = {
+      val head = current
+      val a = next(head)
+      val b = next(a)
+      val c = next(b)
+      val next1 = next(c)
+      next(head) = next1
+      def down(head: Int) = if(head > 0) head - 1 else next.length - 1
+      @tailrec
+      def dest(h: Int): Int =
+        if((h == a) || (h == b) || (h == c))
+          dest(down(h))
+        else
+          h
+      val destination = dest(down(head))
+      next(c) = next(destination)
+      next(destination) = a
+      next1
+    }
+    SequenceUtils.unfoldN(elements(0) - 1, 10_000_000)(move5)
+    val a = next(0)
+    val b = next(a)
+    (a + 1).toLong * (b + 1).toLong
+  }
+
   def main(args: Array[String]): Unit = {
     println("Answer1: " + answer1)
     println("Answer2: " + answer2)
+    println("Answer2_2: " + answer2_2)
   }
 
 }
