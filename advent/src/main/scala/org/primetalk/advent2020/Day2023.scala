@@ -144,13 +144,13 @@ object Day2023 {
 
   val maxValue = 1_000_000
 
-  private class Node(val id: Int, var down: Node, var prev: Node, var next: Node)
+  private class Node(val id: Int, var down: Node, var next: Node)
 
   private def build(elements: Array[Int]): Node = {
     val N = elements.length
     val nodesIndexedMinus1: Array[Node] = (1 to N)
       .map{ i =>
-        new Node(i, null, null, null)
+        new Node(i, down = null, next = null)
       }
       .toArray
     nodesIndexedMinus1.foreach{ n =>
@@ -170,7 +170,6 @@ object Day2023 {
           i + 1
       ) - 1)
       node.next = next
-      next.prev = node
     }
     nodesIndexedMinus1(elements(0) - 1)
   }
