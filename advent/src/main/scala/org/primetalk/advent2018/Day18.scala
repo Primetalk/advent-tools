@@ -212,7 +212,7 @@ What will the total resource value of the lumber collection area be after 10 min
   lazy val answer1: Long = {
     val initialState = Display.readCharDisplay(lines)
     val N = 10
-    val stateN = unfoldN(initialState, N)(_.produceByLocalRules(rules))
+    val stateN = unfoldN(initialState, N)(_.produceByLocalRules8(rules))
     resourceValue(stateN)
   }
 
@@ -225,10 +225,10 @@ What will the total resource value of the lumber collection area be after 10 min
   // 194934
   lazy val answer2: Long = {
     val initialState = Display.readCharDisplay(lines)
-    val (start, loopLength) = floydInt(initialState)(Display.eq)(_.produceByLocalRules(rules))
+    val (start, loopLength) = floydInt(initialState)(Display.eq)(_.produceByLocalRules8(rules))
     val phase = (time - start) % loopLength
     val N = start + phase // This is the first position when state is identical to the state at $time
-    val stateN = unfoldN(initialState, N)(_.produceByLocalRules(rules))
+    val stateN = unfoldN(initialState, N)(_.produceByLocalRules8(rules))
     resourceValue(stateN)
   }
 

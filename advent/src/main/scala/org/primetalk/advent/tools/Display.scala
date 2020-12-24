@@ -299,12 +299,15 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
     }).mkString("\n")
   }
 
-  /** Transform this display according to cellular automaton rules. */
-  def produceByLocalRules(rules: (T, Seq[T]) => T): Display[T] = {
+  type CellularAutomatonRule = (T, Seq[T]) => T
+
+  def produceByRules(relPositions: List[Position])(rules: CellularAutomatonRule): Display[T] = {
     val d = new Display[T](offset, size)()
     for{
       p <- points
-      v = valuesAround(p)
+      v = relPositions.map(_ + p)
+        .filter(isWithinRange)
+        .map(apply)
       next = rules(apply(p), v)
     } {
       d(p) = next
@@ -313,16 +316,10 @@ case class Display[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[(
   }
 
   /** Transform this display according to cellular automaton rules. */
-  def produceByLocalRulesFromMainDirections(rules: (T, Seq[T]) => T): Display[T] = {
-    val d = new Display[T](offset, size)()
-    for{
-      p <- points
-      v = mainPositionsAround(p).map(apply)
-    } {
-      d(p) = rules(apply(p), v)
-    }
-    d
-  }
+  val produceByLocalRules8: CellularAutomatonRule => Display[T] = produceByRules(directions8)
+
+  /** Transform this display according to cellular automaton rules. */
+  val produceByLocalRulesFromMainDirections: CellularAutomatonRule => Display[T] = produceByRules(mainDirections)
 
   def produceByGlobalRules(rules: ((Int, Int), T) => T): Display[T] = {
     val d = new Display[T](offset, size)()

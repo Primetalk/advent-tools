@@ -227,7 +227,7 @@ object Day2011 extends Utils {
   val display: Display[Char] = Display.readCharDisplay(input, '.')
 
   def step(d: Display[Char]): Display[Char] = {
-    d.produceByLocalRules{
+    d.produceByLocalRules8{
       case ('.', _) => '.'
       case (c, surrounding) =>
         val count = surrounding.count(_ == '#')
