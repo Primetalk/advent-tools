@@ -68,6 +68,8 @@ object Geom2dUtils {
       p._1 >= minX && p._1 <= maxX &&
         p._2 >= minY && p._2 <= maxY
 
+    def enlargeBy(deltaX: Int, deltaY: Int): Rectangle =
+      Rectangle(topLeft - (deltaX, deltaY), size + (2 * deltaX, 2 * deltaY))
   }
   /** It's a matrix:
     *  /     \
