@@ -52,6 +52,16 @@ object ModuloArithmetics {
       base.modPow(power, modulo)
   }
 
+  implicit class ModuloOps(a: BigInt)(implicit field: ModuloField) {
+    def *%(b: BigInt): BigInt = field.mul(a, b)
+    def +%(b: BigInt): BigInt = field.add(a, b)
+    def -%(b: BigInt): BigInt = field.sub(a, b)
+    def ^%(b: BigInt): BigInt = field.power(a, b)
+    def log_%(base: BigInt): BigInt = field.linearLogarithm(a, base)
+    def inv_% : BigInt = field.inverse(a)
+    def neg_% : BigInt = field.neg(a)
+  }
+
   case class RemainderAndModulo(r: BigInt, m: BigInt)
 
   /** Solves the following system of equations:

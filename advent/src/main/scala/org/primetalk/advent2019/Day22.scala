@@ -1,6 +1,6 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.ModuloArithmetics.ModuloField
+import org.primetalk.advent.tools.ModuloArithmetics.{ModuloField, ModuloOps}
 
 import java.util
 import org.primetalk.advent.tools.Utils
@@ -265,20 +265,23 @@ object Day22 extends Utils {
     *
     */
   case class ResidualFormula(m: BigInt, offset: BigInt, field: ModuloField) {
+    implicit def f: ModuloField = field
     def mod: BigInt = field.modulo
-    require(offset < mod)
-    require(m < mod)
+    require(offset < field.modulo)
+    require(m < field.modulo)
     def apply(pos: BigInt): BigInt =
-      (m*pos + offset) % mod
+      (m *% pos) +% offset
 
     def multiply(n: BigInt): ResidualFormula =
-      ResidualFormula(m * n % mod, offset * n % mod, field)
+      ResidualFormula(m *% n, offset *% n, field)
+
     def substitute(other: ResidualFormula): ResidualFormula =
-      ResidualFormula(m * other.m % mod, (other.offset*m + offset) % mod, field)
+      ResidualFormula(m *% other.m, (other.offset *% m) +% offset, field)
 
     def *(other: ResidualFormula): ResidualFormula =
-        ResidualFormula(m * other.m % mod,
-          (offset * other.m + (other.offset *m) + offset *other.offset) % mod,
+        ResidualFormula(
+          m *% other.m,
+          (offset *% other.m) +% (other.offset *% m) +% (offset *%other.offset),
           field)
 
     // fast binary power algorithm
@@ -298,22 +301,22 @@ object Day22 extends Utils {
           )
         }
       }
-      loop(this, n, ResidualFormula(BigInt(1),BigInt(0),ModuloField(mod)))
+      loop(this, n, ResidualFormula(BigInt(1),BigInt(0), field))
     }
 
     // fast binary power algorithm
     def powerSubst(n: Long): ResidualFormula =
-      ResidualFormula(field.power(m, n), (field.power(m, n) - 1) * field.inverse(m - 1) * offset % mod, field)
+      ResidualFormula(m ^% n, ((m ^% n) - 1) *% (m - 1).inv_% *% offset, field)
 
     def inverse: ResidualFormula = {
-      val invM = ModuloField(mod).inverse(m)
-      ResidualFormula(invM, field.mul(mod - offset, invM), field)
+      val invM = m.inv_%
+      ResidualFormula(invM, offset.neg_% *% invM, field)
     }
 
     def toDeck: Deck = {
       val res = Array.fill(mod.toInt)(0)
       for { i <- 0 until mod.toInt} {
-        res(((m*i+offset)%mod).toInt) = i
+        res(((m*%i)+%offset).toInt) = i
       }
       res
     }
@@ -321,11 +324,13 @@ object Day22 extends Utils {
 
   def cutImplForward(i: Int): ResidualFormula => ResidualFormula = {
     case ResidualFormula(m, offset, field) =>
-      ResidualFormula(m, (field.modulo + offset - i) % field.modulo, field)
+      implicit val f: ModuloField = field
+      ResidualFormula(m, offset -% i, field)
   }
   def cutImplReverse(i: Int): ResidualFormula => ResidualFormula = {
     case ResidualFormula(m, offset, field) =>
-      ResidualFormula(m, field.add(offset, i), field)
+      implicit val f: ModuloField = field
+      ResidualFormula(m, offset +% i, field)
   }
 
   /**
@@ -336,7 +341,8 @@ object Day22 extends Utils {
     */
   def dealIntoNewStackImplSymmetric: ResidualFormula => ResidualFormula = {
     case ResidualFormula(m, offset, field) =>
-      ResidualFormula(field.neg(m), field.neg(offset + 1), field)
+      implicit val f: ModuloField = field
+      ResidualFormula(m.neg_%, (offset + 1).neg_%, field)
   }
 
   /**
@@ -347,17 +353,16 @@ object Day22 extends Utils {
     * reverse = newJ/n - find m' such that m'*n = m
     */
   def dealWithIncrementImplReverse(n: Int): ResidualFormula => ResidualFormula = {
-    {
-      case ResidualFormula(m, offset, field) =>
-        val invN = field.inverse(n)
-        ResidualFormula(field.mul(m, invN),field.mul(offset, invN), field)
-    }
+    case ResidualFormula(m, offset, field) =>
+      implicit val f: ModuloField = field
+      val invN = BigInt(n).inv_%
+      ResidualFormula(m *% invN, offset *% invN, field)
   }
+
   def dealWithIncrementImplForward(n: Int): ResidualFormula => ResidualFormula = {
-    {
-      case ResidualFormula(m, offset, field) =>
-        ResidualFormula(field.mul(m, n), field.mul(offset, n), field)
-    }
+    case ResidualFormula(m, offset, field) =>
+      implicit val f: ModuloField = field
+      ResidualFormula(m *% n, offset *% n, field)
   }
 
   def getShuffleImpl2(s: ShuffleTechnique): ResidualFormula => ResidualFormula = s match {
