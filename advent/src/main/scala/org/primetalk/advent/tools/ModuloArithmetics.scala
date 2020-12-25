@@ -6,6 +6,24 @@ object ModuloArithmetics {
   val one = BigInt(1)
 
   case class ModuloField(modulo: BigInt) {
+    def apply(a: BigInt): BigInt =
+      a % modulo
+
+    def add(a: BigInt, b: BigInt): BigInt =
+      (a + b) % modulo
+
+    def mul(a: BigInt, b: BigInt): BigInt =
+      (a * b) % modulo
+
+    def div(a: BigInt, b: BigInt): BigInt =
+      mul(a, inverse(b))
+
+    def sub(a: BigInt, b: BigInt): BigInt =
+      (a - b + modulo) % modulo
+
+    def neg(b: BigInt): BigInt =
+      (modulo - b) % modulo
+
     def inverse(a: BigInt): BigInt =
       try {
         a.modInverse(modulo)
@@ -34,10 +52,6 @@ object ModuloArithmetics {
       base.modPow(power, modulo)
   }
 
-
-  def modInverse(a: BigInt, modulo: BigInt): BigInt =
-    ModuloField(modulo).inverse(a)
-
   case class RemainderAndModulo(r: BigInt, m: BigInt)
 
   /** Solves the following system of equations:
@@ -62,7 +76,7 @@ object ModuloArithmetics {
     equations.map{
       case RemainderAndModulo(r_i, a_i) =>
         val M_i = M / a_i
-        val `M_i^-1` = modInverse(M_i, a_i)
+        val `M_i^-1` = ModuloField(a_i).inverse(M_i)
         r_i * M_i * `M_i^-1` % M
     }
       .sum % M
@@ -89,4 +103,15 @@ object ModuloArithmetics {
     //    loop(a, n, 1)
   }
 
+
+//  /** Find 1/n (% mod).
+//    * NB! GCD(n, mod) == 1
+//    *
+//    * Otherwise use BigInt.modInverse
+//    */
+//  def inverse(n: Long, mod: BigInt): Long = {
+//
+//    modPower(n, mod - 2, mod).toLong // Fermat's little theorem
+//    //PrimeNumbers.modInverse(n, mod)
+//  }
 }

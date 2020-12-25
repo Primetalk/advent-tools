@@ -1,15 +1,15 @@
 package org.primetalk.advent2019
 
-import org.primetalk.advent.tools.ModuloArithmetics.{modInverse, modPower}
+import org.primetalk.advent.tools.ModuloArithmetics.ModuloField
 
 import java.util
-import org.primetalk.advent.tools.{ModuloArithmetics, PrimeNumbers, Utils}
+import org.primetalk.advent.tools.Utils
 
 import scala.annotation.tailrec
 
 /**
   * https://adventofcode.com/2019/day/22
-  *
+  * {{{
   * --- Day 22: Slam Shuffle ---
   *
   * There isn't much to do while you wait for the droids to repair your ship. At least you're drifting in the right direction. You decide to practice a new card shuffle you've been working on.
@@ -173,6 +173,7 @@ import scala.annotation.tailrec
   * Your puzzle answer was 41653717360577.
   *
   * Both parts of this puzzle are complete! They provide two gold stars: **
+  * }}}
   */
 object Day22 extends Utils {
   lazy val inputTextFromResource : Iterator[String] =
@@ -243,7 +244,7 @@ object Day22 extends Utils {
 
 //    val formulas = sequenceOfShuffleTechniques.map(getShuffleImplForward)
 //    val shuffleImpl2 = formulas.reduce(_.andThen(_))
-    val totalFormula = sequenceOfShuffleTechniques.foldLeft((ResidualFormula(1, 0, mod), factoryOrdered) ){ case ((formula, deck), shuffle) =>
+    val totalFormula = sequenceOfShuffleTechniques.foldLeft((ResidualFormula(BigInt(1), BigInt(0), ModuloField(mod)), factoryOrdered) ){ case ((formula, deck), shuffle) =>
       val res = getShuffleImplForward(shuffle)(formula)
       println(s"$shuffle: $res")
       val deck1 = res.toDeck
@@ -263,21 +264,22 @@ object Day22 extends Utils {
     * }}}
     *
     */
-  case class ResidualFormula(m: BigInt, offset: BigInt, mod: BigInt) {
+  case class ResidualFormula(m: BigInt, offset: BigInt, field: ModuloField) {
+    def mod: BigInt = field.modulo
     require(offset < mod)
     require(m < mod)
     def apply(pos: BigInt): BigInt =
       (m*pos + offset) % mod
 
     def multiply(n: BigInt): ResidualFormula =
-      ResidualFormula(m * n % mod, offset * n % mod, mod)
+      ResidualFormula(m * n % mod, offset * n % mod, field)
     def substitute(other: ResidualFormula): ResidualFormula =
-      ResidualFormula(m * other.m % mod, (other.offset*m + offset) % mod, mod)
+      ResidualFormula(m * other.m % mod, (other.offset*m + offset) % mod, field)
 
     def *(other: ResidualFormula): ResidualFormula =
         ResidualFormula(m * other.m % mod,
           (offset * other.m + (other.offset *m) + offset *other.offset) % mod,
-          mod)
+          field)
 
     // fast binary power algorithm
     def power(n: Long): ResidualFormula = {
@@ -296,16 +298,16 @@ object Day22 extends Utils {
           )
         }
       }
-      loop(this, n, ResidualFormula(1,0,mod))
+      loop(this, n, ResidualFormula(BigInt(1),BigInt(0),ModuloField(mod)))
     }
 
     // fast binary power algorithm
-    def powerSubst(n: Long): ResidualFormula = {
-      ResidualFormula(modPower(m, n, mod), (modPower(m, n, mod) - 1) * modInverse(m - 1,mod)*offset % mod, mod)
-    }
+    def powerSubst(n: Long): ResidualFormula =
+      ResidualFormula(field.power(m, n), (field.power(m, n) - 1) * field.inverse(m - 1) * offset % mod, field)
+
     def inverse: ResidualFormula = {
-      val invM = modInverse(m, mod)
-      ResidualFormula(invM, (mod - offset) * invM % mod, mod)
+      val invM = ModuloField(mod).inverse(m)
+      ResidualFormula(invM, field.mul(mod - offset, invM), field)
     }
 
     def toDeck: Deck = {
@@ -318,12 +320,12 @@ object Day22 extends Utils {
   }
 
   def cutImplForward(i: Int): ResidualFormula => ResidualFormula = {
-    case ResidualFormula(m, offset, mod) =>
-      ResidualFormula(m, (mod + offset - i) % mod, mod)
+    case ResidualFormula(m, offset, field) =>
+      ResidualFormula(m, (field.modulo + offset - i) % field.modulo, field)
   }
   def cutImplReverse(i: Int): ResidualFormula => ResidualFormula = {
-    case ResidualFormula(m, offset, mod) =>
-      ResidualFormula(m, (offset + i) % mod, mod)
+    case ResidualFormula(m, offset, field) =>
+      ResidualFormula(m, field.add(offset, i), field)
   }
 
   /**
@@ -333,37 +335,28 @@ object Day22 extends Utils {
     * @return
     */
   def dealIntoNewStackImplSymmetric: ResidualFormula => ResidualFormula = {
-    case ResidualFormula(m, offset, mod) =>
-      ResidualFormula((mod - m) % mod, (mod - 1  - offset) % mod, mod)
+    case ResidualFormula(m, offset, field) =>
+      ResidualFormula(field.neg(m), field.neg(offset + 1), field)
   }
 
-  /** Find 1/n (% mod).
-    * NB! GCD(n, mod) == 1
-    *
-    * Otherwise use BigInt.modInverse
-    */
-  def inverse(n: Long, mod: BigInt): Long = {
-    modPower(n, mod - 2, mod).toLong // Fermat's little theorem
-    //PrimeNumbers.modInverse(n, mod)
-  }
   /**
     * j = (m * i + offset) % mod
     * newJ = j*n
     * newJ = (m * n * i + offset * n) % mod
     *
     * reverse = newJ/n - find m' such that m'*n = m
-    *  */
+    */
   def dealWithIncrementImplReverse(n: Int): ResidualFormula => ResidualFormula = {
     {
-      case ResidualFormula(m, offset, mod) =>
-        val invN = inverse(n, mod)
-        ResidualFormula((m * invN) % mod,(offset * invN) % mod, mod)
+      case ResidualFormula(m, offset, field) =>
+        val invN = field.inverse(n)
+        ResidualFormula(field.mul(m, invN),field.mul(offset, invN), field)
     }
   }
   def dealWithIncrementImplForward(n: Int): ResidualFormula => ResidualFormula = {
     {
-      case ResidualFormula(m, offset, mod) =>
-        ResidualFormula((m * n) % mod, offset * n % mod, mod)
+      case ResidualFormula(m, offset, field) =>
+        ResidualFormula(field.mul(m, n), field.mul(offset, n), field)
     }
   }
 
@@ -386,7 +379,7 @@ object Day22 extends Utils {
     val mod = 119315717514047L // prime number
 
     val shuffleImpl = sequenceOfShuffleTechniques.map(getShuffleImplForward).reduce(_.andThen(_))
-    val totalFormula = shuffleImpl(ResidualFormula(1, 0, mod))
+    val totalFormula = shuffleImpl(ResidualFormula(BigInt(1), BigInt(0), ModuloField(mod)))
 
     val numberOfIterations = 101741582076661L // prime number
     val pos = 2020
@@ -401,7 +394,7 @@ object Day22 extends Utils {
 
   lazy val answer22: Long = {
     val mod = 119315717514047L // prime number
-    val initialFormula = ResidualFormula(1,0,mod)
+    val initialFormula = ResidualFormula(BigInt(1), BigInt(0), ModuloField(mod))
     val shuffleImpl = totalShuffleImpl2(sequenceOfShuffleTechniques)
     val totalReverseFormula = shuffleImpl(initialFormula)
 
