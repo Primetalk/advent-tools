@@ -1,17 +1,42 @@
 package org.primetalk.advent.tools
 
-import org.primetalk.advent.tools.PrimeNumbers.Factor
+import scala.annotation.tailrec
 
 object ModuloArithmetics {
+  val one = BigInt(1)
 
-  def modInverse(a: BigInt, modulo: BigInt): BigInt = {
-    try {
-      a.modInverse(modulo)
-    } catch {
-      case e: ArithmeticException =>
-        throw new IllegalArgumentException(s"Couldn't invert $a in modulo $modulo", e)
+  case class ModuloField(modulo: BigInt) {
+    def inverse(a: BigInt): BigInt =
+      try {
+        a.modInverse(modulo)
+      } catch {
+        case e: ArithmeticException =>
+          throw new IllegalArgumentException(s"Couldn't invert $a in modulo $modulo", e)
+      }
+    @tailrec
+    final def linearModPower(a: Long, n: BigInt, res: BigInt = one): BigInt =
+      if(n == 0)
+        res
+      else
+        linearModPower(a, (res * a) % modulo, n - 1)
+
+    def linearLogarithm(res: BigInt, base: BigInt): Long = {
+      @tailrec
+      def loop(res: BigInt, invBase: BigInt, count: Long = 0L): Long =
+        if(res == one)
+          count
+        else
+          loop(res * invBase % modulo, invBase, count + 1)
+      loop(res, inverse(base))
     }
+
+    def power(base: BigInt, power: BigInt): BigInt =
+      base.modPow(power, modulo)
   }
+
+
+  def modInverse(a: BigInt, modulo: BigInt): BigInt =
+    ModuloField(modulo).inverse(a)
 
   case class RemainderAndModulo(r: BigInt, m: BigInt)
 
@@ -42,7 +67,6 @@ object ModuloArithmetics {
     }
       .sum % M
   }
-
 
   // fast binary power algorithm
   def modPower(a: BigInt, n: BigInt, mod: BigInt): BigInt = {
