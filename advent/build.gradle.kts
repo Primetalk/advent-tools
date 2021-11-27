@@ -8,7 +8,7 @@ repositories {
 }
 
 val scalaMinorVersion = "2.13"
-val scalaVersion      = "2.13.4"
+val scalaVersion      = "2.13.7"
 val scalaTestVersion  = "3.2.3"
 
 dependencies {

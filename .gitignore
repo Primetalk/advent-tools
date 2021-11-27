@@ -5,3 +5,6 @@
 /out/
 .gradle/
 advent/build/
+build/
+.bloop/
+target/
