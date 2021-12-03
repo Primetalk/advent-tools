@@ -21,10 +21,16 @@ case class Bits(repr: BigInt, width: Int):
       s
 
   def invert: Bits = 
-    Bits(repr ^ (BigInt(2).pow(width) - 1), width)
+    Bits(repr ^ upper.repr, width)
+
+  def upper: Bits = 
+    Bits(BigInt(2).pow(width) - 1, width)
+
+  def lower: Bits = 
+    Bits(BigInt(0), width)
 
 object Bits:
-  val one = Bits(BigInt(1), 0)
+  val one = Bits(BigInt(1), 1)
   def fromBinaryString(s: String): Bits = 
     Bits(BigInt(s, 2), s.length)
   def fromSeqMSF(s: Seq[Boolean]): Bits = 
