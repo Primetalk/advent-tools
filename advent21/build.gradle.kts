@@ -14,7 +14,10 @@ val scalaVersion      = "3.1.0"
 dependencies {
 //    implementation("org.scala-lang:scala3-library_3:3.1.0")
     implementation("org.scala-lang:scala3-library_3:$scalaVersion")
-//    implementation("com.lihaoyi:fastparse_$scalaMinorVersion:2.3.0")
+    // fastparse is not supported in Scala3
+    // implementation("com.lihaoyi:fastparse_2.13:2.3.3")//"com.lihaoyi" %% "fastparse" % "2.2.2"
+    implementation("org.typelevel:cats-parse_3:0.3.6")
+
 //    implementation("ru.primetalk:rewritable-tree_$scalaMinorVersion:0.1.0")
 ////    implementation("org.typelevel:spire_$scalaMinorVersion:0.16.2")
 //
