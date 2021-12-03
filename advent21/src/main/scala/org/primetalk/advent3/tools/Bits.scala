@@ -20,6 +20,8 @@ case class Bits(repr: BigInt, width: Int):
     else 
       s
 
+  def invert: Bits = 
+    Bits(repr ^ (BigInt(2).pow(width) - 1), width)
 
 object Bits:
   val one = Bits(BigInt(1), 0)
