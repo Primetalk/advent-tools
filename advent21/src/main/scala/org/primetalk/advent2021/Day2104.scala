@@ -1,7 +1,7 @@
 package org.primetalk.advent2021
 
 import org.primetalk.advent3.tools.Utils
-import org.primetalk.advent3.tools.Display2D
+import org.primetalk.advent3.tools.IDisplay2D
 import scala.annotation.tailrec
 
 /**
@@ -87,53 +87,64 @@ object Day2104 extends Utils:
 
   val numberSequence = lines.head.split(',').map(_.toInt).toList
 
-  type Board = Display2D[Int]
+  type Board = IDisplay2D[Int]
 
-  def parseBoardArray(s: IndexedSeq[String]): Array[Array[Int]] =
-    s.filter(_.nonEmpty).map(_.split(' ').filterNot(_.isEmpty).map(_.toInt)).toArray
+  def parseBoardArray(s: IndexedSeq[String]): IArray[IArray[Int]] =
+    IArray.unsafeFromArray(
+      s.filter(_.nonEmpty).map(
+        _.split(' ')
+          .filterNot(_.isEmpty)
+          .map(_.toInt)
+      )
+      .map(IArray.unsafeFromArray)
+      .toArray
+    )
 
   def parseBoard(s: IndexedSeq[String]): Board =
-    new Display2D((0,0), (5,5))(Some( () => parseBoardArray(s)))
+    IDisplay2D((0,0), (5,5))(Some( () => parseBoardArray(s)))
   
-  val boardArrays = lines.tail.tail.sliding(6, 6).map(parseBoardArray)
   val boards = lines.tail.tail.sliding(6, 6).map(parseBoard).toSeq
   
   extension (board: Board)
-    def playNumberMutable(number: Int): Board =
-      val found = board.findAll(_ == number)
-      found.foreach(pos => board(pos) = 0)
+    def playNumber(number: Int): Board =
       board
+        .findAll(_ == number)
+        .foldLeft(board)( (b, pos) => 
+          b.updated(pos, 0)
+        )
+      
     def emptyRowExists: Boolean =
-      board.ys.exists(y => board.linePositions(y).forall(p => board(p) == 0))
+      board.ys.exists(y => board.linePositions(y).forall(board(_) == 0))
     
     def emptyColumnExists: Boolean =
-      board.xs.exists(x => board.columnPositions(x).forall(p => board(p) == 0))
+      board.xs.exists(x => board.columnPositions(x).forall(board(_) == 0))
 
     def isWinning: Boolean = 
       emptyRowExists || emptyColumnExists
     def score: Int = 
       board.values.sum
-  // plays sequence on the board. Return the final board when it wins, index and the winning number.
-  @tailrec
-  def playSequenceMutable(sequence: List[Int], board: Board, index: Int): (Board, Int, Int) = sequence match {
-    case Nil => (board, index, -1)
-    case number::tail => 
-      val boardNext = board.playNumberMutable(number)
-      if boardNext.isWinning then 
-        (boardNext, index, number)
-      else
-        playSequenceMutable(tail, boardNext, index + 1)
-  }
+    // plays sequence on the board. 
+    // Returns the final board when it wins, index and the winning number.
+    @tailrec
+    def playSequence(sequence: List[Int], index: Int): (Board, Int, Int) = sequence match {
+      case Nil => (board, index, -1)
+      case number::tail => 
+        val boardNext = board.playNumber(number)
+        if boardNext.isWinning then 
+          (boardNext, index, number)
+        else
+          boardNext.playSequence(tail, index + 1)
+    }
 
   lazy val answer1: Int = 
-    val boardsWithResults = boards.map(_.deepClone).map(playSequenceMutable(numberSequence, _, 0))
+    val boardsWithResults = boards.map(_.playSequence(numberSequence, 0))
     val (winner, _, winNumber) = boardsWithResults.minBy(_._2)
     winner.score * winNumber
 
   //Part 2
   // 2147482415, 72666, 22881, 23670
   lazy val answer2: Long =
-    val boardsWithResults = boards.map(playSequenceMutable(numberSequence, _, 0))
+    val boardsWithResults = boards.map(_.playSequence(numberSequence, 0))
     val (lastToWin, _, winNumber) = boardsWithResults.maxBy(_._2)
     lastToWin.score * winNumber
 
