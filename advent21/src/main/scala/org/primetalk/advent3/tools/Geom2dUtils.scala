@@ -99,7 +99,7 @@ object Geom2dUtils:
     )
   
   /** Finds bounding rectangle for a collection of points. */
-  def boundingRect(positions: Seq[Position]): Rectangle =
+  def boundingRect(positions: Iterable[Position]): Rectangle =
     val xs = positions.map(_._1)
     val ys = positions.map(_._2)
     rectangleByDiagonal(

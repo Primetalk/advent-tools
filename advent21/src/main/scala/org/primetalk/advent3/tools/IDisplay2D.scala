@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 /**
-  * Display is oriented (x: left->right, y: top->down.).
+  * Immutable Display is oriented (x: left->right, y: top->down.).
   *
   * @param offset - top-left corner. ys increase down, xs increase right
   */
@@ -15,10 +15,10 @@ import scala.reflect.ClassTag
 // TODO: DrawDisplay on canvas (Scala.js)
 // TODO: Remove state. Mutable array could be provided from outside as an implicit context
 // TODO: Use refined type for array size,vector size.
-case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => Array[Array[T]]] = None):
+case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => IArray[IArray[T]]] = None):
   /** We only allocate array when it's needed*/
-  lazy val array: Array[Array[T]] =
-    init.getOrElse(() => Array.ofDim[T](size._2, size._1)).apply()
+  lazy val array: IArray[IArray[T]] =
+    init.getOrElse(() => IArray.unsafeFromArray(Array.ofDim[T](size._2, size._1).map(IArray.unsafeFromArray))).apply()
 
   def apply(position: Position): T =
     val p = position - offset
@@ -29,15 +29,15 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
         throw new IndexOutOfBoundsException(s"$position does not belong to a rectangle at $offset with size $size")
     }
 
-  def update(position: Position, v: T): Unit =
+  def updated(position: Position, v: T): IDisplay2D[T] =
     val p = position - offset
-    array(p._2)(p._1) = v
+    IDisplay2D(offset, size)(Some(() => array.updated(p._2, array(p._2).updated(p._1, v))))
 
-  def resetOffsetInPlace: Display2D[T] =
-    Display2D((0,0), size)(Some(() => array))
+  def resetOffsetInPlace: IDisplay2D[T] =
+    IDisplay2D((0,0), size)(Some(() => array))
 
-  def offsetByInPlace(offset2: Vector2d): Display2D[T] =
-    new Display2D[T](offset + offset2, size)(Some(() => array))
+  def offsetByInPlace(offset2: Vector2d): IDisplay2D[T] =
+    new IDisplay2D[T](offset + offset2, size)(Some(() => array))
 
   lazy val rect: Rectangle = Rectangle(offset, size)
 
@@ -56,19 +56,18 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
     * This might be helpful if we search for some condition in a given area and don't
     * want to store large array of data.
     */
-  def safeUpdate(position: Position, v: T): Boolean =
+  def safeUpdated(position: Position, v: T): IDisplay2D[T] =
     val wasUpdated = isWithinRange(position)
-    if(wasUpdated) {
-      update(position, v)
-    }
-    wasUpdated
-  
+    if wasUpdated then
+      updated(position, v)
+    else 
+      this  
 
   def xs: Range.Exclusive = rect.xs
   def ys: Range.Exclusive = rect.ys
   // initial: () => T = () => {implicitly[Numeric[T]].zero}
 
-  def lineY(y: Int): Array[T] = array(y - minY)
+  def lineY(y: Int): IArray[T] = array(y - minY)
 
   val minX: Int = offset._1
   val maxXplusExtra1: Int = minX + size._1
@@ -96,24 +95,15 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   def points: Seq[Position] = pointsLeftToRightTopToBottomYGrowsDown
   def lazyPoints: LazyList[Position] =
     LazyList(points:_*)
-  def enlargeBy(n: Int): Display2D[T] =
-    val res = new Display2D[T](offset - (n,n), size + (n*2, n*2))()
-    for{
-      p <- points
-    }{
-      res(p) = apply(p)
+  def enlargeBy(n: Int, empty: T): IDisplay2D[T] =
+    IDisplay2D.fromFunction(Rectangle(offset - (n,n), size + (n*2, n*2))){ 
+      pos => 
+        if this.isWithinRange(pos) then this(pos) else empty
     }
-    res
 
-  def shrinkBy(n: Int): Display2D[T] =
-    val res = new Display2D[T](offset + (n,n), size - (n*2, n*2))()
-    for{
-      p <- points
-      if res.isWithinRange(p)
-    }{
-      res(p) = apply(p)
-    }
-    res
+
+  def shrinkBy(n: Int): IDisplay2D[T] =
+    IDisplay2D.fromFunction(Rectangle(offset + (n,n), size - (n*2, n*2)))(this.apply)
 
   def pointsLeftToRightTopToBottomYGrowsDown: Seq[(Int, Int)] =
     for{
@@ -223,61 +213,26 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   }
 
   //    d.array = array.transpose
-  def transpose: Display2D[T] =
-    val d = Display2D[T](offset.transpose, size.transpose)()
-    for {
-      p <- points
-      pp = p.transpose
-    } {
-      d(pp) = apply(p)
-    }
-    d
-  
+  def transpose: IDisplay2D[T] =
+    IDisplay2D.fromFunction(Rectangle(offset.transpose, size.transpose))(p => this((p._2, p._1)))
 
-  def rotateClockwise90: Display2D[T] =
-    val d = Display2D[T]((-maxY, minX), size.transpose)()
-    for{
-      p <- points
-      x = p._1
-      y = p._2
-      pp = (-y, x)
-    } {
-      d(pp) = apply(p)
-    }
-    d
+  def rotateClockwise90: IDisplay2D[T] =
+    IDisplay2D.fromFunction(Rectangle((-maxY, minX), size.transpose))(p => this((-p._2, p._1)))
 
-  def rotateCounterClockwise90: Display2D[T] =
-    val d = Display2D[T]((maxY, -minX), size.transpose)()
-    for{
-      p <- points
-      x = p._1
-      y = p._2
-      pp = (y, -x)
-    } {
-      d(pp) = apply(p)
-    }
-    d
+  def rotateCounterClockwise90: IDisplay2D[T] =
+    IDisplay2D.fromFunction(Rectangle((maxY, -minX), size.transpose))(p => this((p._2, -p._1)))
   
   /** Draws the function on this display. */
-  def renderFunction(f: Position => T): Unit =
-    for{
-      p <- points
-    } {
-      this(p) = f(p)
-    }
+  def renderFunction(f: Position => T): IDisplay2D[T] =
+    IDisplay2D.fromFunction(rect)(f)
 
-  def fill(f: Position => T): Unit = renderFunction(f)
+  val fill = renderFunction
 
   /** Fill display with the given value.
     * Faster than renderFunction(_ => value)
     * */
-  def fillAll(value: => T): Unit =
-    def newFilledArrayLine = Array.fill(size._1)(value)
-    for{
-      j <- 0 until size._2
-    } {
-      array(j) = newFilledArrayLine
-    }
+  def fillAll(value: => T): IDisplay2D[T] =
+    IDisplay2D.fillAll(rect)(value)
 
   def showDisplay(colWidth: Int = 1)(show: T => String = _.toString): String =
     (for{
@@ -288,70 +243,48 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
         .map(_.padTo(colWidth, ' ')).mkString
     }).mkString("\n")
 
-
-  def lazyMap[A: ClassTag](f: T => A): Display2D[A] =
-    new Display2D[A](offset, size)(
-      Some(
-        () => array.map(_.map(f))
-      )
-    )
-  def map[A: ClassTag](f: T => A): Display2D[A] =
+  def lazyMap[A: ClassTag](f: T => A): IDisplay2D[A] =
+    IDisplay2D.fromFunction(rect)(this.apply andThen f)
+    
+  def map[A: ClassTag](f: T => A): IDisplay2D[A] =
     val res = lazyMap(f)
     res.array
     res
-  // def map[B: ClassTag](f: T => B): Display2D[B] = {
-  //   val a: Array[Array[B]] = array.map(_.map(f).toArray)
-  //   new Display2D[B](offset, size)(Some(() => a))
-  // }
 
   type CellularAutomatonRule = (T, Seq[T]) => T
 
-  def produceByRules(relPositions: List[Position])(rules: CellularAutomatonRule): Display2D[T] =
-    val d = new Display2D[T](offset, size)()
-    for{
-      p <- points
-      v = relPositions.map(_ + p)
+  def produceByRules(relPositions: List[Position])(rules: CellularAutomatonRule): IDisplay2D[T] =
+    IDisplay2D.fromFunction(rect)(p => 
+      val v = relPositions.map(_ + p)
         .filter(isWithinRange)
         .map(apply)
-      next = rules(apply(p), v)
-    } {
-      d(p) = next
-    }
-    d
+      rules(apply(p), v)
+    )
 
   /** Transform this display according to cellular automaton rules. */
-  val produceByLocalRules8: CellularAutomatonRule => Display2D[T] = produceByRules(directions8)
+  val produceByLocalRules8: CellularAutomatonRule => IDisplay2D[T] = produceByRules(directions8)
 
   /** Transform this display according to cellular automaton rules. */
-  val produceByLocalRulesFromMainDirections: CellularAutomatonRule => Display2D[T] = produceByRules(mainDirections)
+  val produceByLocalRulesFromMainDirections: CellularAutomatonRule => IDisplay2D[T] = produceByRules(mainDirections)
 
-  def produceByGlobalRules(rules: ((Int, Int), T) => T): Display2D[T] =
-    val d = new Display2D[T](offset, size)()
-    for{
-      p <- points
-      c = apply(p)
-      next = rules(p,c)
-    } {
-      d(p) = next
-    }
-    d
+  def produceByGlobalRules(rules: ((Int, Int), T) => T): IDisplay2D[T] =
+    IDisplay2D.fromFunction(rect)(p => 
+      val c = apply(p)
+      rules(p,c)
+    )
 
-  def flatten[A: ClassTag](using ev: scala.Conversion[T, Display2D[A]]): Display2D[A] =
+  def flatten[A: ClassTag](using ev: scala.Conversion[T, IDisplay2D[A]]): IDisplay2D[A] =
     val tl = apply(offset)
-    val res = Display2D[A](tl.offset + (offset._1 * tl.size._1, offset._2 * tl.size._2), (tl.size._1 * size._1, tl.size._2 * size._2))()
-    res.fill { p =>
+    IDisplay2D.fromFunction(Rectangle(tl.offset + (offset._1 * tl.size._1, offset._2 * tl.size._2), (tl.size._1 * size._1, tl.size._2 * size._2))){ p => 
       val pp = p - tl.offset
       val x = pp._1 / tl.size._1
       val y = pp._2 / tl.size._2
       val tile = apply((x,y))
       tile((pp._1 % tl.size._1, pp._2 % tl.size._2) + tl.offset)
     }
-    res
 
-  def flipY: Display2D[T] =
-    val a: Array[Array[T]] = array.reverse
-    new Display2D[T]((offset._1, -offset._2), size)(Some(() => a))
-  
+  def flipY: IDisplay2D[T] =
+    IDisplay2D[T]((offset._1, -offset._2), size)(Some(() => array.reverse))
 
   case class Pattern(relativePositions: List[Position], value: T):
 
@@ -377,50 +310,64 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   def columnPositions(x: Int): Seq[Position] =
     ys.map(y => (x, y)).toSeq
 
-  def deepClone: Display2D[T] = 
-    val res = Display2D.apply[T](rect)
+  def deepClone: IDisplay2D[T] = 
+    val res = IDisplay2D.apply[T](rect)
     res.fill(this.apply)
     res
-  def toIDisplay2D: IDisplay2D[T] = 
-    val arr = IArray.unsafeFromArray(array.map(IArray.unsafeFromArray))
-    IDisplay2D[T](offset, size)(Some(() => arr))
 
-object Display2D:
-  def apply[T: ClassTag](rect: Rectangle): Display2D[T] =
-    new Display2D[T](rect.topLeft, rect.size)()
+object IDisplay2D:
+  def apply[T: ClassTag](rect: Rectangle): IDisplay2D[T] =
+    new IDisplay2D[T](rect.topLeft, rect.size)()
 
-  def readCharDisplay(lines: Seq[String], emptyChar: Char = 0): Display2D[Char] =
+  def of[T: ClassTag](offset: Vector2d, size: Vector2d)(f: Position => T): IDisplay2D[T] =
+    Display2D.of(offset, size)(f).toIDisplay2D
+
+  def fromFunction[T: ClassTag](rect: Rectangle)(f: Position => T): IDisplay2D[T] =
+    of(rect.topLeft, rect.size)(f)
+
+  /** Fill display with the given value.
+    * Faster than renderFunction(_ => value)
+    * */
+  def fillAll[T: ClassTag](rect: Rectangle)(value: => T): IDisplay2D[T] =
+    new IDisplay2D[T](rect.topLeft, rect.size)(Some(() =>
+      val display = Display2D.apply(rect)
+      display.fillAll(value)
+      IArray.unsafeFromArray(display.array.map(IArray.unsafeFromArray))
+    ))
+
+  def readCharDisplay(lines: Seq[String], emptyChar: Char = 0): IDisplay2D[Char] =
     val width = lines.map(_.length).max
-    Display2D[Char]((0,0), (width, lines.length))(
+    IDisplay2D[Char]((0,0), (width, lines.length))(
       Some(
         () => 
-          lines.map{ line =>
-            val arr = line.toCharArray
-            if arr.length == width then
-              arr
-            else
-              val arr2 = Array.fill[Char](width)(emptyChar)
-              arr.copyToArray(arr2)
-              arr2
-          }.toArray
+          IArray.unsafeFromArray(
+            lines.map{ line =>
+              val arr = line.toCharArray
+              IArray.unsafeFromArray(
+                if arr.length == width then
+                  arr
+                else
+                  val arr2 = Array.fill[Char](width)(emptyChar)
+                  arr.copyToArray(arr2)
+                  arr2
+              )
+            }.toArray
+          )
       )
     )
   
 
-  def eq[T](d1: Display2D[T], d2: Display2D[T]): Boolean =
+  def eq[T](d1: IDisplay2D[T], d2: IDisplay2D[T]): Boolean =
     d1.offset == d2.offset &&
     d1.size == d2.size &&
     d1.array.zip(d2.array)
       .forall{ case (a,b) => a.sameElements(b) }
 
-  def showPoints(points: Seq[Position], pointChar: Char = '.', emptyChar: Char = ' '): Display2D[Char] =
+  def showPoints(points: Set[Position], pointChar: Char = '.', emptyChar: Char = ' '): IDisplay2D[Char] =
     val rect = Geom2dUtils.boundingRect(points)
-    val d = Display2D.apply[Char](rect)
-    d.fillAll(emptyChar)
-    points.foreach(p => d(p) = pointChar)
-    d
-
-  def of[T: ClassTag](offset: Vector2d, size: Vector2d)(f: Position => T): Display2D[T] =
-    val d = Display2D[T](offset, size)()
-    d.fill(f)
-    d
+    IDisplay2D.fromFunction[Char](rect){ p => 
+      if points.contains(p) then 
+        pointChar 
+      else 
+        emptyChar
+    }
