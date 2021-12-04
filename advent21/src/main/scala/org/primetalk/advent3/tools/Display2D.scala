@@ -78,8 +78,6 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   val maxYplusExtra1: Int = minY + size._2
   val maxY: Int = maxYplusExtra1 - 1
 
-
-
   def toPositionPredicate(predicate: T => Boolean): Position => Boolean =
     p => isWithinRange(p) && predicate(apply(p))
 
@@ -371,6 +369,18 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   /** Counts number of elements that satisfy the given predicate. */
   def count(predicate: T => Boolean): Int =
     points.count((apply _).andThen(predicate))
+  def findAll(p: T => Boolean): Seq[Position] =
+    points.filter(pos => p(apply(pos)))
+
+  def linePositions(y: Int): Seq[Position] =
+    xs.map(x => (x, y)).toSeq
+  def columnPositions(x: Int): Seq[Position] =
+    ys.map(y => (x, y)).toSeq
+
+  def deepClone: Display2D[T] = 
+    val res = Display2D.apply[T](rect)
+    res.fill(this.apply)
+    res
 
 object Display2D:
   def apply[T: ClassTag](rect: Rectangle): Display2D[T] =
