@@ -6,6 +6,7 @@ import org.primetalk.advent3.tools.IDisplay2D
 import scala.annotation.tailrec
 import cats.parse.Parser
 import org.primetalk.advent3.tools.Display2D
+import org.primetalk.advent3.tools.ParsingUtils.positiveNumber
 
 /**
   * https://adventofcode.com/2021/day/05
@@ -87,68 +88,51 @@ import org.primetalk.advent3.tools.Display2D
 object Day2105 extends Utils:
 
   val input = readResourceLines("day05.txt")
-  case class Line(pos1: Position, pos2: Position)
-  def parseLine(s: String): Line = {
-    import org.primetalk.advent3.tools.ParsingUtils._
-    val point: Parser[Position] = (positiveNumber <* Parser.char(',')) ~ positiveNumber
-    val line: Parser[Line] = ((point <* Parser.string(" -> ")) ~ point).map((a,b) => Line(a,b))
-    line.parseAll(s).fold(a => throw IllegalArgumentException(s"Cannot parse $a"), identity)
-  }
+  val point: Parser[(Int, Int)] = 
+    (positiveNumber <* Parser.char(',')) ~ positiveNumber
+  val line: Parser[Line] = 
+    ((point <* Parser.string(" -> ")) ~ point).map((a,b) => Line(a,b))
+    
+  def parseLine(s: String): Line =
+    line.parseAll(s).fold(
+      a => throw IllegalArgumentException(s"Cannot parse $a"), 
+      identity
+    )
+  
   val lines = input.map(parseLine)
+  assert(lines.size == 500)
+  val lineSegments = lines.map(_.toLineSegment)
+
+  extension (display: Display2D[Int])
+    def drawLine(line: Line): Unit =
+      line.toLineSegment.allPoints.foreach{ 
+        display(_) += 1
+      }
+    def drawLineSegment(ls: LineSegment): Unit =
+      ls.allPoints.foreach{ 
+        display(_) += 1
+      }
+ 
   lazy val answer1: Int = 
-    assert(lines.size == 500)
     val points = lines.map(_.pos1) ++ lines.map(_.pos2)
     val rect = boundingRect(points)
     val display = Display2D[Int](rect)
-    val vertical = lines.filter(l => l.pos1._1 == l.pos2._1)
-    val horisontal = lines.filter(l => l.pos1._2 == l.pos2._2)
-    vertical.foreach{ case Line((x, y1), (_, y2)) =>
-      for {
-        y <- Range.inclusive(math.min(y1, y2), math.max(y1, y2))
-      } display((x,y)) = display((x,y)) + 1
-    }
-    horisontal.foreach{ case Line((x1, y), (x2, _)) =>
-      for {
-        x <- Range.inclusive(math.min(x1, x2), math.max(x1, x2))
-      } display((x,y)) = display((x,y)) + 1
-    }
+    lineSegments
+      .filter(ls => ls.dirVector.isVertical || ls.dirVector.isHorizontal)
+      .foreach(display.drawLineSegment)
+    
     display.values.count(_ > 1)
   
 
   //Part 2
   lazy val answer2: Long = 
-    assert(lines.size == 500)
     val points = lines.map(_.pos1) ++ lines.map(_.pos2)
     val rect = boundingRect(points)
     val display = Display2D[Int](rect)
-    val vertical = lines.filter(l => l.pos1._1 == l.pos2._1)
-    val horisontal = lines.filter(l => l.pos1._2 == l.pos2._2)
-    val diagonal = lines.filter{ l =>
-      val dx = l.pos1._1 - l.pos2._1
-      val dy = l.pos1._2 - l.pos2._2
-       dx == dy || dx == -dy
-    }
-    vertical.foreach{ case Line((x, y1), (_, y2)) =>
-      for {
-        y <- Range.inclusive(math.min(y1, y2), math.max(y1, y2))
-      } display((x,y)) = display((x,y)) + 1
-    }
-    horisontal.foreach{ case Line((x1, y), (x2, _)) =>
-      for {
-        x <- Range.inclusive(math.min(x1, x2), math.max(x1, x2))
-      } display((x,y)) = display((x,y)) + 1
-    }
-    diagonal.foreach{ case Line((x1, y1), (x2, y2)) =>
-      val len = math.max(x1, x2) - math.min(x1, x2)
-      val dx = math.signum(x2 - x1)
-      val dy = math.signum(y2 - y1)
+    lineSegments
+      .filter(ls => ls.dirVector.isVertical || ls.dirVector.isHorizontal|| ls.dirVector.isDiagonal)
+      .foreach(display.drawLineSegment)
 
-      for {
-        i <- Range.inclusive(0, len)
-        x = x1 + dx * i
-        y = y1 + dy * i
-      } display((x,y)) = display((x,y)) + 1
-    }
     display.values.count(_ > 1)
 
   def main(args: Array[String]): Unit =
