@@ -102,20 +102,15 @@ object Day2105 extends Utils:
   val lines = input.map(parseLine)
   assert(lines.size == 500)
   val lineSegments = lines.map(_.toLineSegment)
+  val rect = boundingRect(lines.map(_.pos1) ++ lines.map(_.pos2))
 
   extension (display: Display2D[Int])
-    def drawLine(line: Line): Unit =
-      line.toLineSegment.allPoints.foreach{ 
-        display(_) += 1
-      }
     def drawLineSegment(ls: LineSegment): Unit =
       ls.allPoints.foreach{ 
         display(_) += 1
       }
  
   lazy val answer1: Int = 
-    val points = lines.map(_.pos1) ++ lines.map(_.pos2)
-    val rect = boundingRect(points)
     val display = Display2D[Int](rect)
     lineSegments
       .filter(ls => ls.dirVector.isVertical || ls.dirVector.isHorizontal)
@@ -126,8 +121,6 @@ object Day2105 extends Utils:
 
   //Part 2
   lazy val answer2: Long = 
-    val points = lines.map(_.pos1) ++ lines.map(_.pos2)
-    val rect = boundingRect(points)
     val display = Display2D[Int](rect)
     lineSegments
       .filter(ls => ls.dirVector.isVertical || ls.dirVector.isHorizontal|| ls.dirVector.isDiagonal)
