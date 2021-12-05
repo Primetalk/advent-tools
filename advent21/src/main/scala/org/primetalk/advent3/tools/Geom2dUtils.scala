@@ -9,6 +9,7 @@ object Geom2dUtils:
     def toVector2d: Vector2d = direction * length
     def isHorizontal: Boolean = direction._2 == 0
     def isVertical: Boolean = direction._1 == 0
+    def isDiagonal: Boolean = math.abs(direction._1) == math.abs(direction._2)
     /** converts line segment to points.
       * NB! Does not include start position! This is convenient when drawing many segments*/
     def drawPrependFromStart(start: Position, positions: List[Position] = Nil): List[Position] = {
@@ -22,6 +23,21 @@ object Geom2dUtils:
         }
       loop(start, direction, length, positions)
     }
+  case class Line(pos1: Position, pos2: Position):
+    /** NB! Not precise! Only works well for horizontal, vertical and diagonal lines. 
+     * 
+     */
+    def toDirVectorSparse: DirVector =
+      val dx = pos2._1 - pos1._1
+      val dy = pos2._2 - pos1._2
+      val len = math.max(math.abs(dx), math.abs(dy)) 
+      if len == 0 then
+        DirVector((0,0), 0)
+      else
+        DirVector((dx/len, dy/len), len)
+
+    def toLineSegment: LineSegment =
+      LineSegment(pos1, toDirVectorSparse)
 
   case class LineSegment(start: Position, dirVector: DirVector):
     def end: Position = start + dirVector.toVector2d
@@ -29,6 +45,8 @@ object Geom2dUtils:
       * NB! Does not include start position! This is convenient when drawing many segments*/
     def drawPrepend(positions: List[Position] = Nil): List[Position] =
       dirVector.drawPrependFromStart(start, positions)
+    def allPoints: List[Position] = 
+      start :: drawPrepend()
 
   def rectangleByDiagonal(topLeft: Position, bottomRight: Position): Rectangle =
     Rectangle(topLeft, bottomRight - topLeft + (1, 1))
