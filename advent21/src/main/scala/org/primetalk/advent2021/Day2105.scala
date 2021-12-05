@@ -2,10 +2,7 @@ package org.primetalk.advent2021
 
 import org.primetalk.advent3.tools.Utils
 import org.primetalk.advent3.tools.Geom2dUtils._
-import org.primetalk.advent3.tools.IDisplay2D
-import scala.annotation.tailrec
 import cats.parse.Parser
-import org.primetalk.advent3.tools.Display2D
 import org.primetalk.advent3.tools.ParsingUtils.positiveNumber
 
 /**
@@ -104,29 +101,20 @@ object Day2105 extends Utils:
   val lineSegments = lines.map(_.toLineSegment)
   val rect = boundingRect(lines.map(_.pos1) ++ lines.map(_.pos2))
 
-  extension (display: Display2D[Int])
-    def drawLineSegment(ls: LineSegment): Unit =
-      ls.allPoints.foreach{ 
-        display(_) += 1
-      }
- 
   lazy val answer1: Int = 
-    val display = Display2D[Int](rect)
     lineSegments
       .filter(ls => ls.dirVector.isVertical || ls.dirVector.isHorizontal)
-      .foreach(display.drawLineSegment)
-    
-    display.values.count(_ > 1)
-  
+      .flatMap(_.allPoints)
+      .groupMapReduce(identity)(_ => 1)(_ + _)
+      .count(_._2 > 1)
 
   //Part 2
   lazy val answer2: Long = 
-    val display = Display2D[Int](rect)
     lineSegments
       .filter(ls => ls.dirVector.isVertical || ls.dirVector.isHorizontal|| ls.dirVector.isDiagonal)
-      .foreach(display.drawLineSegment)
-
-    display.values.count(_ > 1)
+      .flatMap(_.allPoints)
+      .groupMapReduce(identity)(_ => 1)(_ + _)
+      .count(_._2 > 1)
 
   def main(args: Array[String]): Unit =
     println("Answer1: " + answer1)
