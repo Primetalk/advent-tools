@@ -3,7 +3,7 @@ package org.primetalk.advent2021
 import org.primetalk.advent3.tools.Utils
 
 /**
-  * https://adventofcode.com/2021/day/01
+  * https://adventofcode.com/2021/day/1
   * 
   * --- Day 1: Sonar Sweep ---
   * 

@@ -6,7 +6,7 @@ import cats.parse.Parser
 import org.primetalk.advent3.tools.ParsingUtils.positiveNumber
 
 /**
-  * https://adventofcode.com/2021/day/05
+  * https://adventofcode.com/2021/day/5
   * 
   * --- Day 5: Hydrothermal Venture ---
   * 

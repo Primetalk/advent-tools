@@ -3,7 +3,7 @@ package org.primetalk.advent2021
 import org.primetalk.advent3.tools.Utils
 
 /**
-  * https://adventofcode.com/2021/day/02
+  * https://adventofcode.com/2021/day/2
   * --- Day 2: Dive! ---
   * 
   * Now, you need to figure out how to pilot this thing.
@@ -80,14 +80,13 @@ object Day2102 extends Utils:
   }
   val directions = lines.map(parseLine)
   // 2120749
-  lazy val answer1: Int = {
+  lazy val answer1: Int =
     val x = directions.map(_._1).sum
     val y = directions.map(_._2).sum
-    x * y 
-  }
+    x * y
 
   //Part 2 2138382217
-  lazy val answer2: Int = {
+  lazy val answer2: Int =
     val (aim, pos) = directions.foldLeft((0, (0,0))){ 
       case ((aim, pos), dir) =>
         val newAim = aim + dir._2
@@ -95,7 +94,6 @@ object Day2102 extends Utils:
         (newAim, (pos._1 + dir._1, pos._2 + aim * dir._1))
     }
     pos._1*pos._2
-  }
 
   def main(args: Array[String]): Unit =
     println("Answer1: " + answer1)
