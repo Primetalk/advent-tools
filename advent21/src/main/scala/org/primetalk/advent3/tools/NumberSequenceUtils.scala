@@ -240,3 +240,36 @@ object NumberSequenceUtils:
       else
         binFindSupremum0(low, next)
     binFindSupremum0(low, high)
+  
+  /** Function should have a single strong minimum in the given range.
+   * The search maintains three points with values. Each turn it selects another point in the middle 
+   * of the larger interval and decides which 3 points to keep.
+   * Search continues until there are 3 consequtive points - x, x+1,x+2. 
+   * And then selects the lowest of them.
+   * Function is evaluated at most once at points.
+  */
+  def findSingleMinumum[T: Ordering](f: Int => T)(lower: Int, upper: Int): (Int, T) = 
+    val ord = summon[Ordering[T]]
+    import ord.mkOrderingOps
+    case class PosValue(pos: Int, value: T)
+    def fpv(pos: Int): PosValue = 
+      PosValue(pos, f(pos))
+    def findSingleMinumum0(l: PosValue, m: PosValue, u: PosValue): PosValue = 
+      if u.pos <= l.pos + 2 then
+        Seq(l, m, u).minBy(_.value)
+      else 
+        val (m1, m2) = 
+          if u.pos - m.pos > m.pos - l.pos then
+            (m, fpv(m.pos + (u.pos - m.pos)/2))
+          else
+            (fpv(l.pos + (m.pos - l.pos)/2), m)
+
+        if m1.value < m2.value then 
+          findSingleMinumum0(l, m1, m2)
+        else
+          findSingleMinumum0(m1, m2, u)
+
+    val fl = fpv(lower) // we could also start at mid, but that would duplicate mid calculation code
+    val PosValue(p, fp) = findSingleMinumum0(fl, fl, fpv(upper))
+    (p, fp)
+  

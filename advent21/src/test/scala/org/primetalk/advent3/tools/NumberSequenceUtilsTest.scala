@@ -35,4 +35,11 @@ class NumberSequenceUtilsTest extends UnitSpec {
   it should "find supremum" in {
     NumberSequenceUtils.binFindSupremum(_ < 10)(0, 100) shouldBe 9
   }
+  it should "find minimum" in {
+    NumberSequenceUtils.findSingleMinumum(_ + 1)(10, 100) shouldBe (10, 11)
+    NumberSequenceUtils.findSingleMinumum(x => math.abs(x - 11)+5)(0, 100) shouldBe (11, 5)
+    NumberSequenceUtils.findSingleMinumum(x => math.abs(x - 11)+5)(11, 100) shouldBe (11, 5)
+    NumberSequenceUtils.findSingleMinumum(x => math.abs(x - 11)+5)(0, 11) shouldBe (11, 5)
+    NumberSequenceUtils.findSingleMinumum(x => math.abs(x - 11)+5)(0, 10) shouldBe (10, 6)
+  }
 }
