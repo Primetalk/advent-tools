@@ -36,6 +36,9 @@ trait Utils:
   def parseIntsNewLineSeparated(text: String): IndexedSeq[Int] =
     splitLines(text).map(_.toInt)
 
+  def parseIntsCommaSeparated(text: String): IndexedSeq[Int] =
+    text.split(',').map(_.toInt).toIndexedSeq
+
   def parseLongsNewLineSeparated(text: String): IndexedSeq[Long] =
     splitLines(text).map(_.toLong)
 
