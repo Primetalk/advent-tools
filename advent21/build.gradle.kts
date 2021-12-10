@@ -51,3 +51,10 @@ tasks.register<JavaExec>("Day2100"){
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("org.primetalk.advent2021.Day2100")
 }
+
+tasks.register<JavaExec>("Day2110"){
+    group = "run"
+    description = "Run Day2110"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("org.primetalk.advent2021.Day2110")
+}

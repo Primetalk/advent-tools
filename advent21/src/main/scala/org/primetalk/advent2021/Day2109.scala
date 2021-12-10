@@ -98,16 +98,16 @@ object Day2109 extends Utils:
       .map(_.toString.toInt + 1)
       .sum
 
-  def basin(pointsToCheck: List[Position], known: Set[Position]): Set[Position] = pointsToCheck match {
-    case Nil => known
-    case point::tail =>
-      val newPoints = mainDirections.map(point + _)
-        .filterNot(known.contains)
-        .filter(display.isWithinRange)
-        .filterNot(display(_) == '9')
-      basin(newPoints.toList reverse_::: tail, known + point)  
-  }
-  
+  def basin(pointsToCheck: List[Position], known: Set[Position]): Set[Position] = 
+    pointsToCheck match
+      case Nil => known
+      case point::tail =>
+        val newPoints = mainDirections.map(point + _)
+          .filterNot(known.contains)
+          .filter(display.isWithinRange)
+          .filterNot(display(_) == '9')
+        basin(newPoints.toList reverse_::: tail, known + point)  
+
   //Part 2
   lazy val answer2: Int = 
     val basinSizes = lowPoints.map{ p => basin(p :: Nil, Set()).size}
