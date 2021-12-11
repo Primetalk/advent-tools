@@ -4,6 +4,8 @@ import org.primetalk.advent3.tools.Utils
 import org.primetalk.advent3.tools.Display2D
 import org.primetalk.advent3.tools.Geom2dUtils._
 import org.primetalk.advent3.tools.NumberSequenceUtils
+import org.primetalk.advent3.tools.IDisplay2D
+import scala.annotation.tailrec
 
 /**
   * https://adventofcode.com/2021/day/11
@@ -358,64 +360,55 @@ import org.primetalk.advent3.tools.NumberSequenceUtils
   */
 object Day2111 extends Utils:
 
-  val display = Display2D.readCharDisplay(readResourceLines("day11.txt"))
+  val display = IDisplay2D.readCharDisplay(readResourceLines("day11.txt"))
   val displayEnergy = display.map(_.toString.toInt)
   val displayEnergy2 = display.map(_.toString.toInt)
 
-  def increaseEnergy2(display: Display2D[Int]): Unit = 
-    display.points.foreach{ p => 
-      display(p) += 1
-    }
+  def increaseEnergy2(display: IDisplay2D[Int]): IDisplay2D[Int] = 
+    display.map(_ + 1)
   
-  def flash(originalDisplay: Display2D[Int], additions: Display2D[Int], flashCount: Int = 0): Int =
-    val newAdditions = Display2D.apply[Int](originalDisplay.rect)
-    originalDisplay.points.foreach{ p => 
-      val v = originalDisplay(p) + additions(p)
-      if v > 9 then
-        directions8.foreach{ dir => 
-          val adj = p + dir
-          if additions.isWithinRange(adj) then
-            newAdditions(p + dir) += 1
-          
-        }
-        newAdditions(p) = Int.MinValue
-      
-    }
-    val newFlashCount = newAdditions.count(_ < 0)
-    if newFlashCount == 0 then
-      originalDisplay.points.foreach{ p => 
-        if additions(p) < 0 then 
-          originalDisplay(p) = 0
-        else
-          originalDisplay(p) += additions(p) 
+  @tailrec
+  def flash(originalDisplay: IDisplay2D[Int], flashCount: Int = 0): ( IDisplay2D[Int], Int) =
+    val flashedPoints = originalDisplay.points.filter(p => originalDisplay(p) > 9)
+    val increases = 
+      for 
+        p <- flashedPoints
+        dir <- directions8
+        r = p + dir
+        if originalDisplay.isWithinRange(r)
+      yield r
+    val increasedPoints = increases.groupMapReduce(identity)(_ => 1)(_ + _).withDefault(_ => 0)
+    val newFlashCount = flashedPoints.size
+    if newFlashCount > 0 then
+      val flashedPointsSet = flashedPoints.toSet
+      val updatedDisplay = originalDisplay.produceByGlobalRules{ 
+        case (p,v) => 
+          if flashedPointsSet.contains(p) then
+            Int.MinValue
+          else if v >= 0 then
+            v + increasedPoints(p)
+          else 
+            v
       }
-      // println(flashCount)
-      flashCount
-    else
-      additions.points.foreach{ p => 
-        if newAdditions(p) < 0 then 
-          additions(p) = Int.MinValue
-        else
-          additions(p) += newAdditions(p) 
-      }
-      flash(originalDisplay, additions, flashCount + newFlashCount)
+      flash(updatedDisplay, flashCount + newFlashCount)
+    else 
+      (originalDisplay.replace(Int.MinValue, 0), flashCount)
 
-  def step(displayAndFlashCount: (Display2D[Int], Int)): (Display2D[Int], Int) =
-    increaseEnergy2(displayAndFlashCount._1)
-    val cnt = flash(displayAndFlashCount._1, Display2D.apply[Int](displayAndFlashCount._1.rect), displayAndFlashCount._2)
-    (displayAndFlashCount._1, cnt)
+  def step(displayAndFlashCount: (IDisplay2D[Int], Int)): (IDisplay2D[Int], Int) =
+    val d = increaseEnergy2(displayAndFlashCount._1)
+    val (res, cnt) = flash(d)
+    (res, cnt + displayAndFlashCount._2)
 
   lazy val answer1: Int = 
     val (_, res) = NumberSequenceUtils.unfoldN(step)((displayEnergy, 0), 100)
     res
 
   //Part 2
-  def step2(displayAndFlashCount: (Display2D[Int], Int)): (Display2D[Int], Int) =
-    increaseEnergy2(displayAndFlashCount._1)
-    val cnt = flash(displayAndFlashCount._1, Display2D.apply[Int](displayAndFlashCount._1.rect), 0)
-    // println(cnt)
-    (displayAndFlashCount._1, cnt)
-  // 165, 156, 164, 265
+  def step2(displayAndFlashCount: (IDisplay2D[Int], Int)): (IDisplay2D[Int], Int) =
+    val d = increaseEnergy2(displayAndFlashCount._1)
+    flash(d)
+    
+  // // 165, 156, 164, 265
   lazy val answer2: Int =
     // val (_, res) = NumberSequenceUtils.countUntil(step2)(_._2 == 100)((displayEnergy, 0))
     val (_, res) = NumberSequenceUtils.countUntil(step2)(_._1.inclusiveRectSum(displayEnergy2.rect.topLeft, displayEnergy2.rect.bottomRight) == 0)((displayEnergy2, 0))

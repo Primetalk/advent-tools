@@ -183,7 +183,7 @@ object NumberSequenceUtils:
     unfoldUntil0
 
   final def countUntil[A](f: A => A)(p: A => Boolean): (z: A) => (A, Int) = 
-    (z: A) => unfoldUntil[(A, Int)]( ac => ({print(s"${ac._2}:");f(ac._1)}, ac._2 + 1))(ac => p(ac._1))((z, 0))
+    (z: A) => unfoldUntil[(A, Int)]( ac => ({/*print(s"${ac._2}:");*/f(ac._1)}, ac._2 + 1))(ac => p(ac._1))((z, 0))
 
   /** Starts with initial state `S`, then applies `f` continuously.
     * Each step adds something to output and updates state.

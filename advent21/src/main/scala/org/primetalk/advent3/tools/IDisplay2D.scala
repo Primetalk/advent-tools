@@ -272,7 +272,8 @@ case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Optio
       val c = apply(p)
       rules(p,c)
     )
-
+  def replace(old: T, n: T): IDisplay2D[T] =
+    produceByGlobalRules{ case (_, v) => if v == old then n else v }
   def flatten[A: ClassTag](using ev: scala.Conversion[T, IDisplay2D[A]]): IDisplay2D[A] =
     val tl = apply(offset)
     IDisplay2D.fromFunction(Rectangle(tl.offset + (offset._1 * tl.size._1, offset._2 * tl.size._2), (tl.size._1 * size._1, tl.size._2 * size._2))){ p => 
