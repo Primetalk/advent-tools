@@ -1,8 +1,6 @@
 package org.primetalk.advent2021
 
 import org.primetalk.advent3.tools.Utils
-import cats.parse._
-import cats.data.NonEmptyList
 
 /**
   * https://adventofcode.com/2021/day/10
@@ -111,9 +109,15 @@ import cats.data.NonEmptyList
   * 
   * Both parts of this puzzle are complete! They provide two gold stars: **
   */
-object Day2110 extends Utils:
+object Day2110alt extends Utils:
 
   val input = readResourceLines("day10.txt")
+
+  val matchingPairs: List[(Char, Char)] = List("()", "[]", "{}", "<>").map(_.toCharArray)
+    .map{ case Array(open, close) => (open, close) }
+  val closingByOpen = matchingPairs.toMap
+  def isOpening(ch: Char) = matchingPairs.exists(_._1 == ch)
+  def isClosing(ch: Char) = matchingPairs.exists(_._2 == ch)
 
   val weight = Map(
     ')' -> 3,
@@ -122,52 +126,55 @@ object Day2110 extends Utils:
     '>' -> 25137,
   )
 
-  def chunk(open: Char, close: Char): Parser[Unit] = 
-    Parser.defer(
-      (Parser.char(open) *> otherChunks.rep0 <* Parser.char(close)).void
-    )
-    
-  def otherChunks: Parser[Unit] =
-    Parser.defer(
-      // matchingPairs
-      //   .map{case (open, close) => chunk(open, close) }
-      //   .reduce(_ | _)
-      chunk('(', ')') | 
-      chunk('[', ']') | 
-      chunk('{', '}') | 
-      chunk('<', '>') 
-    ).rep.void
+  extension (stack: List[Char])
 
-  def evalLine(line: String): Int = 
-    otherChunks.parseAll(line) match
-      case Left(msg) if msg.failedAtOffset >= line.length => 
-        // println(s"out")
+    def handle(c: Char): Either[(Char, Char), List[Char]] =
+      if isOpening(c) then 
+        Right(c :: stack)
+      else if isClosing(c) then 
+        stack match
+          case expectedOpening :: tail =>
+            val expectedClosing = closingByOpen(expectedOpening)
+            if expectedClosing == c then
+              Right(tail)
+            else
+              Left((c, expectedClosing))
+          case Nil =>
+            Left((c, 'o'))
+      else
+        throw IllegalArgumentException(s"Unknown char $c")
+
+  def lastStack(line: List[Char], stack: List[Char]): (List[Char], List[Char]) =
+    line match
+      case Nil => (line, stack)
+      case h :: tail => 
+        stack.handle(h) match
+          case Left((char, expected)) =>
+            println(s"found $char, expected $expected") 
+            (line, stack)
+          case Right(newStack) => 
+            lastStack(tail, newStack)
+
+  def evalLine(line: String): Int =
+    lastStack(line.toCharArray.toList, Nil) match
+      case (_, Nil) => 
+        println("no stack")
         0
-      case Left(msg) => 
-        val char = line(msg.failedAtOffset)
-        // println(s"${msg.failedAtOffset}, ${char}")
-        weight.getOrElse(char, 0)
-      case Right(_) => 0
+      case (c::_, h::_) =>
+        // val expected = closingByOpen(h)
+        weight.getOrElse(c, 0)
+      case (Nil, h::_) =>
+        println("incomplete")
+        0
 
   lazy val answer1: Int = 
     input.map(evalLine).sum
 
   //Part 2
-  def findSuffix(line: String, suffix: String = ""): String = 
-    val line2 = line + suffix
-    if suffix.length > line.length then 
-      throw IllegalStateException("Suffix cannot be longer than line")
-    otherChunks.parseAll(line2) match
-      case Left(err@Parser.Error(failedAtOffset, lst)) => 
-        if failedAtOffset < line.length then 
-          throw IllegalStateException(s"The line itself is incorrect: $err")
-        lst.head match 
-          case Parser.Expectation.InRange(_, lower, _) =>
-            findSuffix(line, suffix + lower.toString)
-          case _ =>
-            throw IllegalStateException(s"Unexpected parsing error: $err")
-      case Right(_) => 
-        suffix
+  def findSuffix(line: String): String = 
+    lastStack(line.toCharArray.toList, Nil) match
+      case (_, stack) => 
+        stack.map(closingByOpen).mkString
 
   val scoreChar = Map(')' -> 1, ']' -> 2, '}' -> 3, '>' -> 4)
 
@@ -176,12 +183,14 @@ object Day2110 extends Utils:
       s * 5L + scoreChar(char)
     }
 
-  // 454057517, 2192104158
-  lazy val answer2: Long = 
+  def answer2OfInput(input: IndexedSeq[String]): Long = 
     val incomplete = input.filter(s => evalLine(s) == 0)
     val suffixes = incomplete.map(findSuffix(_))
     val scores = suffixes.map(score)
     scores.sorted.apply(scores.length/2)
+    
+  lazy val answer2: Long =
+    answer2OfInput(input)
 
   def main(args: Array[String]): Unit =
     println("Answer1: " + answer1)
