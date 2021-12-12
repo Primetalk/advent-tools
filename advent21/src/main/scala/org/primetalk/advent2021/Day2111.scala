@@ -361,8 +361,7 @@ import scala.annotation.tailrec
 object Day2111 extends Utils:
 
   val display = IDisplay2D.readCharDisplay(readResourceLines("day11.txt"))
-  val displayEnergy = display.map(_.toString.toInt)
-  val displayEnergy2 = display.map(_.toString.toInt)
+  val energy = display.map(_.toString.toInt)
 
   def increaseEnergy2(display: IDisplay2D[Int]): IDisplay2D[Int] = 
     display.map(_ + 1)
@@ -400,7 +399,7 @@ object Day2111 extends Utils:
     (res, cnt + displayAndFlashCount._2)
 
   lazy val answer1: Int = 
-    val (_, res) = NumberSequenceUtils.unfoldN(step)((displayEnergy, 0), 100)
+    val (_, res) = NumberSequenceUtils.unfoldN(step)((energy, 0), 100)
     res
 
   //Part 2
@@ -410,8 +409,8 @@ object Day2111 extends Utils:
     
   // // 165, 156, 164, 265
   lazy val answer2: Int =
-    // val (_, res) = NumberSequenceUtils.countUntil(step2)(_._2 == 100)((displayEnergy, 0))
-    val (_, res) = NumberSequenceUtils.countUntil(step2)(_._1.inclusiveRectSum(displayEnergy2.rect.topLeft, displayEnergy2.rect.bottomRight) == 0)((displayEnergy2, 0))
+    val (_, res) = NumberSequenceUtils.countUntil(step2)(_._2 == 100)((energy, 0))
+    // val (_, res) = NumberSequenceUtils.countUntil(step2)(_._1.inclusiveRectSum(energy.rect.topLeft, energy.rect.bottomRight) == 0)((energy, 0))
     res
 
   def main(args: Array[String]): Unit =
