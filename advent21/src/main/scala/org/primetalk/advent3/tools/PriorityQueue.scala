@@ -43,38 +43,39 @@ def insertAllIntoSortedList[T: Ordering](list: List[T], elements: List[T]): List
 // given orderingByPriority[T](p: Priority[T]): Ordering[T] = 
 //   Ordering
 
-case class PriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsortedPriority: Int = Int.MaxValue):
-  def insert(el: T)(using priority: Priority[T]): PriorityQueue[T] =
+/** Allows to quickly extract minimal element. */
+case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsortedPriority: Int = Int.MaxValue):
+  def insert(el: T)(using priority: Priority[T]): MyPriorityQueue[T] =
     sorted match
       case Nil => 
-        PriorityQueue((el :: unsorted).sortBy(priority(_)))
+        MyPriorityQueue((el :: unsorted).sortBy(priority(_)))
       case h :: t =>
         val pel = priority(el)
         if pel < priority(h) then
-          PriorityQueue(el :: sorted, unsorted, minUnsortedPriority)
+          MyPriorityQueue(el :: sorted, unsorted, minUnsortedPriority)
         else
-          PriorityQueue(sorted, el :: unsorted, math.min(minUnsortedPriority, pel))
+          MyPriorityQueue(sorted, el :: unsorted, math.min(minUnsortedPriority, pel))
 
   def isEmpty: Boolean =
     sorted.isEmpty && unsorted.isEmpty
 
-  def take(using priority: Priority[T]): (T, PriorityQueue[T]) =
+  def take(using priority: Priority[T]): (T, MyPriorityQueue[T]) =
     sorted match
       case Nil =>
         val (h :: sorted) = unsorted.sortBy(priority(_))
-        (h, PriorityQueue(sorted))
+        (h, MyPriorityQueue(sorted))
       case h::t if priority(h) < minUnsortedPriority =>
-        (h, PriorityQueue(t, unsorted, minUnsortedPriority))
+        (h, MyPriorityQueue(t, unsorted, minUnsortedPriority))
       case _ :: _ =>
         given Ordering[T] = Ordering.by(priority(_))
         val (h :: sorted2) = insertAllIntoSortedList(sorted, unsorted)
-        (h, PriorityQueue(sorted2))
+        (h, MyPriorityQueue(sorted2))
 
-  def insertAll(lst: List[T])(using priority: Priority[T]): PriorityQueue[T] =
+  def insertAll(lst: List[T])(using priority: Priority[T]): MyPriorityQueue[T] =
     lst.foldLeft(this)(_.insert(_))
 
   def toList(using priority: Priority[T]): List[T] =
-    def toListAcc(pq: PriorityQueue[T], acc: List[T] = Nil): List[T] =
+    def toListAcc(pq: MyPriorityQueue[T], acc: List[T] = Nil): List[T] =
       if pq.isEmpty then 
         acc.reverse
       else
