@@ -28,7 +28,20 @@ trait Utils:
       src.close()
     }
 
+  def thisObjectInputResourceName = 
+    getClass.getSimpleName.replace("$", ".txt")
+
+  def readThisObjectInput: String =
+    readResourceAsString(thisObjectInputResourceName)
+
+  def readThisObjectInputLines: IndexedSeq[String] =
+    readResourceLines(thisObjectInputResourceName)
+
   val newLineRegex: Regex = "\n".r
+
+  extension (text: String)
+    def scalaLines: IndexedSeq[String] =
+      text.split('\n').toIndexedSeq
 
   def splitLines(text: String): IndexedSeq[String] =
     newLineRegex.split(text).toIndexedSeq
