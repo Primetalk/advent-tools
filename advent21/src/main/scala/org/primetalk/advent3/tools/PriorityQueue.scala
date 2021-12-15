@@ -20,6 +20,10 @@ final def insertIntoSortedList[T: Ordering](list: List[T], el: T, prefix: List[T
 trait Priority[T]:
   def apply(t: T): Int
 
+/**
+ * Combines two sorted lists.
+ * O(N + M)
+ */
 def mergeSorted[T: Ordering](sorted1: List[T], sorted2: List[T], accum: List[T] = Nil): List[T] =
   sorted1 match
     case Nil =>
@@ -34,7 +38,9 @@ def mergeSorted[T: Ordering](sorted1: List[T], sorted2: List[T], accum: List[T] 
             mergeSorted(t1, sorted2, h1 :: accum)
           else
             mergeSorted(sorted1, t2, h2 :: accum)
-
+/** Inserts some elements into previously sorted list
+ * O(N+M*ln M)
+*/
 def insertAllIntoSortedList[T: Ordering](list: List[T], elements: List[T]): List[T] =
   mergeSorted(list, elements.sorted)
   //elements. foldLeft(list){ case (lst, el) => insertIntoSortedList(lst, el)}
@@ -43,7 +49,10 @@ def insertAllIntoSortedList[T: Ordering](list: List[T], elements: List[T]): List
 // given orderingByPriority[T](p: Priority[T]): Ordering[T] = 
 //   Ordering
 
-/** Allows to quickly extract minimal element. */
+/** Allows to quickly extract minimal element.
+ * This is not very efficient implementation.
+ * One would prefer Chris Okasaki's one.
+ */
 case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsortedPriority: Int = Int.MaxValue):
   def insert(el: T)(using priority: Priority[T]): MyPriorityQueue[T] =
     sorted match
@@ -74,6 +83,13 @@ case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsor
   def insertAll(lst: List[T])(using priority: Priority[T]): MyPriorityQueue[T] =
     lst.foldLeft(this)(_.insert(_))
 
+  def ++(other: MyPriorityQueue[T])(using priority: Priority[T]): MyPriorityQueue[T] =
+    given Ordering[T] = Ordering.by(priority(_))
+    MyPriorityQueue(
+      mergeSorted(sorted, other.sorted), other.unsorted reverse_::: unsorted, 
+      math.min(other.minUnsortedPriority, minUnsortedPriority)
+    )
+
   def toList(using priority: Priority[T]): List[T] =
     def toListAcc(pq: MyPriorityQueue[T], acc: List[T] = Nil): List[T] =
       if pq.isEmpty then 
@@ -82,3 +98,9 @@ case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsor
         val (h, pq2) = pq.take
         toListAcc(pq2, h :: acc)
     toListAcc(this)
+object MyPriorityQueue:
+  def fromList[T](lst: List[T])(using priority: Priority[T]): MyPriorityQueue[T] =
+    given Ordering[T] = Ordering.by(priority(_))
+    MyPriorityQueue(lst.sorted)
+
+  def empty[T]: MyPriorityQueue[T] = MyPriorityQueue(Nil)
