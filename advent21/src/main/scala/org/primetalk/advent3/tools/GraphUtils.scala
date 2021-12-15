@@ -95,6 +95,44 @@ object GraphUtils:
   final def topologicalSortFromDependencies[T: Ordering](dependencies: GraphDependencies[T], acc: List[T] = List()): List[T] = 
     topologicalSortSubList(dependencies.keys.toList, dependencies, acc)
        
+  case class PartialSearchResult[P, R](news: List[P], found: List[R])
+  /** 
+   * Searches Rs in a P-space. 
+   * Finishes when there are no news.
+   * There is a global S that allows 
+   * to eliminate some unwanted elements from search space.
+   * It is used in two places - on generation side and on global elimination.
+   */
+  def findAllWidthFirst[P, R, S](f: S => P => PartialSearchResult[P, R], eliminate: (S, List[P]) => (S, List[P]))(zero: S, start: List[P], foundSoFar: List[R]): List[R] =
+    if start.isEmpty then
+      foundSoFar
+    else
+      val partialResults = start.map(f(zero))
+      val nextBeforeElimination = partialResults.flatMap(_.news)
+      val (s, next) = eliminate(zero, nextBeforeElimination)
+      val nextFound = partialResults.map(_.found).foldLeft(foundSoFar)( (lst, f) => f reverse_::: lst )
+      findAllWidthFirst(f, eliminate)(s, next, nextFound)
+
+  case class PartialSearchResultWithPriority[P, R](news: MyPriorityQueue[P], found: List[R])
+
+  def priorityFindFirst[P: Priority, R, S](
+    f: S => P => PartialSearchResultWithPriority[P, R], 
+    eliminate: (S, MyPriorityQueue[P]) => (S, MyPriorityQueue[P])
+  )(zero: S, start: MyPriorityQueue[P], foundSoFar: List[R]): List[R] =
+    if start.isEmpty then
+      foundSoFar
+    else 
+      val (min, queue) = start.take
+      val PartialSearchResultWithPriority(next, found) = f(zero)(min)
+      found match
+        case Nil =>
+          val (zero2, nextElim) = eliminate(zero, next)
+          val nextStartElim = nextElim ++ queue
+          priorityFindFirst(f, eliminate)(zero2, nextStartElim, 
+            found reverse_::: foundSoFar)
+        case lst =>
+          lst
+
   /** This trait contains building blocks for searching shortest paths. 
    * @tparam T - Node type
    * @tparam W - weight
@@ -203,8 +241,24 @@ object GraphUtils:
           if isFinish(h.node) then
             findAllPaths(t, h :: completedPaths)
           else 
-
             val outgoing = graphAsFunction(h.node).toList
             val outgoing2 = outgoing.filter(n => allowedVisits(n) > h.visits.getOrElse(n, 0))
             val paths = outgoing2.map(h.prepend)
             findAllPaths( paths reverse_::: t, completedPaths)
+
+      
+  /** A trait that contains some building blocks for width-first search.
+   * 
+   */
+  trait Search[S]:
+    /** Return possible next states. 
+     * Similar to `graphAsFunction`.
+     */
+    def next(path: PathInfo): PartialSearchResult[PathInfo, PathInfo]
+
+    case class PathInfo(length: Int, reversePath: ReversePath[S], counts: Map[S, Int]):
+      def last: S = reversePath.head
+      def prepend(h: S): PathInfo = 
+        PathInfo(length + 1, h :: reversePath, counts.updatedWith(h)(_.map(_ + 1).orElse(Some(1))))
+
+  
