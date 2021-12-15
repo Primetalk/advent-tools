@@ -2,49 +2,28 @@ plugins {
     scala
     id("com.github.maiflai.scalatest") version "0.31"
 }
-//
+
 repositories {
-    mavenCentral()// jcenter()
+    mavenCentral()
 }
-//
+
 val scalaMinorVersion = "3.1"
 val scalaVersion      = "3.1.0"
-//val scalaTestVersion  = "3.2.3"
-//
+
 dependencies {
-//    implementation("org.scala-lang:scala3-library_3:3.1.0")
     implementation("org.scala-lang:scala3-library_3:$scalaVersion")
-    // fastparse is not supported in Scala3
-    // implementation("com.lihaoyi:fastparse_2.13:2.3.3")//"com.lihaoyi" %% "fastparse" % "2.2.2"
     implementation("org.typelevel:cats-parse_3:0.3.6")
+    implementation("org.typelevel:cats-collections-core_3:0.9.3")
 
     testImplementation("org.scalatest:scalatest_3:3.2.10")
-//    implementation("ru.primetalk:rewritable-tree_$scalaMinorVersion:0.1.0")
-////    implementation("org.typelevel:spire_$scalaMinorVersion:0.16.2")
-//
-//    testImplementation("org.scalatest:scalatest-flatspec_$scalaMinorVersion:$scalaTestVersion")
-//    testImplementation("org.scalatest:scalatest-shouldmatchers_$scalaMinorVersion:$scalaTestVersion")
-//    testImplementation("org.scalatest:scalatest-propspec_$scalaMinorVersion:$scalaTestVersion")
-//    testImplementation("org.scalatest:scalatest-core_$scalaMinorVersion:$scalaTestVersion")
-//
-//    testImplementation("org.scalatest:scalatest_$scalaMinorVersion:$scalaTestVersion")
-//    testImplementation("org.scalatestplus:scalacheck-1-14_$scalaMinorVersion:3.2.2.0")
-//
-////    testImplementation("org.scalacheck:scalacheck_$scalaMinorVersion:1.13.5")
-//    testImplementation("com.chuusai:shapeless_$scalaMinorVersion:2.3.3")
-//
-   testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.35.10")
-   testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.62.2")
-//    testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.36.8")
+    testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.62.2")
 
-//   testCompile 'org.scalatest:scalatest_2.13:3.2.0'
-//   testRuntime 'com.vladsch.flexmark:flexmark-all:0.35.10'
 }
-//
-//tasks.test {
-//    maxParallelForks = 2
-//}
-//
+
+tasks.test {
+   maxParallelForks = 2
+}
+
 tasks.register<JavaExec>("Day2100"){
     group = "run"
     description = "Run Day2100"
@@ -57,4 +36,11 @@ tasks.register<JavaExec>("Day2110"){
     description = "Run Day2110"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("org.primetalk.advent2021.Day2110")
+}
+
+tasks.register<JavaExec>("Day2115"){
+    group = "run"
+    description = "Run Day2115"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("org.primetalk.advent2021.Day2115")
 }

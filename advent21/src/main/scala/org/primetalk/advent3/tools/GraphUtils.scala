@@ -1,6 +1,7 @@
 package org.primetalk.advent3.tools
 
 import scala.annotation.tailrec
+import cats.kernel.Order
 
 object GraphUtils:
   type Edge[T] = (T, T)
@@ -129,6 +130,28 @@ object GraphUtils:
           val (zero2, nextElim) = eliminate(zero, next)
           val nextStartElim = nextElim ++ queue
           priorityFindFirst(f, eliminate)(zero2, nextStartElim, 
+            found reverse_::: foundSoFar)
+        case lst =>
+          lst
+
+
+  case class PartialSearchResultWithOrdering[P, R](news: cats.collections.Heap[P], found: List[R])
+
+  def orderingFindFirst[P: Ordering, R, S](
+    f: S => P => PartialSearchResultWithOrdering[P, R], 
+    eliminate: (S, cats.collections.Heap[P]) => (S, cats.collections.Heap[P])
+  )(zero: S, start: cats.collections.Heap[P], foundSoFar: List[R]): List[R] =
+    given Order[P] = Order.fromOrdering
+    if start.isEmpty then
+      foundSoFar
+    else 
+      val Some(min, queue) = start.pop
+      val PartialSearchResultWithOrdering(next, found) = f(zero)(min)
+      found match
+        case Nil =>
+          val (zero2, nextElim) = eliminate(zero, next)
+          val nextStartElim = queue.addAll(nextElim.toList)
+          orderingFindFirst(f, eliminate)(zero2, nextStartElim, 
             found reverse_::: foundSoFar)
         case lst =>
           lst

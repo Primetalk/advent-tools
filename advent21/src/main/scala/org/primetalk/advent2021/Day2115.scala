@@ -6,8 +6,11 @@ import org.primetalk.advent3.tools.GraphUtils
 import org.primetalk.advent3.tools.Geom2dUtils._
 import org.primetalk.advent3.tools.GraphUtils.PartialSearchResult
 import org.primetalk.advent3.tools.GraphUtils.PartialSearchResultWithPriority
+import org.primetalk.advent3.tools.GraphUtils.PartialSearchResultWithOrdering
 import org.primetalk.advent3.tools.MyPriorityQueue
 import org.primetalk.advent3.tools.Priority
+import cats.collections.Heap
+import cats.kernel.Order
 
 /**
   * https://adventofcode.com/2021/day/15
@@ -213,7 +216,7 @@ object Day2115 extends Utils:
             if m.contains(key) && m(key).totalRisk <= path.totalRisk then
               (m, lst)
             else
-              println(s"$key: ${path.totalRisk}")
+              // println(s"$key: ${path.totalRisk}")
               (m.updated(key, path), path :: lst)
         }
         (m, MyPriorityQueue(sortedBackwards.reverse))
@@ -248,34 +251,32 @@ object Day2115 extends Utils:
     val maze = maze2
     val initialPath = PathInfo(0, List(maze2.rect.topLeft))
     given Ordering[PathInfo[Position]] = Ordering.by(_.totalRisk)
-    given Priority[PathInfo[Position]] with
-      def apply(p: PathInfo[Position]): Int = p.totalRisk
-      
-    val found = GraphUtils.priorityFindFirst[PathInfo[Position], PathInfo[Position], Map[Position, PathInfo[Position]]](
+    given Order[PathInfo[Position]] = Order.fromOrdering
+
+    val found = GraphUtils.orderingFindFirst[PathInfo[Position], PathInfo[Position], Map[Position, PathInfo[Position]]](
       map => path => {
         val key = path.node
         if map.contains(key) && map(key).totalRisk < path.totalRisk then
-          PartialSearchResultWithPriority(MyPriorityQueue.empty, Nil)
+          PartialSearchResultWithOrdering(Heap.empty, Nil)
         else
           val nextPoints = maze2.adjacentPositions(key)
           val nextPaths = nextPoints.map{np =>  path.prepend(np, maze(np) - '0')}
           val (found, notYet) = nextPaths.partition(np => np.node == maze.rect.bottomRight)
-          PartialSearchResultWithPriority( MyPriorityQueue.fromList(notYet), found)
+          PartialSearchResultWithOrdering( Heap.fromIterable(notYet), found)
       },
-      (map: Map[Position, PathInfo[Position]], q: MyPriorityQueue[PathInfo[Position]]) => 
-        val (m, sortedBackwards) = q.sorted.foldLeft((map, List[PathInfo[Position]]())){
+      (map: Map[Position, PathInfo[Position]], q: Heap[PathInfo[Position]]) => 
+        val (m, sortedBackwards) = q.foldLeft((map, List[PathInfo[Position]]())){
           case ((m, lst), path) =>
             val key = path.node
             if m.contains(key) && m(key).totalRisk <= path.totalRisk then
               (m, lst)
             else
-              println(s"$key: ${path.totalRisk}")
               (m.updated(key, path), path :: lst)
         }
-        (m, MyPriorityQueue(sortedBackwards.reverse))
-    )(Map(initialPath.node -> initialPath), MyPriorityQueue(List(initialPath)), Nil)
+        (m, Heap.fromIterable(sortedBackwards.reverse))
+    )(Map(initialPath.node -> initialPath), Heap.apply(initialPath), Nil)
     found.head.totalRisk
 
   def main(args: Array[String]): Unit =
-    // println("Answer1: " + answer1)
+    println("Answer1: " + answer1)
     println("Answer2: " + answer2)

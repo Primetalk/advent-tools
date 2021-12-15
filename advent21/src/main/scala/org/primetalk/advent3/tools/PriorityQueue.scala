@@ -1,7 +1,7 @@
 package org.primetalk.advent3.tools
 
 import scala.annotation.tailrec
-
+  
 /** Inserts an element into the beginning of the sorted list.
  * PRE: list is sorted
  */
@@ -104,3 +104,17 @@ object MyPriorityQueue:
     MyPriorityQueue(lst.sorted)
 
   def empty[T]: MyPriorityQueue[T] = MyPriorityQueue(Nil)
+
+// given MyHeap[MyPriorityQueue] with
+//   def empty[T]: MyPriorityQueue[T] = 
+//     MyPriorityQueue.empty
+
+//   def enqueue[T: Ordering](h: MyPriorityQueue[T], el: T): MyPriorityQueue[T] = 
+//     ???
+//     // h.insert(el)
+
+//   def dequeue[T: Ordering](h: MyPriorityQueue[T]): (T, MyPriorityQueue[T]) = 
+//     h.take
+    
+//   def isEmpty[T: Ordering](h: MyPriorityQueue[T]): Boolean = 
+//     h.isEmpty
