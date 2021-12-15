@@ -176,7 +176,6 @@ object Day2114 extends Utils:
     "OC" -> 'C',
     "PH" -> 'H',
   )
-  val input = readThisObjectInput
 
   def process(polymer: String): String = 
     (polymer.sliding(2).map( pair => 
