@@ -264,6 +264,11 @@ case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Optio
   /** Transform this display according to cellular automaton rules. */
   val produceByLocalRules8: CellularAutomatonRule => IDisplay2D[T] = produceByRules(directions8)
 
+  val neibourhood9 = (0,0) :: directions8
+  
+  /** Transform this display according to cellular automaton rules. */
+  val produceByLocalRules9: CellularAutomatonRule => IDisplay2D[T] = produceByRules(neibourhood9)
+
   /** Transform this display according to cellular automaton rules. */
   val produceByLocalRulesFromMainDirections: CellularAutomatonRule => IDisplay2D[T] = produceByRules(mainDirections)
 
