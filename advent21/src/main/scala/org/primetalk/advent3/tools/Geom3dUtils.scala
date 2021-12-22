@@ -12,16 +12,36 @@ object Geom3dUtils:
   def parallelepipedByDiagonal(topLeft: Position, bottomRight: Position): Parallelepiped =
     Parallelepiped(topLeft, bottomRight - topLeft + (1, 1, 1))
 
+  def parallelepipedFromRanges(xr: InclusiveRange, yr: InclusiveRange, zr: InclusiveRange): Parallelepiped =
+    parallelepipedByDiagonal((xr._1, yr._1, zr._1), (xr._2, yr._2, zr._2))
+
+  // sealed trait OrtPlain
+  // case class OrtPlainX(x: Int) extends OrtPlain
+  // case class OrtPlainY(y: Int) extends OrtPlain
+  // case class OrtPlainZ(z: Int) extends OrtPlain
+
+  case class Line3d(a: Position, b: Position)
+
   /** Origin is in top left corner. */
   case class Parallelepiped(topLeft: Position, size: Vector3d) {
 
     def bottomRight: Position = topLeft + size - (1, 1, 1)
+
+    def containsCompletely(other: Parallelepiped): Boolean =
+      isWithin(other.topLeft) &&
+        isWithin(other.bottomRight) 
 
     def isWithin(p: Position): Boolean = p match
       case (x,y,z) =>
         x0 <= x && (x - x0) < size._1 &&
         y0 <= y && (y - y0) < size._2 &&
         z0 <= z && (z - z0) < size._3
+
+    def isOnBoundary(p: Position): Boolean = p match
+      case (x,y,z) =>
+        x0 == x || x1 == x ||
+        y0 == y || y1 == y ||
+        z0 == z || z1 == z 
 
     def x0: Int = topLeft._1
     def y0: Int = topLeft._2
@@ -31,19 +51,22 @@ object Geom3dUtils:
     def y1: Int = y0 + size._2 - 1
     def z1: Int = z0 + size._3 - 1
 
+    def xr: InclusiveRange = (x0, x1)
+    def yr: InclusiveRange = (y0, y1)
+    def zr: InclusiveRange = (z0, z1)
+
     def isValid: Boolean =
       size.isAllPositive
 
-    def randomPoint(rnd: Random): Position = {
+    def randomPoint(rnd: Random): Position =
       val s = size
       val i = rnd.nextInt(s._1)
       val j = rnd.nextInt(s._2)
       val k = rnd.nextInt(s._3)
       (i, j, k) + topLeft
-    }
 
-    def vertices: Seq[Position] =
-      Seq(
+    def vertices: List[Position] =
+      List(
         (x0,y0,z0),
         (x0,y0,z1),
         (x0,y1,z0),
@@ -54,21 +77,65 @@ object Geom3dUtils:
         (x1,y1,z1)
       )
 
+    def edges: List[Line3d] =
+      val v = vertices
+      for
+        a <- v
+        b <- v
+        if a != b
+        if a._1 == b._1 || a._2 == b._2 || a._3 == b._3 
+      yield 
+        Line3d(a,b)
+    
     def manhattanSize: Long = size.manhattanSize
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
 
-    def intersect(other: Parallelepiped): Option[Parallelepiped] = {
-      val othersVerticesInside = other.vertices.filter(isWithin)
-      val verticesInsideOther = vertices.filter(other.isWithin)
-      val vs = othersVerticesInside ++ verticesInsideOther
-      vs.headOption.map(_ =>
-        parallelepipedByDiagonal(
-          (vs.map(_._1).min, vs.map(_._2).min, vs.map(_._3).min),
-          (vs.map(_._1).max, vs.map(_._2).max, vs.map(_._3).max)
-          )
-      )
-    }
+    def points: Seq[Position] =
+      for
+        z <- z0 to z1
+        y <- y0 to y1
+        x <- x0 to x1
+      yield
+        (x,y,z)
+
+    def volume: BigInt =
+      BigInt(size._1) * size._2 * size._3
+
+    def intersect(other: Parallelepiped): Option[Parallelepiped] =
+      for
+        rxi <- xr.intersect(other.xr)
+        ryi <- yr.intersect(other.yr)
+        rzi <- zr.intersect(other.zr)
+      yield
+        parallelepipedFromRanges(rxi, ryi, rzi)
+
+    /** From the set of points represented by this parallelepiped, remove another one. 
+     * If there is no intersection, this one is returned.
+     * If there is an intersection, 
+     * a collection of parallelepipeds is returned. Combining them together and 
+     * the intersection will recreate volume of the original parallelepiped.
+     */
+    def subtract(other: Parallelepiped): List[Parallelepiped] =
+      intersect(other) match
+        case None => 
+          List(this)
+        case Some(i) =>
+          val ixr = i.xr
+          val iyr = i.yr
+          val izr = i.zr
+
+          val gxr = xr.exclude(ixr)
+          val gyr = yr.exclude(iyr)
+          val gzr = zr.exclude(izr)
+
+          for
+            zrr <- izr :: gzr
+            yrr <- iyr :: gyr
+            xrr <- ixr :: gxr
+            if xrr != ixr || yrr != iyr || zrr != izr
+          yield
+            parallelepipedFromRanges(xrr, yrr, zrr)
 
     def divideIntoSmallerPieces(n: Int): Seq[Parallelepiped] = {
       if(size == (1,1,1))
