@@ -2,6 +2,7 @@ package org.primetalk.advent3.tools
 
 import scala.annotation.tailrec
 import cats.kernel.Order
+import cats.collections.Heap
 
 object GraphUtils:
   type Edge[T] = (T, T)
@@ -134,6 +135,41 @@ object GraphUtils:
         case lst =>
           lst
 
+  case class PartialSearchResultWithPriority2[P, R](news: Iterable[P], found: List[R])
+  
+  def priorityFindFirst2[P: Order, R, S](
+    f: S => P => PartialSearchResultWithPriority2[P, R], 
+    eliminate: (S, Iterable[P]) => (S, Iterable[P])
+  )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] =
+    if start.isEmpty then
+      foundSoFar
+    else 
+      val Some(min, queue) = start.pop
+      val PartialSearchResultWithPriority2(next, found) = f(zero)(min)
+      found match
+        case Nil =>
+          val (zero2, nextElim) = eliminate(zero, next)
+          val nextStartElim = queue.addAll(nextElim)
+          priorityFindFirst2(f, eliminate)(zero2, nextStartElim, 
+            found reverse_::: foundSoFar)
+        case lst =>
+          lst
+
+  def priorityFindAll2[P: Order, R, S](
+    f: P => PartialSearchResultWithPriority2[P, R],
+    estimate: (S, List[R]) => S, 
+    eliminate: (S, Iterable[P]) => (S, Iterable[P])
+  )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] =
+    if start.isEmpty then
+      foundSoFar
+    else 
+      val Some(min, queue) = start.pop
+      val PartialSearchResultWithPriority2(next, found) = f(min)
+      val (zero2, nextElim) = eliminate(zero, next)
+      val nextStartElim = queue.addAll(nextElim)
+      val zero3 = estimate(zero2, found)
+      priorityFindAll2(f, estimate, eliminate)(zero3, nextStartElim, 
+        found reverse_::: foundSoFar)
 
   case class PartialSearchResultWithOrdering[P, R](news: cats.collections.Heap[P], found: List[R])
 
@@ -174,9 +210,6 @@ object GraphUtils:
 
     val isFinish: T => Boolean
 
-    given Priority[PathInfo] with
-      def apply(p: PathInfo): Int = p.length
-
     extension (shortestPath: Map[T, PathInfo])
       def isPathLongerThanExisting(path: PathInfo): Boolean = 
         shortestPath.get(path.node).exists(_.length <= path.length)
@@ -200,19 +233,20 @@ object GraphUtils:
       * @return the length of path and all found paths.
       */
     @tailrec
-    final def findAllShortestPaths2(
+    final def findAllShortestPaths7(
       toVisitSortedByPathInfoLength: List[PathInfo],
       shortestPath: Map[T, PathInfo] = Map(),
       foundPaths: List[ReversePath[T]] = List(),
-      lengthLimit: Int = Int.MaxValue
-    ): (Int, Seq[ReversePath[T]]) =
+      priorityLimit: Long = Long.MaxValue
+    )(using priority: Priority[PathInfo]): (Long, Seq[ReversePath[T]]) =
+
       toVisitSortedByPathInfoLength match 
         case Nil =>
-          (lengthLimit, foundPaths)
+          (priorityLimit, foundPaths)
         case headPath::tail =>
-          if headPath.length >= lengthLimit then 
+          if priority(headPath) >= priorityLimit then 
             // ignore this node, because it's further than lengthLimit
-            findAllShortestPaths2(tail, shortestPath, foundPaths, lengthLimit)
+            findAllShortestPaths7(tail, shortestPath, foundPaths, priorityLimit)
           else
             val nextNodes: List[T] = graphAsFunction(headPath.node).toList
             val pathsToNextNodes: List[PathInfo] = nextNodes.map(headPath.prepend)
@@ -220,15 +254,15 @@ object GraphUtils:
               pathsToNextNodes.filter(p => isFinish(p.node))
             val found = inFinish.toList
             val nextFoundPaths = found.map(_.reversePath) reverse_::: foundPaths
-            val nextLengthLimit = found.headOption.map(_.length).getOrElse(lengthLimit)
-            require(nextLengthLimit <= lengthLimit, "length <= lengthLimit")
+            val nextLengthLimit = found.headOption.map(priority(_)).getOrElse(priorityLimit)
+            require(nextLengthLimit <= priorityLimit, "priority <= priorityLimit")
             val eliminatePathLongerThanExisting = pathsToNextNodes
               .filterNot(shortestPath.isPathLongerThanExisting)
             val nextShortestPath = shortestPath.addFoundPaths(pathsToNextNodes) 
-            given Ordering[PathInfo] = Ordering.by(_.length)
+            given Ordering[PathInfo] = Ordering.by(priority.apply)
             val nextToVisitSorted = insertAllIntoSortedList(tail, eliminatePathLongerThanExisting)
             
-            findAllShortestPaths2(
+            findAllShortestPaths7(
               nextToVisitSorted,
               nextShortestPath,
               nextFoundPaths, 
