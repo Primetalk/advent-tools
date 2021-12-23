@@ -196,7 +196,7 @@ object Day2115 extends Utils:
     val initialPath = PathInfo(0, List(maze.rect.topLeft))
     given Ordering[PathInfo[Position]] = Ordering.by(_.totalRisk)
     given Priority[PathInfo[Position]] with
-      def apply(p: PathInfo[Position]): Int = p.totalRisk
+      def apply(p: PathInfo[Position]): Long = p.totalRisk
       
     val found = GraphUtils.priorityFindFirst[PathInfo[Position], PathInfo[Position], Map[Position, PathInfo[Position]]](
       map => path => {

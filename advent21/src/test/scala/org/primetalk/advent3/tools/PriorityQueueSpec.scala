@@ -9,7 +9,7 @@ class PriorityQueueSpec extends UnitSpec:
 
   "PriorityQueue" should "return sorted" in {
     given Priority[Int] with
-      def apply(i: Int): Int = i
+      def apply(i: Int): Long = i
       
     val queue =  MyPriorityQueue(Nil).insertAll(examples)
     val result = queue.toList

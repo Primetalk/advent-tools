@@ -18,7 +18,7 @@ final def insertIntoSortedList[T: Ordering](list: List[T], el: T, prefix: List[T
         insertIntoSortedList(tail, el, h :: prefix)
 // @typeclass
 trait Priority[T]:
-  def apply(t: T): Int
+  def apply(t: T): Long
 
 /**
  * Combines two sorted lists.
@@ -53,7 +53,7 @@ def insertAllIntoSortedList[T: Ordering](list: List[T], elements: List[T]): List
  * This is not very efficient implementation.
  * One would prefer Chris Okasaki's one.
  */
-case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsortedPriority: Int = Int.MaxValue):
+case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsortedPriority: Long = Long.MaxValue):
   def insert(el: T)(using priority: Priority[T]): MyPriorityQueue[T] =
     sorted match
       case Nil => 
