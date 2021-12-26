@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
 // TODO: DrawDisplay on canvas (Scala.js)
 // TODO: Remove state. Mutable array could be provided from outside as an implicit context
 // TODO: Use refined type for array size,vector size.
-case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => IArray[IArray[T]]] = None):
+final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option[() => IArray[IArray[T]]] = None):
   /** We only allocate array when it's needed*/
   lazy val array: IArray[IArray[T]] =
     init.getOrElse(() => IArray.unsafeFromArray(Array.ofDim[T](size._2, size._1).map(IArray.unsafeFromArray))).apply()
@@ -320,6 +320,19 @@ case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Optio
     val res = IDisplay2D.apply[T](rect)
     res.fill(this.apply)
     res
+
+  def isEqualTo(other: IDisplay2D[T]): Boolean =
+    offset == other.offset &&
+    size == other.size &&
+    array.zip(other.array).forall(_.sameElements(_))
+
+  def elementClassTag: ClassTag[T] = 
+    summon[ClassTag[T]]
+
+  override def equals(other: Any): Boolean =
+    other.isInstanceOf[IDisplay2D[_]] &&
+      other.asInstanceOf[IDisplay2D[_]].elementClassTag == elementClassTag &&
+      this.isEqualTo(other.asInstanceOf[IDisplay2D[T]])
 
 object IDisplay2D:
   def apply[T: ClassTag](rect: Rectangle): IDisplay2D[T] =
