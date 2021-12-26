@@ -211,6 +211,15 @@ object NumberSequenceUtils:
     else
       fixedPoint(n)(f)
   
+  @tailrec
+  final def countUntilFixedPoint[A](z: A, cnt: Long = 0)(f: A => A, eq: (A, A) => Boolean ): (A, Long) =
+    val n = f(z)
+    if cnt % 1000 == 0 then println(cnt)
+    if eq(n, z) then
+      (z, cnt)
+    else
+      countUntilFixedPoint(n, cnt + 1)(f, eq)
+  
 
   /** Finds minimum argument for predicate to hold true. */
   @tailrec
