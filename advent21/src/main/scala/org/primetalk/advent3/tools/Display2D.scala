@@ -267,6 +267,18 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
     }
 
   def fill(f: Position => T): Unit = renderFunction(f)
+  def fillAndCountChanges(f: Position => T): Int = 
+    var cnt = 0
+    for{
+      p <- points
+    } {
+      val newV = f(p)
+      if newV != this(p) then {
+        cnt += 1
+        this(p) = f(p)
+      }
+    }
+    cnt
 
   /** Fill display with the given value.
     * Faster than renderFunction(_ => value)
