@@ -7,8 +7,8 @@ repositories {
     mavenCentral()
 }
 
-val scalaMinorVersion = "3.1"
-val scalaVersion      = "3.1.0"
+val scalaMinorVersion = "3.2"
+val scalaVersion      = "3.2.1"
 
 dependencies {
     implementation("org.scala-lang:scala3-library_3:$scalaVersion")
@@ -50,4 +50,11 @@ tasks.register<JavaExec>("Day2120"){
     description = "Run Day2120"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("org.primetalk.advent2021.Day2120")
+}
+
+tasks.register<JavaExec>("Day2121"){
+    group = "run"
+    description = "Run Day2121"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("org.primetalk.advent2021.Day2121")
 }
