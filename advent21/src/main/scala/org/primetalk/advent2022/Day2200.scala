@@ -7,6 +7,10 @@ import org.primetalk.advent3.tools.Utils
   */
 object Day2200 extends Utils:
 
+  val input = readThisObjectInput
+
+  val lines = readThisObjectInputLines
+
   lazy val answer1: Int = 1
 
   //Part 2
