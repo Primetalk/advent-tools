@@ -75,7 +75,7 @@ object PrimeNumbers:
   def factoriseToFactorPowers(n: Int): Seq[Factor] =
     factoriseToPrimes(n)
       .groupMapReduce(identity)(_ => 1)(_ + _)
-      .map{ case (i,p) => Factor(i,p) }
+      .map{ case (base,pow) => Factor(base,pow) }
       .toSeq
 
   def multiply(factors: Seq[Factor]): Int =

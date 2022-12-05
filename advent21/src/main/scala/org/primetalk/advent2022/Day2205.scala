@@ -168,8 +168,12 @@ object Day2205 extends Utils:
       if cnt == 0 then
         (from, to)
       else
-        val head :: fromRes = from
-        moveCnt(fromRes, head :: to, cnt - 1)
+        from match
+          case head :: fromRes =>
+            moveCnt(fromRes, head :: to, cnt - 1)
+          case Nil =>
+            ???
+
     val (fromRes, toRes) = moveCnt(from, to, cnt)
 
     stack

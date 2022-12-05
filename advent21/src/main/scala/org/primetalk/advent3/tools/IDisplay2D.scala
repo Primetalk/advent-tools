@@ -22,12 +22,11 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
 
   def apply(position: Position): T =
     val p = position - offset
-    try {
+    try
       array(p._2)(p._1)
-    } catch {
+    catch
       case e: IndexOutOfBoundsException =>
         throw new IndexOutOfBoundsException(s"$position does not belong to a rectangle at $offset with size $size")
-    }
 
   def updated(position: Position, v: T): IDisplay2D[T] =
     val p = position - offset

@@ -141,10 +141,10 @@ object GraphUtils:
     f: S => P => PartialSearchResultWithPriority2[P, R], 
     eliminate: (S, Iterable[P]) => (S, Iterable[P])
   )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] =
-    if start.isEmpty then
+    start.pop match
+     case None =>
       foundSoFar
-    else 
-      val Some(min, queue) = start.pop
+     case Some(min, queue) =>
       val PartialSearchResultWithPriority2(next, found) = f(zero)(min)
       found match
         case Nil =>
@@ -160,16 +160,25 @@ object GraphUtils:
     estimate: (S, List[R]) => S, 
     eliminate: (S, Iterable[P]) => (S, Iterable[P])
   )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] =
-    if start.isEmpty then
+    start.pop match
+     case None =>
       foundSoFar
-    else 
-      val Some(min, queue) = start.pop
+     case Some(min, queue) =>
       val PartialSearchResultWithPriority2(next, found) = f(min)
       val (zero2, nextElim) = eliminate(zero, next)
       val nextStartElim = queue.addAll(nextElim)
       val zero3 = estimate(zero2, found)
       priorityFindAll2(f, estimate, eliminate)(zero3, nextStartElim, 
         found reverse_::: foundSoFar)
+
+  def priorityFindAll3[P: Order, R, S](
+    f: P => PartialSearchResultWithPriority2[P, R],
+    estimate: (S, List[R]) => S, 
+    eliminate: (S, Iterable[P]) => (S, Iterable[P])
+  )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] = {
+    // cats.effect.MVar
+    ???
+  }
 
   case class PartialSearchResultWithOrdering[P, R](news: cats.collections.Heap[P], found: List[R])
 
@@ -178,10 +187,10 @@ object GraphUtils:
     eliminate: (S, cats.collections.Heap[P]) => (S, cats.collections.Heap[P])
   )(zero: S, start: cats.collections.Heap[P], foundSoFar: List[R]): List[R] =
     given Order[P] = Order.fromOrdering
-    if start.isEmpty then
+    start.pop match
+     case None =>  
       foundSoFar
-    else 
-      val Some(min, queue) = start.pop
+     case Some(min, queue) =>
       val PartialSearchResultWithOrdering(next, found) = f(zero)(min)
       found match
         case Nil =>

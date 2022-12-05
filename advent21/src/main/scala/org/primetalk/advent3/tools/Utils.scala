@@ -13,11 +13,10 @@ trait Utils:
   def readResourceLines(resourceName: String): IndexedSeq[String] =
     val resource: URL = getClass.getResource(resourceName)
     val src = Source.fromURL(resource, "UTF-8")
-    try {
+    try
       src.getLines().toIndexedSeq
-    } finally {
+    finally
       src.close()
-    }
 
   def readResourceAsString(resourceName: String): String =
     val resource: URL = getClass.getResource(resourceName)
@@ -25,11 +24,10 @@ trait Utils:
       throw new IllegalArgumentException(s"Couldn't find resource '$resourceName'")
     else 
       val src = Source.fromURL(resource, "UTF-8")
-      try {
+      try
         src.mkString
-      } finally {
+      finally
         src.close()
-      }
 
   def thisObjectInputResourceName = 
     getClass.getSimpleName.replace("$", ".txt")
@@ -61,7 +59,7 @@ trait Utils:
   val intsRegex: Regex = "[-]?\\d+".r
 
   def parseAllIntsInString(text: String): Seq[Int] =
-    intsRegex.findAllMatchIn(text).map{_.toString().toInt}.toSeq
+    intsRegex.findAllMatchIn(text).map(_.toString().toInt).toSeq
 
 
 object Utils extends Utils

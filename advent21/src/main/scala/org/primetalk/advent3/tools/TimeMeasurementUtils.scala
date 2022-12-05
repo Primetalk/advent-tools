@@ -1,6 +1,14 @@
 package org.primetalk.advent3.tools
 
-object TimeMeasurementUtils:
+/** Usage:
+ * {{{
+ *   val a = measure{
+ *     // some computation 
+ *     value
+ *   }.report(millis => println(s"time taken = $millis ms"))
+ * }}}
+*/
+object TimeMeasurementUtils: 
 
   type TimeMeasure[A] = (Long, A)
 

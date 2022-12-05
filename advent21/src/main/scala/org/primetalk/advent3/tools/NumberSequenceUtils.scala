@@ -19,29 +19,29 @@ object NumberSequenceUtils:
   final def floydInt[T](t0: T)(eq: (T, T) => Boolean = (a: T, b: T) => a == b)(f: SequenceGen[T] ): (Int, Int) = {
 
     @tailrec
-    def goDoubleSpeed(tortoise: T, hare: T, ν: Int): (T, T, Int) = {
+    def goDoubleSpeed(tortoise: T, hare: T, ν: Int): (T, T, Int) =
       if(eq(tortoise, hare))
         (tortoise, hare, ν)
       else
         goDoubleSpeed(f(tortoise), f(f(hare)), ν + 1)
-    }
+
     val t1 = f(t0)
     val (_, hare, _) = goDoubleSpeed(t1, f(t1), 1)
     @tailrec
-    def goNormalSpeed(tortoise: T, hare: T, μ: Int): (T, T, Int) = {
+    def goNormalSpeed(tortoise: T, hare: T, μ: Int): (T, T, Int) =
       if(eq(tortoise, hare))
         (tortoise, hare, μ)
       else
         goNormalSpeed(f(tortoise), f(hare), μ + 1)
-    }
+
     val (tortoise2, _, μ) = goNormalSpeed(t0, hare, 0)
     @tailrec
-    def goHare(tortoise: T, hare: T, λ: Int): Int = {
+    def goHare(tortoise: T, hare: T, λ: Int): Int =
       if(eq(tortoise, hare))
         λ
       else
         goHare(tortoise, f(hare), λ + 1)
-    }
+
     val λ = goHare(tortoise2, f(tortoise2), 1)
     (μ, λ)
   }
@@ -89,42 +89,39 @@ object NumberSequenceUtils:
     val hare = 2
     assert(states.length >= 3)
     @tailrec
-    def goDoubleSpeed(ν: Long): Long = {
-      if(eq(states(tortoise), states(hare)))
+    def goDoubleSpeed(ν: Long): Long =
+      if eq(states(tortoise), states(hare)) then
         ν
-      else {
+      else
         update(states(tortoise))
         update(states(hare))
         update(states(hare))
         goDoubleSpeed(ν + 1)
-      }
-    }
+
     copy(states(tortoise), states(t0))
     update(states(tortoise))
     copy(states(hare), states(tortoise))
     update(states(hare))
     goDoubleSpeed(1)
     @tailrec
-    def goNormalSpeed(μ: Long): Long = {
-      if(eq(states(tortoise), states(hare)))
+    def goNormalSpeed(μ: Long): Long =
+      if eq(states(tortoise), states(hare)) then
         μ
-      else {
+      else
         update(states(tortoise))
         update(states(hare))
         goNormalSpeed(μ + 1)
-      }
-    }
+
     copy(states(tortoise), states(t0))
     val μ = goNormalSpeed(0)
     @tailrec
-    def goHare(λ: Long): Long = {
-      if(eq(states(tortoise), states(hare)))
+    def goHare(λ: Long): Long =
+      if eq(states(tortoise), states(hare)) then
         λ
-      else {
+      else
         update(states(hare))
         goHare(λ + 1)
-      }
-    }
+
     copy(states(hare), states(tortoise))
     update(states(hare))
     val λ = goHare(1)
@@ -133,10 +130,9 @@ object NumberSequenceUtils:
   inline final def unfold[A](gen: FiniteSequenceGen[A]): (z: A) => A =
     @annotation.tailrec
     def unfold0(z: A): A =
-      gen(z) match {
+      gen(z) match
         case None => z
         case Some(zz) => unfold0(zz)
-      }
     
     unfold0
   
@@ -194,10 +190,10 @@ object NumberSequenceUtils:
   final def unfoldWithSuffix[S, T](f: S => Option[(S, T)]): (tail: List[T], z: S) => List[T] =
     @tailrec
     def unfoldWithSuffix0(tail: List[T] = Nil, z: S): List[T] =
-      f(z) match {
+      f(z) match
         case None => tail
         case Some((zz, b)) => unfoldWithSuffix0(b :: tail, zz)
-      }
+
     unfoldWithSuffix0
 
   def generateStreamFrom[S](s0: S)(f: S => S): LazyList[S] =

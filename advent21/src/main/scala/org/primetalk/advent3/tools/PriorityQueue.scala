@@ -71,14 +71,21 @@ case class MyPriorityQueue[T](sorted: List[T], unsorted: List[T] = Nil, minUnsor
   def take(using priority: Priority[T]): (T, MyPriorityQueue[T]) =
     sorted match
       case Nil =>
-        val (h :: sorted) = unsorted.sortBy(priority(_))
-        (h, MyPriorityQueue(sorted))
-      case h::t if priority(h) < minUnsortedPriority =>
-        (h, MyPriorityQueue(t, unsorted, minUnsortedPriority))
-      case _ :: _ =>
-        given Ordering[T] = Ordering.by(priority(_))
-        val (h :: sorted2) = insertAllIntoSortedList(sorted, unsorted)
-        (h, MyPriorityQueue(sorted2))
+        unsorted.sortBy(priority(_)) match
+          case h :: sorted =>
+            (h, MyPriorityQueue(sorted))
+          case Nil =>
+            throw IllegalStateException("take on empty priority queue")
+      case h::t =>
+        if priority(h) < minUnsortedPriority then
+          (h, MyPriorityQueue(t, unsorted, minUnsortedPriority))
+        else
+          given Ordering[T] = Ordering.by(priority(_))
+          insertAllIntoSortedList(sorted, unsorted) match
+            case h :: sorted2 =>
+              (h, MyPriorityQueue(sorted2))
+            case Nil => 
+              ??? // should never happen, because sorted is not empty
 
   def insertAll(lst: List[T])(using priority: Priority[T]): MyPriorityQueue[T] =
     lst.foldLeft(this)(_.insert(_))
