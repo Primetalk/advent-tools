@@ -338,6 +338,9 @@ object IDisplay2D:
   def apply[T: ClassTag](rect: Rectangle): IDisplay2D[T] =
     new IDisplay2D[T](rect.topLeft, rect.size)()
 
+  def fromArray[T: ClassTag](arr2: Array[Array[T]]): IDisplay2D[T] =
+    Display2D.fromArray(arr2).toIDisplay2D
+    
   def of[T: ClassTag](offset: Vector2d, size: Vector2d)(f: Position => T): IDisplay2D[T] =
     Display2D.of(offset, size)(f).toIDisplay2D
 

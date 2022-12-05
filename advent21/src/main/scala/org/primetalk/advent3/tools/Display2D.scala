@@ -389,6 +389,11 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   def columnPositions(x: Int): Seq[Position] =
     ys.map(y => (x, y)).toSeq
 
+  def lineValues(y: Int): Seq[T] = 
+    linePositions(y).map(apply)
+  def columnValues(x: Int): Seq[T] =
+    columnPositions(x).map(apply)
+    
   def deepClone: Display2D[T] = 
     val res = Display2D.apply[T](rect)
     res.fill(this.apply)
@@ -436,3 +441,8 @@ object Display2D:
     val d = Display2D[T](offset, size)()
     d.fill(f)
     d
+  def fromArray[T: ClassTag](arr2: Array[Array[T]]): Display2D[T] =
+    new Display2D[T]((0,0), (arr2(0).length, arr2.length))(Some(() => arr2))
+
+  def fromIDisplay2D[T: ClassTag](id: IDisplay2D[T]): Display2D[T] =
+    of[T](id.offset, id.size)(id.apply)
