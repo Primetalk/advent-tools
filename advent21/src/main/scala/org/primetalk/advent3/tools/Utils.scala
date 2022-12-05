@@ -21,12 +21,15 @@ trait Utils:
 
   def readResourceAsString(resourceName: String): String =
     val resource: URL = getClass.getResource(resourceName)
-    val src = Source.fromURL(resource, "UTF-8")
-    try {
-      src.mkString
-    } finally {
-      src.close()
-    }
+    if resource == null then 
+      throw new IllegalArgumentException(s"Couldn't find resource '$resourceName'")
+    else 
+      val src = Source.fromURL(resource, "UTF-8")
+      try {
+        src.mkString
+      } finally {
+        src.close()
+      }
 
   def thisObjectInputResourceName = 
     getClass.getSimpleName.replace("$", ".txt")
