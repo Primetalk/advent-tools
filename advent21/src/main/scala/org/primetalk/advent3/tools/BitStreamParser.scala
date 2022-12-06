@@ -3,7 +3,15 @@ package org.primetalk.advent3.tools
 trait BitsParser[T]:
   def parse(bits: List[Char]): (T, List[Char])
 
+/** This parser combinator mini-library supports parsing 
+ * higher-level data structures from the stream of bits '0', '1'.
+ * 
+ * NB! It does not support failure (and hence, backtracking)!
+ * Probably, ordinary parsing library could do the same.
+ */
 object BitsParser:
+  val one = '1'
+  val zero = '0'
   extension [T](p: BitsParser[T])
     def map[A](f: T => A): BitsParser[A] = new BitsParser[A]:
       def parse(bits: List[Char]): (A, List[Char]) =
@@ -44,6 +52,9 @@ object BitsParser:
     def toNumber: BitsParser[Long] = 
       p.map(_.mkString)
         .map(s => BigInt(s, 2).toLong)
+    def toBits: BitsParser[Bits] =
+      p.map(_.mkString)
+        .map(Bits.fromBinaryString)
 
   def fixedWidth(len: Int): BitsParser[List[Char]] = new BitsParser[List[Char]]:
     def parse(bits: List[Char]): (List[Char], List[Char]) =
@@ -53,4 +64,4 @@ object BitsParser:
     fixedWidth(len).toNumber
 
   def bit: BitsParser[Boolean] =
-    fixedWidth(1).map(_ == List('1'))
+    fixedWidth(1).map(_ == List(one))
