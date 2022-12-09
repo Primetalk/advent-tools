@@ -191,6 +191,9 @@ object Geom2dUtils:
     def theta: Double =
       math.atan2(-v._2, v._1)
 
+    def normalizeCoords: Vector2d = 
+      (math.signum(v._1),math.signum(v._2))
+
   def manhattanDistance(p1: Position, p2: Position): Int =
     math.abs(p1._1 - p2._1) + math.abs(p1._2 - p2._2)
 
