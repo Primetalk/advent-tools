@@ -61,5 +61,9 @@ trait Utils:
   def parseAllIntsInString(text: String): Seq[Int] =
     intsRegex.findAllMatchIn(text).map(_.toString().toInt).toSeq
 
+  def parseFirstIntInString(text: String): Int =
+    intsRegex.findFirstIn(text)
+      .map(_.toString().toInt)
+      .getOrElse(throw IllegalArgumentException(s"no int in $text"))
 
 object Utils extends Utils
