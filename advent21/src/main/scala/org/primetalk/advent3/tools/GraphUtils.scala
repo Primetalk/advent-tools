@@ -219,8 +219,11 @@ object GraphUtils:
 
     val isFinish: T => Boolean
 
+    given shorterIsPriority: Priority[PathInfo] = new Priority[PathInfo]:
+      def apply(pi: PathInfo): Long = pi.length
+
     extension (shortestPath: Map[T, PathInfo])
-      def isPathLongerThanExisting(path: PathInfo): Boolean = 
+      def thereIsShorterPath(path: PathInfo): Boolean = 
         shortestPath.get(path.node).exists(_.length <= path.length)
       def addFoundPaths(paths: List[PathInfo]): Map[T, PathInfo] =
         paths match 
@@ -251,6 +254,7 @@ object GraphUtils:
 
       toVisitSortedByPathInfoLength match 
         case Nil =>
+//          println(shortestPath.get())
           (priorityLimit, foundPaths)
         case headPath::tail =>
           if priority(headPath) >= priorityLimit then 
@@ -266,7 +270,7 @@ object GraphUtils:
             val nextLengthLimit = found.headOption.map(priority(_)).getOrElse(priorityLimit)
             require(nextLengthLimit <= priorityLimit, "priority <= priorityLimit")
             val eliminatePathLongerThanExisting = pathsToNextNodes
-              .filterNot(shortestPath.isPathLongerThanExisting)
+              .filterNot(shortestPath.thereIsShorterPath)
             val nextShortestPath = shortestPath.addFoundPaths(pathsToNextNodes) 
             given Ordering[PathInfo] = Ordering.by(priority.apply)
             val nextToVisitSorted = insertAllIntoSortedList(tail, eliminatePathLongerThanExisting)
