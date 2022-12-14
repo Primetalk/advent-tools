@@ -310,6 +310,9 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
   def findAll(p: T => Boolean): Seq[Position] =
     points.filter(pos => p(apply(pos)))
 
+  def indexOf(v: T): Option[Position] = 
+    findAll(_ == v).headOption
+
   def linePositions(y: Int): Seq[Position] =
     xs.map(x => (x, y)).toSeq
   def columnPositions(x: Int): Seq[Position] =
@@ -332,6 +335,18 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
     other.isInstanceOf[IDisplay2D[_]] &&
       other.asInstanceOf[IDisplay2D[_]].elementClassTag == elementClassTag &&
       this.isEqualTo(other.asInstanceOf[IDisplay2D[T]])
+
+  def findShortestPathBetweenValues(
+    directions: List[Direction] = mainDirections,
+    isMoveAllowed: (from: Position, to: Position) => Boolean = (from, to) => isWithinRange(to),
+  )(from: T, to: T): (Long, Seq[GraphUtils.ReversePath[Position]]) =
+      object searcher extends GraphUtils.ShortestPathAlgorithms[Position]:
+        val graphAsFunction: GraphUtils.GraphAsFunction[Position] = p => 
+          directions.map(dir => p + dir).filter(t => isMoveAllowed(p,t))
+        val isFinish: (Position) => Boolean = apply(_) == to
+
+        val start = findAll(_ == from).map(p => PathInfo(0, List(p))).toList
+      searcher.findAllShortestPaths7(searcher.start)
 
 object IDisplay2D:
   def apply[T: ClassTag](rect: Rectangle): IDisplay2D[T] =

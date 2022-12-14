@@ -81,40 +81,29 @@ object Day2212 extends Utils:
       case 'E' => 'z'
       case 'S' => 'a'
       case _ => ch
-    
+
+  def isMoveAllowed(from: Position, to: Position): Boolean = 
+    heightMap.isWithinRange(from) && 
+    heightMap.isWithinRange(to) && {
+      lazy val current = removeSE(heightMap(from))
+      lazy val c = removeSE(heightMap(to))
+      (c == current + 1 || c <= current)
+    }
+
   lazy val answer1: Long =
-    object ShortestPathFinder extends ShortestPathAlgorithms[Position]:
-      val isFinish: (Position) => Boolean = p => heightMap(p) == 'E'
-      val graphAsFunction: GraphAsFunction[Position] = p =>
-        val current = removeSE(heightMap(p))
-        mainDirections
-          .map(p + _)
-          .filter(heightMap.isWithinRange)
-          .filter{ next => 
-            val c = removeSE(heightMap(next))
-            c == current + 1 || c <= current
-          }
-    import ShortestPathFinder._
-    val start = heightMap.findAll(_ == 'S').toList
-    val (len, _) = findAllShortestPaths7(start.map(p => PathInfo(0, List(p))))
+    val (len, _) = heightMap.findShortestPathBetweenValues(
+      isMoveAllowed = isMoveAllowed
+    )('S', 'E')
     len
 
   //Part 2
+  def isMoveAllowed2(from: Position, to: Position): Boolean = 
+    isMoveAllowed(to, from)
+
   lazy val answer2: Long =
-    object ShortestPathFinder extends ShortestPathAlgorithms[Position]:
-      val isFinish: (Position) => Boolean = p => heightMap(p) == 'a'
-      val graphAsFunction: GraphAsFunction[Position] = p =>
-        val current = removeSE(heightMap(p))
-        mainDirections
-          .map(p + _)
-          .filter(heightMap.isWithinRange)
-          .filter{ next => 
-            val c = removeSE(heightMap(next))
-            c == current - 1 || c >= current
-          }
-    import ShortestPathFinder._
-    val start = heightMap.findAll(_ == 'E').toList
-    val (len, _) = findAllShortestPaths7(start.map(p => PathInfo(0, List(p))))
+    val (len, _) = heightMap.findShortestPathBetweenValues(
+      isMoveAllowed = isMoveAllowed2
+    )('E', 'a')
     len
 
   def main(args: Array[String]): Unit =

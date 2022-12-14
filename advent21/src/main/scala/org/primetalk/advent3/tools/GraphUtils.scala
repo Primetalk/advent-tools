@@ -201,7 +201,12 @@ object GraphUtils:
         case lst =>
           lst
 
-  /** This trait contains building blocks for searching shortest paths. 
+  /** This trait contains building blocks for searching shortest paths.
+   * 
+   * SearchSpace is defined by
+   *  - graph (as a function)
+   *  - target definition
+   *  
    * @tparam T - Node type
    * @tparam W - weight
   */
@@ -254,7 +259,6 @@ object GraphUtils:
 
       toVisitSortedByPathInfoLength match 
         case Nil =>
-//          println(shortestPath.get())
           (priorityLimit, foundPaths)
         case headPath::tail =>
           if priority(headPath) >= priorityLimit then 
