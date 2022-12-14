@@ -291,6 +291,9 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
       array(j) = newFilledArrayLine
     }
 
+  def update(seq: Seq[Position], value: T): Unit =
+    seq.foreach(update(_, value))
+
   def showDisplay(colWidth: Int = 1)(show: T => String = _.toString): String =
     (for{
       y <- ys

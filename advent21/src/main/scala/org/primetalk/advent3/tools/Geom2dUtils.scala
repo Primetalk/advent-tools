@@ -23,6 +23,7 @@ object Geom2dUtils:
         }
       loop(start, direction, length, positions)
     }
+  // NB! Does not include pos1! Use toLineSegment.allPoints when needed.
   case class Line(pos1: Position, pos2: Position):
     /** NB! Not precise! Only works well for horizontal, vertical and diagonal lines. 
      * 
