@@ -33,29 +33,28 @@ object Interval:
       case Nil =>
         orig
 
+  def mergeAdjacent(lst: List[Interval], result: List[Interval] = Nil): List[Interval] =
+    lst match
+      case head1 :: head2 :: tail => 
+        val lst = head1.union(head2)
+        lst match
+          case head :: Nil =>
+            mergeAdjacent(head :: tail, result)
+          case _ =>
+            mergeAdjacent(head2 :: tail, head1 :: result)
+      case head :: Nil => 
+        (head :: result).reverse
+      case Nil =>
+        result.reverse
   // simplifies the collection of intervals to a collection of nonoverlapping intervals
   def unionAll(intervals: List[Interval], nonOverlapping: List[Interval] = Nil): List[Interval] =
-    def mergeAdjacent(lst: List[Interval], result: List[Interval] = Nil): List[Interval] =
-      lst match
-        case head1 :: head2 :: tail => 
-          val lst = head1.union(head2)
-          lst match
-            case head :: Nil =>
-              mergeAdjacent(head :: tail, result)
-            case _ =>
-              mergeAdjacent(head2 :: tail, head1 :: result)
-        case head :: Nil => 
-          (head :: result).reverse
-        case Nil =>
-          result.reverse
     intervals match
       case head :: tail => 
         //val nonOverlapping2 = nonOverlapping.foldLeft(List(head))((lst, no) => lst.flatMap(no.union(_)))
         val nonOverlapping2 = 
-          (subtractAll(List(head), nonOverlapping) reverse_::: nonOverlapping)
-            .sortBy(_.start)
-        unionAll(tail, mergeAdjacent(nonOverlapping2))
+          subtractAll(List(head), nonOverlapping) reverse_::: nonOverlapping
+        unionAll(tail, nonOverlapping2)
         //unionAll(tail, mergeAdjacent(head::nonOverlapping.flatMap(_.union(head)))
       case Nil =>
-        nonOverlapping
+        mergeAdjacent(nonOverlapping.sortBy(_.start))
     

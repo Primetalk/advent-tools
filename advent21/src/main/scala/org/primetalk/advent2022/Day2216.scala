@@ -320,7 +320,7 @@ object Day2216 extends Utils:
   val initialState = State("AA", 0, Set(), 0, 0)
 
   given stateOrder: Order[State] = Order.by(s => -(s.rate*10 - s.time*20))// - s.time*1))
-  def enumerateSearchSpace[Space: Order, ]
+
   def generateAll(toVisit: Heap[State], size: Int = 0, result: Int = 0): Int =
     if size > 10000000 then 
       throw IllegalStateException(s"size=$size")
