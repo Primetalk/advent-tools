@@ -477,7 +477,9 @@ object Day2216 extends Utils:
     println(mostDistantRooms.mkString(","))
     generateAll2(Heap(State2()))//.map(_.flow).max
 
+  def wgraph: WeightedGraphAsFunction[String, Int] = shortestPaths
 
   def main(args: Array[String]): Unit =
+    println(wgraph.toDot("mygraph", "AA"))
     //println("Answer1: " + answer1)
-    println("Answer2: " + answer2)
+    //println("Answer2: " + answer2)

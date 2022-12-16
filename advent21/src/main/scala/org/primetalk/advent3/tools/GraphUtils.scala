@@ -7,6 +7,8 @@ import cats.collections.Heap
 object GraphUtils:
   type Edge[T] = (T, T)
 
+  type LabelledEdge[T, W] = (T, T, W)
+
   type GraphEdges[T] = Seq[Edge[T]]
 
   type Predicate[T] = T => Boolean
@@ -180,6 +182,25 @@ object GraphUtils:
     ???
   }
 
+  def enumerateSearchSpace[PointInSearchSpace: Order, AggregateResult](
+    next: PointInSearchSpace => List[PointInSearchSpace],
+    aggregate: (AggregateResult, PointInSearchSpace) => AggregateResult,
+    eliminate: (AggregateResult, PointInSearchSpace) => Boolean
+  )(
+    toVisit: Heap[PointInSearchSpace], result: AggregateResult, 
+    count: Int = 0): AggregateResult =
+    if count > 100_000_000 then 
+      throw IllegalStateException(s"count=$count is too large")
+    toVisit.pop match
+      case Some((head, tail)) => 
+        if eliminate(result, head) then
+          enumerateSearchSpace(next, aggregate, eliminate)(tail, aggregate(result, head), count - 1)
+        else
+          val nextPoints = next(head)
+          enumerateSearchSpace(next, aggregate, eliminate)(tail ++ nextPoints, result, count + nextPoints.size)
+      case None =>
+        result
+
   case class PartialSearchResultWithOrdering[P, R](news: cats.collections.Heap[P], found: List[R])
 
   def orderingFindFirst[P: Ordering, R, S](
@@ -284,6 +305,34 @@ object GraphUtils:
               nextShortestPath,
               nextFoundPaths, 
               nextLengthLimit)
+
+    @tailrec
+    final def findAllShortestPaths8(
+      toVisitSortedByPathInfoLength: List[PathInfo],
+      shortestPath: Map[T, PathInfo] = Map(),
+      foundPaths: List[ReversePath[T]] = List()
+    )(using priority: Priority[PathInfo]): Map[T, PathInfo] =
+
+      toVisitSortedByPathInfoLength match 
+        case Nil =>
+          shortestPath
+        case headPath::tail =>
+            val nextNodes: List[T] = graphAsFunction(headPath.node).toList
+            val pathsToNextNodes: List[PathInfo] = nextNodes.map(headPath.prepend)
+            val inFinish: List[PathInfo] =
+              pathsToNextNodes.filter(p => isFinish(p.node))
+            val found = inFinish.toList
+            val nextFoundPaths = found.map(_.reversePath) reverse_::: foundPaths
+            val eliminatePathLongerThanExisting = pathsToNextNodes
+              .filterNot(shortestPath.thereIsShorterPath)
+            val nextShortestPath = shortestPath.addFoundPaths(pathsToNextNodes) 
+            given Ordering[PathInfo] = Ordering.by(priority.apply)
+            val nextToVisitSorted = insertAllIntoSortedList(tail, eliminatePathLongerThanExisting)
+            
+            findAllShortestPaths8(
+              nextToVisitSorted,
+              nextShortestPath,
+              nextFoundPaths)
           
   /** A setup for searching all paths.
    * Some nodes might be visited a few times.
@@ -335,4 +384,24 @@ object GraphUtils:
       def prepend(h: S): PathInfo = 
         PathInfo(length + 1, h :: reversePath, counts.updatedWith(h)(_.map(_ + 1).orElse(Some(1))))
 
-  
+  extension [T, W](wgraph: WeightedGraphAsFunction[T, W])
+    def toLabelledEdges(start: T): List[LabelledEdge[T, W]] =
+      def collect(toVisit: List[T], visited: Set[T] = Set(), results: List[LabelledEdge[T, W]] = Nil): List[LabelledEdge[T, W]] =
+        toVisit match
+          case head :: tail => 
+            val next = wgraph(head)
+              .filterNot(p => visited.contains(p._1))
+              .map((to, w) => (head, to, w))
+              .toList
+            val nodes = next.map(_._2)
+            collect(nodes reverse_::: tail, visited + head, next reverse_::: results)
+          case Nil =>
+            results
+      collect(List(start))
+    def toDot(name: String, start: T): String =
+      renderWGraph(name, toLabelledEdges(start))
+  def renderWGraph[T, W](name: String, ledges: List[LabelledEdge[T, W]]): String =
+    s"""digraph $name {
+${ledges.map((a,b,l) => s"  $a -> $b [len=$l label=$l];\n").mkString}
+}
+"""
