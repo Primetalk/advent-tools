@@ -82,6 +82,9 @@ object NumberSequenceUtils:
   // [0] - initial state
   // [1] - tortoise - any value
   // [2] - hare - any value
+  // @returns (μ, λ) - (shift, period)
+  //    NB, shift might not be enough when there are some parallel processes happen.
+  // one might need to add period to it to come to a stable place
   @inline
   def floydMutable[T](states: Array[T])(eq: (T, T) => Boolean = (a: T, b: T) => a == b, copy: (T, T) => Unit)(update: T => Unit): (Long, Long) =
     val t0 = 0

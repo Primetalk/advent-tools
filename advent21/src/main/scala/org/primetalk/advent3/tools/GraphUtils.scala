@@ -405,3 +405,25 @@ object GraphUtils:
 ${ledges.map((a,b,l) => s"  $a -> $b [len=$l label=$l];\n").mkString}
 }
 """
+
+  /** Collects all nodes connected to the given one. */
+  def collectConnectedComponent[T](g: GraphAsFunction[T])(start: T): Set[T] =
+    @tailrec
+    def go(toVisit2: Set[T], visited: Set[T]): Set[T] =
+      toVisit2.headOption match
+        case None => 
+          visited
+        case Some(hh) =>
+          val visited2 = visited + hh // (to avoid direct loop links)
+          val newFound = g(hh).toSet -- visited2
+          go(toVisit2.tail ++ newFound, visited2)
+    go(Set(start), Set())
+
+  @tailrec
+  def findAllConnectedComponents[T](g: GraphAsFunction[T])(toVisit: Set[T], result: List[Set[T]] = Nil): List[Set[T]] =
+    toVisit.headOption match
+      case None => 
+        result
+      case Some(head) =>
+        val component = collectConnectedComponent(g)(head)
+        findAllConnectedComponents(g)(toVisit -- component, component :: result)

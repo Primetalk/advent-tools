@@ -9,6 +9,10 @@ object Geom3dUtils:
   type Position = Vector3d
   type Direction = Vector3d
 
+  def parse3d(line: String): Position =
+    val Seq(x,y,z) = Utils.parseAllIntsInString(line)
+    (x,y,z):Position
+
   def parallelepipedByDiagonal(topLeft: Position, bottomRight: Position): Parallelepiped =
     Parallelepiped(topLeft, bottomRight - topLeft + (1, 1, 1))
 
@@ -86,7 +90,16 @@ object Geom3dUtils:
         if a._1 == b._1 || a._2 == b._2 || a._3 == b._3 
       yield 
         Line3d(a,b)
-    
+    def faces: List[Parallelepiped] = 
+      List(
+        parallelepipedByDiagonal((x0,y0,z0), (x0,y1,z1)),
+        parallelepipedByDiagonal((x0,y0,z0), (x1,y0,z1)),
+        parallelepipedByDiagonal((x0,y0,z0), (x1,y1,z0)),
+        parallelepipedByDiagonal((x1,y1,z1), (x1,y0,z0)),
+        parallelepipedByDiagonal((x1,y1,z1), (x0,y1,z0)),
+        parallelepipedByDiagonal((x1,y1,z1), (x0,y0,z1)),
+      )
+      
     def manhattanSize: Long = size.manhattanSize
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
