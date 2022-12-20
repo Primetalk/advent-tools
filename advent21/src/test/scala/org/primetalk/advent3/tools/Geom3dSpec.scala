@@ -23,7 +23,8 @@ class Geom3dSpec extends UnitSpec:
   val p5 = parallelepipedFromRanges((-28, 18), (-38, 10), (-14,33))
 
   "Parallelepiped 3,4" should "subtract" in {
-    val Some(i) = p3.intersect(p4)
+    val i = p3.intersect(p4).getOrElse(???)
+
     p3.intersect(i) should equal(Some(i))
     p4.intersect(i) should equal(Some(i))
 
