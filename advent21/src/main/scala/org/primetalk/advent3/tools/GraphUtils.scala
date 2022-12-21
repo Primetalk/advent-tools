@@ -188,18 +188,20 @@ object GraphUtils:
     eliminate: (AggregateResult, PointInSearchSpace) => Boolean
   )(
     toVisit: Heap[PointInSearchSpace], result: AggregateResult, 
-    count: Int = 0): AggregateResult =
-    if count > 100_000_000 then 
-      throw IllegalStateException(s"count=$count is too large")
-    toVisit.pop match
-      case Some((head, tail)) => 
-        if eliminate(result, head) then
-          enumerateSearchSpace(next, aggregate, eliminate)(tail, aggregate(result, head), count - 1)
-        else
-          val nextPoints = next(head)
-          enumerateSearchSpace(next, aggregate, eliminate)(tail ++ nextPoints, result, count + nextPoints.size)
-      case None =>
-        result
+    limit: Int = 1_000_000_000): AggregateResult =
+    if limit <= 0 then 
+      println(s"limit=$limit has been reached") // TODO: Either
+      result
+    else
+      toVisit.pop match
+        case Some((head, tail)) => 
+          if eliminate(result, head) then
+            enumerateSearchSpace(next, aggregate, eliminate)(tail, result, limit + 1)
+          else
+            val nextPoints = next(head)
+            enumerateSearchSpace(next, aggregate, eliminate)(tail ++ nextPoints, aggregate(result, head), limit - nextPoints.size)
+        case None =>
+          result
 
   case class PartialSearchResultWithOrdering[P, R](news: cats.collections.Heap[P], found: List[R])
 
