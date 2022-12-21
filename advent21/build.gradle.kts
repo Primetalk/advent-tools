@@ -14,7 +14,9 @@ dependencies {
     implementation("org.scala-lang:scala3-library_3:$scalaVersion")
     implementation("org.typelevel:cats-parse_3:0.3.6")
     implementation("org.typelevel:cats-collections-core_3:0.9.3")
-
+    implementation("org.typelevel:cats-effect_3:3.4.2")
+    implementation("org.scala-lang.modules:scala-parallel-collections_3:1.0.4")
+    
     testImplementation("org.scalatest:scalatest_3:3.2.10")
     testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.62.2")
 
