@@ -222,16 +222,35 @@ object NumberSequenceUtils:
 
   /** Finds minimum argument for predicate to hold true. */
   @tailrec
-  def binFindInfinum(p: Predicate[Int])(guessBelow: Int, guessAbove: Int): Int =
+  def binFindInfinumOld(p: Predicate[Long])(guessBelow: Long, guessAbove: Long): Long =
+    require(!p(guessBelow) && p(guessAbove))
     if guessAbove == guessBelow + 1 then
       guessAbove
     else 
       val next = (guessAbove + guessBelow) / 2
       if p(next) then
-        binFindInfinum(p)(guessBelow, next)
+        binFindInfinumOld(p)(guessBelow, next)
       else
-        binFindInfinum(p)(next, guessAbove)
-
+        binFindInfinumOld(p)(next, guessAbove)
+  /**
+    * Searches the minimum position when the function drops from true to false.
+    * {{{require(!f(low) && f(high))}}}
+    *
+    * @param low where to start finding the value boundary
+    * @return lowest position where f is true
+    */
+  def binFindInfinum(p: Predicate[Long])(low: Long, high: Long): Long =
+    require(!p(low) && p(high))
+    @tailrec
+    def binFindInfinum0(low: Long, high: Long): Long =
+      val next = low + (high - low) / 2 // this avoids overloading
+      if next == low then
+        high
+      else if p(next) then
+        binFindInfinum0(low, next)
+      else
+        binFindInfinum0(next, high)
+    binFindInfinum0(low, high)
   /**
     * Searches the position when the function drops from true to false.
     * {{{require(f(low) && !f(high))}}}
@@ -239,10 +258,10 @@ object NumberSequenceUtils:
     * @param low where to start finding the value boundary
     * @return last position where f is true
     */
-  def binFindSupremum(p: Predicate[Int])(low: Int, high: Int): Int =
+  def binFindSupremum(p: Predicate[Long])(low: Long, high: Long): Long =
     require(p(low) && !p(high))
     @tailrec
-    def binFindSupremum0(low: Int, high: Int): Int =
+    def binFindSupremum0(low: Long, high: Long): Long =
       val next = low + (high - low) / 2 // this avoids overloading
       if next == low then
         low

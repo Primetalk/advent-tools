@@ -12,6 +12,8 @@ trait Utils:
 
   def readResourceLines(resourceName: String): IndexedSeq[String] =
     val resource: URL = getClass.getResource(resourceName)
+    if resource == null then 
+      throw IllegalArgumentException("couldn't find " + resourceName)
     val src = Source.fromURL(resource, "UTF-8")
     try
       src.getLines().toIndexedSeq
