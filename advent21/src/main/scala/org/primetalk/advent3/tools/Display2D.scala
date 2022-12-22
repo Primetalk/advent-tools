@@ -43,6 +43,15 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
 
   def isWithinRange(p: Position): Boolean = rect.isWithinRange(p)
   
+  def wrapIntoRange(p: Position): Position =
+    val (x,y) = p
+    val p2 = (
+      minX + math.floorMod(x - minX, size._1),
+      minY + math.floorMod(y - minY, size._2)
+    )
+    require(isWithinRange(p2), s"position is not wrapped: $p -> $p2")
+    p2
+
   def positionInside(p: Position): Option[Position] = 
     if(isWithinRange(p))
       Some(p)
@@ -297,6 +306,15 @@ case class Display2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init: Option
   def showDisplay(colWidth: Int = 1)(show: T => String = _.toString): String =
     (for{
       y <- ys
+    } yield {
+      lineY(y)
+        .map(show)
+        .map(_.padTo(colWidth, ' ')).mkString
+    }).mkString("\n")
+
+  def showDisplayFlippedY(colWidth: Int = 1)(show: T => String = _.toString): String =
+    (for{
+      y <- ys.reverse
     } yield {
       lineY(y)
         .map(show)

@@ -10,6 +10,7 @@ object Geom2dUtils:
     def isHorizontal: Boolean = direction._2 == 0
     def isVertical: Boolean = direction._1 == 0
     def isDiagonal: Boolean = math.abs(direction._1) == math.abs(direction._2)
+    def reverse: DirVector = DirVector(direction.reverse, length)
     /** converts line segment to points.
       * NB! Does not include start position! This is convenient when drawing many segments*/
     def drawPrependFromStart(start: Position, positions: List[Position] = Nil): List[Position] = {
@@ -41,7 +42,8 @@ object Geom2dUtils:
       LineSegment(pos1, toDirVectorSparse)
 
   case class LineSegment(start: Position, dirVector: DirVector):
-    def end: Position = start + dirVector.toVector2d
+    def endP1: Position = start + dirVector.toVector2d
+    def end: Position = start + dirVector.toVector2d - dirVector.direction
     /** converts line segment to points.
       * NB! Does not include start position! This is convenient when drawing many segments*/
     def drawPrepend(positions: List[Position] = Nil): List[Position] =
@@ -49,10 +51,19 @@ object Geom2dUtils:
     def allPoints: List[Position] = 
       start :: drawPrepend()
 
+    def reverse: LineSegment =
+      LineSegment(end, dirVector.reverse)
+     
+    def relative(pos: Position): Position = 
+      (pos - start).rotateByDegree(-dirVector.direction.thetaDeg)
+
+    def fromRelative(pos: Position): Position = 
+      pos.rotateByDegree(dirVector.direction.thetaDeg) + start
+
   def rectangleByDiagonal(topLeft: Position, bottomRight: Position): Rectangle =
     Rectangle(topLeft, bottomRight - topLeft + (1, 1))
 
-  /** Origin is in top left corner. */
+  /** Origin is in top left corner. Y coordinate looks down*/
   final case class Rectangle(topLeft: Position, size: Vector2d):
 
     def area: Long =
@@ -60,8 +71,17 @@ object Geom2dUtils:
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
 
-    @inline
-    def bottomRight: Position = topLeft + size - (1, 1)
+    inline def bottomRight: Position = topLeft + size - (1, 1)
+    inline def topRight = (maxX, minY)
+    inline def bottomLeft = (minX, maxY)
+
+    def edgeSegment(edge: Direction): LineSegment = 
+      val dir = rotateLeft(edge)// NB!!! FlippedY axis
+      edge match
+        case Up => LineSegment(topLeft, DirVector(dir, size._1))
+        case Right => LineSegment(topRight, DirVector(dir, size._2))
+        case Down => LineSegment(bottomRight, DirVector(dir, size._1))
+        case Left => LineSegment(bottomLeft, DirVector(dir, size._2))
 
     def contains(p: Position): Boolean =
       p._1 >= topLeft._1 &&
@@ -87,6 +107,23 @@ object Geom2dUtils:
     def enlargeBy(deltaX: Int, deltaY: Int): Rectangle =
       Rectangle(topLeft - (deltaX, deltaY), size + (2 * deltaX, 2 * deltaY))
   
+  /** Normally oriented rectangle. */
+  final case class Rect(rectangleFlippedY: Rectangle):
+    private inline def r = rectangleFlippedY
+    inline def size = r.size
+    inline def topLeft = rectangleFlippedY.bottomLeft
+    inline def bottomRight = rectangleFlippedY.topRight
+    inline def topRight = rectangleFlippedY.bottomRight
+    inline def bottomLeft = rectangleFlippedY.topLeft
+
+    def edgeSegment(edge: Direction): LineSegment = 
+      val dir = rotateRight(edge)
+      edge match
+        case Up => LineSegment(topLeft, DirVector(dir, size._1))
+        case Right => LineSegment(topRight, DirVector(dir, size._2))
+        case Down => LineSegment(bottomRight, DirVector(dir, size._1))
+        case Left => LineSegment(bottomLeft, DirVector(dir, size._2))
+
   /** It's a matrix:
     *  /     \
     *  | a b |
@@ -128,10 +165,26 @@ object Geom2dUtils:
 
   val origin: Position = (0, 0)
 
+  // NB! Directions have normal Y orientation!
+  // In case of flipped rectangles, use Y* directions
   val Up: Direction = (0, +1)
   val Down: Direction = (0, -1)
   val Left: Direction = (-1, 0)
   val Right: Direction = (1, 0)
+
+  val charToDir = Map(
+    '^' -> Up,
+    '>' -> Right,
+    'v' -> Down,
+    '<' -> Left,
+  )
+  val dirToChar = charToDir.map(_.swap)
+  val ydirToChar = charToDir.map((c,d) => (d.flipY, c))
+  // NB! the following directions have Y flipped
+  val YDown = Up
+  val YUp = Down
+  val YLeft = Left
+  val YRight = Right
 
   val North: Direction = Up
   val South: Direction = Down
@@ -161,6 +214,8 @@ object Geom2dUtils:
 
   extension (v: Vector2d)
 
+    def flipX = (-v._1, v._2)
+    def flipY = (v._1, -v._2)
     def *(k: Int): Vector2d = (v._1 * k, v._2 * k)
 
     def transpose: Vector2d =
@@ -178,6 +233,7 @@ object Geom2dUtils:
         case 90 => rotateRight
         case 180 => rotate180
         case 270 => rotateLeft
+        case _ => throw IllegalArgumentException(s"cannot rotateByDegree($deg)")
       }
       mat.apply(v)
 
@@ -192,8 +248,13 @@ object Geom2dUtils:
     def theta: Double =
       math.atan2(-v._2, v._1)
 
+    def thetaDeg: Int =
+      (180*theta / math.Pi).round.toInt
+
     def normalizeCoords: Vector2d = 
       (math.signum(v._1),math.signum(v._2))
+
+    def reverse: Vector2d = (-v._1, -v._2)
 
   def manhattanDistance(p1: Position, p2: Position): Int =
     math.abs(p1._1 - p2._1) + math.abs(p1._2 - p2._2)

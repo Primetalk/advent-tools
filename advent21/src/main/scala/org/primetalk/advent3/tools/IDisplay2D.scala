@@ -42,6 +42,15 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
 
   def isWithinRange(p: Position): Boolean = rect.isWithinRange(p)
   
+  def wrapIntoRange(p: Position): Position =
+    val (x,y) = p
+    val p2 = (
+      minX + math.floorMod(x - minX, size._1),
+      minY + math.floorMod(y - minY, size._2)
+    )
+    require(isWithinRange(p2), s"position is not wrapped: $p -> $p2")
+    p2
+
   def positionInside(p: Position): Option[Position] = 
     if(isWithinRange(p))
       Some(p)
