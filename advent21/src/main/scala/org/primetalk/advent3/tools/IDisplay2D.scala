@@ -4,6 +4,7 @@ import org.primetalk.advent3.tools.Geom2dUtils.*
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
+import scala.collection.immutable.ArraySeq
 
 /**
   * Immutable Display is oriented (x: left->right, y: top->down.).
@@ -379,6 +380,9 @@ object IDisplay2D:
       display.fillAll(value)
       IArray.unsafeFromArray(display.array.map(IArray.unsafeFromArray))
     ))
+
+  def readCharDisplayFromString(input: String, emptyChar: Char = 0): IDisplay2D[Char] =
+    readCharDisplay(ArraySeq.unsafeWrapArray(input.split("\n")))
 
   def readCharDisplay(lines: Seq[String], emptyChar: Char = 0): IDisplay2D[Char] =
     val width = lines.map(_.length).max
