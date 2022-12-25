@@ -71,6 +71,15 @@ object Geom2dUtils:
 
     def coordinatePoints: Seq[Position] = Seq(topLeft, bottomRight)
 
+    def points: Seq[Position] = 
+      pointsLeftToRightTopToBottomYGrowsDown
+
+    def pointsLeftToRightTopToBottomYGrowsDown: Seq[(Int, Int)] =
+      for{
+        j <- ys
+        i <- xs
+      } yield (i, j)
+
     inline def bottomRight: Position = topLeft + size - (1, 1)
     inline def topRight = (maxX, minY)
     inline def bottomLeft = (minX, maxY)
@@ -104,6 +113,14 @@ object Geom2dUtils:
       p._1 >= minX && p._1 <= maxX &&
         p._2 >= minY && p._2 <= maxY
 
+    def wrapIntoRange(p: Position): Position =
+      val (x,y) = p
+      val p2 = (
+        minX + math.floorMod(x - minX, size._1),
+        minY + math.floorMod(y - minY, size._2)
+      )
+      require(isWithinRange(p2), s"position is not wrapped: $p -> $p2")
+      p2
     def enlargeBy(deltaX: Int, deltaY: Int): Rectangle =
       Rectangle(topLeft - (deltaX, deltaY), size + (2 * deltaX, 2 * deltaY))
   
@@ -180,6 +197,7 @@ object Geom2dUtils:
   )
   val dirToChar = charToDir.map(_.swap)
   val ydirToChar = charToDir.map((c,d) => (d.flipY, c))
+  val ycharToDir = ydirToChar.map(_.swap)
   // NB! the following directions have Y flipped
   val YDown = Up
   val YUp = Down
