@@ -7,8 +7,8 @@ repositories {
     mavenCentral()
 }
 
-val scalaMinorVersion = "3.2"
-val scalaVersion      = "3.2.1"
+val scalaMinorVersion = "3.3"
+val scalaVersion      = "3.3.1"
 
 dependencies {
     implementation("org.scala-lang:scala3-library_3:$scalaVersion")
@@ -17,9 +17,10 @@ dependencies {
     implementation("org.typelevel:cats-effect_3:3.4.2")
     implementation("org.scala-lang.modules:scala-parallel-collections_3:1.0.4")
     
+    implementation("eu.timepit:refined_3:0.11.0")
+    
     testImplementation("org.scalatest:scalatest_3:3.2.10")
     testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.62.2")
-
 }
 
 tasks.test {
@@ -59,4 +60,11 @@ tasks.register<JavaExec>("Day2121"){
     description = "Run Day2121"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("org.primetalk.advent2021.Day2121")
+}
+
+tasks.register<JavaExec>("Day2301"){
+    group = "run"
+    description = "Run Day2301"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("org.primetalk.advent2023.Day2301")
 }
