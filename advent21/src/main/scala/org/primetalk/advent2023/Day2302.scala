@@ -65,39 +65,40 @@ Both parts of this puzzle are complete! They provide two gold stars: **
   */
 object Day2302 extends Utils:
 
-  val lines = readThisObjectInputLines
+  private val lines = readThisObjectInputLines
 
-  enum Color:
+  private enum Color:
     case red, green, blue
+  import Color.*
 
-  case class Sample(red: Int, green: Int, blue: Int)
-  case class Game(id: Int, bags: List[Sample])
-  def parse(line: String): Game =
+  private type Sample = Map[Color, Int]
+
+  private case class Game(id: Int, bags: List[Sample])
+
+  private def parse(line: String): Game =
     val Array(game, samples) = line.split(':')
     val id = game.substring(5).toInt
     val bags =
       samples.split(';')
-        .map{s =>
-          val m: Map[Color, Int] =
-            s.trim.split(',')
+        .map(
+          _.trim.split(',')
               .map{ s =>
                 val Array(cnt, color) = s.trim.split(' ')
                 Color.valueOf(color) -> cnt.toInt
               }
               .toMap
               .withDefault(_ => 0)
-          import Color.*
-          Sample(m(red), m(green), m(blue))
-        }
+        )
     Game(id, bags.toList)
 
-  val games = lines.map(parse)
-  println(games.mkString("\n"))
+  private val games = lines.map(parse)
+
   lazy val answer1: Int = games
     .filter(g => g.bags.forall(s =>
-      s.red <= 12 &&
-        s.green <= 13 &&
-        s.blue <= 14))
+      s(red) <= 12 &&
+        s(green) <= 13 &&
+        s(blue) <= 14)
+    )
     .map(_.id)
     .sum
 
@@ -106,16 +107,17 @@ object Day2302 extends Utils:
     games
       .map{
         g =>
-          val s = Sample(
-            red = g.bags.map(_.red).max,
-            green = g.bags.map(_.green).max,
-            blue = g.bags.map(_.blue).max,
+          val s = Map(
+            red -> g.bags.map(_(red)).max,
+            green -> g.bags.map(_(green)).max,
+            blue -> g.bags.map(_(blue)).max,
           )
-          s.red*s.green*s.blue
+          s(red)*s(green)*s(blue)
       }
       .sum
 
   def main(args: Array[String]): Unit =
     println("Answer1: " + answer1)
     println("Answer2: " + answer2)
+
 end Day2302
