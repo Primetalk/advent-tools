@@ -4,6 +4,7 @@ import org.primetalk.advent3.tools.Geom2dUtils.*
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
+import scala.language.implicitConversions
 
 /**
   * Display is oriented (x: left->right, y: top->down.).
