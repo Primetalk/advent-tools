@@ -129,7 +129,10 @@ object Day2303 extends Utils:
       }
     gearPositions
       .map{ gearPos =>
-        numberPositionsValuesAndLengths.filter(n => n.positions.exists(np => directions8.exists(dir => np + dir == gearPos)))
+        numberPositionsValuesAndLengths
+          .filter(_.positions.exists(np =>
+            directions8.exists(dir => np + dir == gearPos)
+          ))
       }
       .filter(_.size == 2)
       .map{ case Seq(n1, n2) => n1.n * n2.n}
