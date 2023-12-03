@@ -1,6 +1,10 @@
 plugins {
     scala
-    id("com.github.maiflai.scalatest") version "0.31"
+    id("com.github.maiflai.scalatest") version "0.32"
+}
+
+tasks.withType<ScalaCompile>{
+    scalaCompileOptions.additionalParameters = listOf("-feature")
 }
 
 repositories {
@@ -12,15 +16,15 @@ val scalaVersion      = "3.3.1"
 
 dependencies {
     implementation("org.scala-lang:scala3-library_3:$scalaVersion")
-    implementation("org.typelevel:cats-parse_3:0.3.6")
-    implementation("org.typelevel:cats-collections-core_3:0.9.3")
-    implementation("org.typelevel:cats-effect_3:3.4.2")
+    implementation("org.typelevel:cats-parse_3:1.0.0")
+    implementation("org.typelevel:cats-collections-core_3:0.9.8")
+    implementation("org.typelevel:cats-effect_3:3.5.2")
     implementation("org.scala-lang.modules:scala-parallel-collections_3:1.0.4")
     
     implementation("eu.timepit:refined_3:0.11.0")
     
-    testImplementation("org.scalatest:scalatest_3:3.2.10")
-    testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.62.2")
+    testImplementation("org.scalatest:scalatest_3:3.2.17")
+    testRuntimeOnly("com.vladsch.flexmark:flexmark-all:0.64.8")
 }
 
 tasks.test {
@@ -67,4 +71,11 @@ tasks.register<JavaExec>("Day2301"){
     description = "Run Day2301"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("org.primetalk.advent2023.Day2301")
+}
+
+tasks.register<JavaExec>("Day2303"){
+    group = "run"
+    description = "Run Day2301"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("org.primetalk.advent2023.Day2303")
 }

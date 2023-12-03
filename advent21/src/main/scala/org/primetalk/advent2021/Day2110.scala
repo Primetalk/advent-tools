@@ -1,8 +1,10 @@
 package org.primetalk.advent2021
 
 import org.primetalk.advent3.tools.Utils
-import cats.parse._
+import cats.parse.*
 import cats.data.NonEmptyList
+
+import scala.annotation.tailrec
 
 /**
   * https://adventofcode.com/2021/day/10
@@ -153,12 +155,13 @@ object Day2110 extends Utils:
     input.map(evalLine).sum
 
   //Part 2
-  def findSuffix(line: String, suffix: String = ""): String = 
+  @tailrec
+  def findSuffix(line: String, suffix: String = ""): String =
     val line2 = line + suffix
     if suffix.length > line.length then 
       throw IllegalStateException("Suffix cannot be longer than line")
     otherChunks.parseAll(line2) match
-      case Left(err@Parser.Error(failedAtOffset, lst)) => 
+      case Left(err@Parser.Error(failedAtOffset, lst)) =>
         if failedAtOffset < line.length then 
           throw IllegalStateException(s"The line itself is incorrect: $err")
         lst.head match 
@@ -168,6 +171,7 @@ object Day2110 extends Utils:
             throw IllegalStateException(s"Unexpected parsing error: $err")
       case Right(_) => 
         suffix
+      case Left(e) => throw IllegalStateException(s"Unknown: e")
 
   val scoreChar = Map(')' -> 1, ']' -> 2, '}' -> 3, '>' -> 4)
 
