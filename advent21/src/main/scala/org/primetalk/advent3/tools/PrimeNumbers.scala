@@ -1,4 +1,4 @@
-package org.primetalk.advent.tools
+package org.primetalk.advent3.tools
 
 import scala.annotation.tailrec
 
@@ -123,7 +123,10 @@ object PrimeNumbers:
         greatestCommonDivisor(divisor, nextDivisor)
     else 
       greatestCommonDivisor(divisor, i)
- 
+
+  def greatestCommonDivisorN[T: Integral](s: Seq[T]): T =
+    s.reduce(greatestCommonDivisor)
+
 
 //    @scala.annotation.tailrec mod inverse
 //    def loop(t: BigInt = 0, newt: BigInt = 1, r: BigInt = n, newr: BigInt = a): BigInt = {
@@ -161,7 +164,7 @@ object PrimeNumbers:
     a.toLong * b / greatestCommonDivisorInt(a, b)
 
   def leastCommonMultipleLong(a: Long, b: Long): Long =
-    a.toLong * b / greatestCommonDivisorLong(a, b)
+    a * b / greatestCommonDivisorLong(a, b)
 
   def leastCommonMultiple[T: Integral](a: T, b: T): T =
     val num = Integral[T]

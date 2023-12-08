@@ -145,7 +145,7 @@ object NumberSequenceUtils:
   inline final def unfoldN[A](f: A => A): (z: A, n: Long) => A =
     @annotation.tailrec
     def unfoldN0(z: A, n: Long): A =
-      if(n == 0)
+      if(n == 0L)
         z
       else
         unfoldN0(f(z), n - 1)
@@ -284,7 +284,8 @@ object NumberSequenceUtils:
     case class PosValue(pos: Int, value: T)
     def fpv(pos: Int): PosValue = 
       PosValue(pos, f(pos))
-    def findSingleMinumum0(l: PosValue, m: PosValue, u: PosValue): PosValue = 
+    @tailrec
+    def findSingleMinimum0(l: PosValue, m: PosValue, u: PosValue): PosValue = 
       if u.pos <= l.pos + 2 then
         Seq(l, m, u).minBy(_.value)
       else 
@@ -294,12 +295,12 @@ object NumberSequenceUtils:
           else
             (fpv(l.pos + (m.pos - l.pos)/2), m)
 
-        if m1.value < m2.value then 
-          findSingleMinumum0(l, m1, m2)
+        if m1.value < m2.value then
+          findSingleMinimum0(l, m1, m2)
         else
-          findSingleMinumum0(m1, m2, u)
+          findSingleMinimum0(m1, m2, u)
 
     val fl = fpv(lower) // we could also start at mid, but that would duplicate mid calculation code
-    val PosValue(p, fp) = findSingleMinumum0(fl, fl, fpv(upper))
+    val PosValue(p, fp) = findSingleMinimum0(fl, fl, fpv(upper))
     (p, fp)
   
