@@ -1,6 +1,6 @@
 package org.primetalk.advent2023
 
-import org.primetalk.advent.tools.PrimeNumbers
+import org.primetalk.advent3.tools.PrimeNumbers
 import org.primetalk.advent3.tools.{NumberSequenceUtils, Utils}
 
 import scala.annotation.tailrec

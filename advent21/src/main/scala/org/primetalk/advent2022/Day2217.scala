@@ -5,7 +5,7 @@ import org.primetalk.advent3.tools.Geom2dUtils._
 import org.primetalk.advent3.tools.Display2D.apply
 import org.primetalk.advent3.tools.Display2D
 import scala.collection.immutable.Queue
-import org.primetalk.advent.tools.PrimeNumbers
+import org.primetalk.advent3.tools.PrimeNumbers
 import org.primetalk.advent3.tools.NumberSequenceUtils
 
 /**
