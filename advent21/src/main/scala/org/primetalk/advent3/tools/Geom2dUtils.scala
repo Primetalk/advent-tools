@@ -229,7 +229,8 @@ object Geom2dUtils:
       (p._1 + vector._1, p._2 + vector._2)
     def -(vector: Vector2d): Position =
       (p._1 - vector._1, p._2 - vector._2)
-
+    def unary_- : Position = 
+      (-p._1, -p._2)
   extension (v: Vector2d)
 
     def flipX = (-v._1, v._2)
@@ -304,3 +305,14 @@ object Geom2dUtils:
   def manhattanCircle(p: Position, r: Int): ManhattanEllipse =
     ManhattanEllipse(p - (r,0), p + (r,0))
 
+
+  def fill(produce: Position => List[Position], isOnBoundary: Position => Boolean)(pointsToCheck: List[Position], found: Set[Position]): Set[Position] =
+    pointsToCheck match
+      case head :: tail =>
+        if isOnBoundary(head) || found.contains(head) then 
+          fill(produce, isOnBoundary)(tail, found)
+        else
+          val morePoints = produce(head).filterNot(isOnBoundary).filterNot(found.contains)
+          fill(produce, isOnBoundary)(morePoints ::: tail, found + head)
+      case Nil => 
+        found
