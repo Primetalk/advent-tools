@@ -285,7 +285,7 @@ object NumberSequenceUtils:
     def fpv(pos: Int): PosValue = 
       PosValue(pos, f(pos))
     @tailrec
-    def findSingleMinimum0(l: PosValue, m: PosValue, u: PosValue): PosValue = 
+    def findSingleMinimum0(l: PosValue, m: PosValue, u: PosValue): PosValue =
       if u.pos <= l.pos + 2 then
         Seq(l, m, u).minBy(_.value)
       else 
