@@ -168,6 +168,18 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
 //       None
 //   }
 
+  inline def upClockwiseEdge: IndexedSeq[Position] =
+    xs.map((_, minY))
+
+  inline def downClockwiseEdge: IndexedSeq[Position] =
+    xs.reverse.map((_, maxY))
+
+  inline def rightClockwiseEdge: IndexedSeq[Position] =
+    ys.map((maxX, _))
+
+  inline def leftClockwiseEdge: IndexedSeq[Position] =
+    ys.reverse.map((minX, _))
+
   /** Enumerates all positions on edges.
     * O(N+M)
     * The order is not guaranteed.
@@ -179,24 +191,24 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
     else if(maxX == minX)
       ys.map((minX, _))
     else if(maxY == minY)
-      xs.map((_, minY))
+      upClockwiseEdge
     else
-      xs.map((_, minY)) ++
-        xs.map((_, maxY)) ++
+      upClockwiseEdge ++
+        downClockwiseEdge ++
         (minY + 1).until(maxY).map((minX, _)) ++
         (minY + 1).until(maxY).map((maxX, _))
-  
+
 
   // Up, Left, Down, Right
   def edgePositionsByDirClockwise(dir: Direction): IndexedSeq[Position] = dir match {
     case Geom2dUtils.Up =>
-      xs.map((_, minY))
+      upClockwiseEdge
     case Geom2dUtils.Right =>
-      ys.map((maxX, _))
+      rightClockwiseEdge
     case Geom2dUtils.Left =>
-      ys.map((minX, _)).reverse
+      leftClockwiseEdge
     case Geom2dUtils.Down =>
-      xs.map((_, maxY)).reverse
+      downClockwiseEdge
     case _ =>
       throw new IllegalArgumentException(s"There is no edge at direction $dir")
   }
