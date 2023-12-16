@@ -79,6 +79,9 @@ final case class IDisplay2D[T: ClassTag](offset: Vector2d, size: Vector2d)(init:
 
   def lineY(y: Int): IArray[T] = array(y - minY)
 
+  def rows: Seq[IArray[T]] = 
+    ys.map(lineY).toSeq
+    
   val minX: Int = offset._1
   val maxXplusExtra1: Int = minX + size._1
   val maxX: Int = maxXplusExtra1 - 1
