@@ -9,3 +9,10 @@ class BitsSpec extends UnitSpec:
       assert(Bits.fromBinaryString(b).invert === Bits.fromBinaryString(a))
     }
   }
+
+  "Bits" should "count known examples" in {
+    val examples = List(1L -> 1, 3L -> 2, 32L -> 1, 48L -> 2, -1L -> 64)
+    forAll(examples) { case (a, b) =>
+      assert(Bits.countBits(a) === b)
+    }
+  }
