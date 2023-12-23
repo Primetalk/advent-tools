@@ -181,7 +181,16 @@ object NumberSequenceUtils:
       
     unfoldUntil0
 
-  final def countUntil[A](f: A => A)(p: A => Boolean): (z: A) => (A, Int) = 
+  /** Unfolds a sequence until there are values. Returns the last one. */
+  final def unfoldLastSome[A](f: A => Option[A]): A => A =
+    @tailrec
+    def unfoldLastSome0(z: A): A =
+      f(z) match
+        case None => z
+        case Some(z) => unfoldLastSome0(z)
+    unfoldLastSome0
+
+  final def countUntil[A](f: A => A)(p: A => Boolean): (z: A) => (A, Int) =
     (z: A) => unfoldUntil[(A, Int)]( ac => ({/*print(s"${ac._2}:");*/f(ac._1)}, ac._2 + 1))(ac => p(ac._1))((z, 0))
 
   /** Starts with initial state `S`, then applies `f` continuously.
