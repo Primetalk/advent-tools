@@ -27,7 +27,7 @@ object Geom3dUtils:
   case class Line3d(a: Position, b: Position)
 
   /** Origin is in top left corner. */
-  case class Parallelepiped(topLeft: Position, size: Vector3d) {
+  case class Parallelepiped(topLeft: Position, size: Vector3d):
 
     def bottomRight: Position = topLeft + size - (1, 1, 1)
 
@@ -35,6 +35,8 @@ object Geom3dUtils:
       isWithin(other.topLeft) &&
         isWithin(other.bottomRight) 
 
+    def hasIntersection(other: Parallelepiped): Boolean =
+      intersect(other).nonEmpty
     def isWithin(p: Position): Boolean = p match
       case (x,y,z) =>
         x0 <= x && (x - x0) < size._1 &&
@@ -166,7 +168,9 @@ object Geom3dUtils:
             .filterNot(_ == this)
             .distinct
     }
-  }
+    def movedBy(shift: Vector3d): Parallelepiped =
+      Parallelepiped(topLeft + shift, size)
+  end Parallelepiped
 
   type ManhattanPosition = Position
   type ManhattanParallelepiped = Parallelepiped
