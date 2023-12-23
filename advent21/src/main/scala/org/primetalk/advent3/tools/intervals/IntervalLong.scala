@@ -42,6 +42,23 @@ case class Interval(start: Long, endInclusive: Long):
       List(this)
     else
       List(Interval(from, pos - 1), Interval(pos, endInclusive))
+
+  def divideLessThan(pos: Long): (Option[Interval], Option[Interval]) =
+    if pos <= from then
+      (None, Some(this))
+    else if pos > endInclusive then
+      (Some(this), None)
+    else
+      (Some(Interval(from, pos - 1)), Some(Interval(pos, endInclusive)))
+
+  def divideGreaterThan(pos: Long): (Option[Interval], Option[Interval]) =
+    if pos < from then
+      (Some(this), None)
+    else if pos >= endInclusive then
+      (None, Some(this))
+    else
+      (Some(Interval(pos + 1, endInclusive)), Some(Interval(from, pos)))
+
   inline def isEmpty: Boolean = length == 0
   inline def nonEmpty: Boolean = length != 0 
 
