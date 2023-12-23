@@ -26,6 +26,8 @@ object GraphUtils:
 
   type WeightedGraphAsFunction[T, W] = T => Seq[(T, W)]
 
+  type WeightedGraphAsMap[T, W] = Map[T, Seq[(T, W)]]
+
   type ReversePath[T] = List[T]
 
   extension [T](deps: GraphDependencies[T])
@@ -429,3 +431,38 @@ ${ledges.map((a,b,l) => s"  $a -> $b [len=$l label=$l];\n").mkString}
       case Some(head) =>
         val component = collectConnectedComponent(g)(head)
         findAllConnectedComponents(g)(toVisit -- component, component :: result)
+
+  /** Simplify graph that contains linear chains to a weighted graph
+    * with only nodes where there are branches */
+  def simplifyGraph[T](g: GraphAsFunction[T], seedForks: List[T]): WeightedGraphAsMap[T, Int] =
+    type W = Int
+    case class PathFromFork(t: T, fork: T, length: Int)
+
+    def loop(toCheck: List[PathFromFork], forks: Set[T] = Set(), knownMap: Map[T, Seq[(T, W)]] = Map(), visited: Set[T] = Set()): Map[T, Seq[(T, W)]] =
+      toCheck match
+        case Nil => knownMap
+        case head :: tail =>
+          val newNodes = g(head.t)
+          val newToCheck = newNodes.filterNot(visited.contains)
+          if newNodes.size > 2 || forks.contains(head.t) then
+            if head.length == 2 then // skip self loops
+              loop(tail, forks, knownMap, visited)
+            else
+              loop(
+                newToCheck.map(t => PathFromFork(t, head.t, 1)).toList ::: tail,
+                forks + head.t,
+                knownMap
+                  .updated(head.fork, (head.t, head.length) +: knownMap.getOrElse(head.fork, Seq()))
+                  .updated(head.t, (head.fork, head.length) +: knownMap.getOrElse(head.t, Seq()))
+                ,
+                visited,// + head.t, we explicitly want to visit previously seen forks to connect loops.
+              )
+          else
+            loop(
+              newToCheck.map(t => PathFromFork(t, head.fork, head.length + 1)).toList ::: tail,
+              forks,
+              knownMap,
+              visited + head.t,
+            )
+
+    loop(seedForks.map(f => PathFromFork(f, f, 0)), seedForks.toSet)
