@@ -58,14 +58,19 @@ trait Utils:
   def parseLongsNewLineSeparated(text: String): IndexedSeq[Long] =
     splitLines(text).map(_.toLong)
 
-  val intsRegex: Regex = "[-]?\\d+".r
+  val numbersRegex: Regex = "[-]?\\d+".r
 
   def parseAllIntsInString(text: String): Seq[Int] =
-    intsRegex.findAllMatchIn(text).map(_.toString().toInt).toSeq
+    numbersRegex.findAllMatchIn(text)
+      .map(_.toString().toInt).toSeq
+  def parseAllLongsInString(text: String): Seq[Long] =
+    numbersRegex.findAllMatchIn(text)
+      .map(_.toString().toLong).toSeq
 
   def parseFirstIntInString(text: String): Int =
-    intsRegex.findFirstIn(text)
-      .map(_.toString().toInt)
+    numbersRegex
+      .findFirstIn(text)
+      .map(_.toInt)
       .getOrElse(throw IllegalArgumentException(s"no int in $text"))
 
 object Utils extends Utils
