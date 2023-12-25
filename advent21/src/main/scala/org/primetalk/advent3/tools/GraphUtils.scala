@@ -4,8 +4,13 @@ import scala.annotation.tailrec
 import cats.kernel.Order
 import cats.collections.Heap
 
+import scala.util.Random
+
 object GraphUtils:
   type Edge[T] = (T, T)
+
+  type UEdge[T] = Set[T]
+  type UGraphEdges[T] = IndexedSeq[UEdge[T]]
 
   type LabelledEdge[T, W] = (T, T, W)
 
@@ -466,3 +471,48 @@ ${ledges.map((a,b,l) => s"  $a -> $b [len=$l label=$l];\n").mkString}
             )
 
     loop(seedForks.map(f => PathFromFork(f, f, 0)), seedForks.toSet)
+
+  def convertEachVertexToSet[T](graph: UGraphEdges[T]): UGraphEdges[Set[T]] =
+    val vertices = graph.toSet.flatten
+    val vmap = vertices.map(v => v -> Set(v)).toMap
+    graph.map(_.map(vmap))
+
+  def removeLoops[T](graph: UGraphEdges[T]): UGraphEdges[T] =
+    graph.filterNot(_.size < 2)
+
+  // Алгоритм Каргера
+  // используя генератор случайных чисел выполняет поиск разреза.
+  // При этом довольно высока вероятность найти наименьший разрез.
+  // Например, в графе с 1400 рёбрами удалось найти минимальный разрез за 310 запусков (25.12.2023)
+  case class Cut[T](s1: Set[T], s2: Set[T], cut: UGraphEdges[Set[T]])
+  def findARandomCut[T](graph: UGraphEdges[T], r: Random = new Random()): Cut[T] =
+    val graphS = convertEachVertexToSet(graph)
+
+    @tailrec
+    def loop(g: UGraphEdges[Set[T]]): Cut[T] =
+      val vertexCount = g.flatten.size
+      if g.isEmpty then
+        ???
+      else if vertexCount <= 2 then
+        val List(s1, s2) = g(0).toList
+        Cut(s1, s2, g)
+      else
+        val edgeIndex = r.nextInt(g.size)
+        val edge = g(edgeIndex).toList
+        val List(v1, v2) = edge
+        val v = v1 ++ v2
+        val newG = g.map(e => e.map(v3 => if edge.contains(v3) then v else v3))
+        val loopless = removeLoops(newG)
+        if loopless.isEmpty then
+          val List(s1, s2) = g(0).toList
+          Cut(s1, s2, g)
+        else
+          loop(loopless)
+    loop(removeLoops(graphS))
+
+  def convertUGraphToMap[T](graph: UGraphEdges[T]): Map[T, Seq[T]] =
+    graph
+      .flatMap(e => e.toList.map(v1 => v1 -> e.toList.filterNot(_ == v1)))
+      .groupBy(_._1)
+      .view.mapValues(_.flatMap(_._2))
+      .toMap
