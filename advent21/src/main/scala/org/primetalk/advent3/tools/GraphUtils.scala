@@ -144,12 +144,13 @@ object GraphUtils:
         case lst =>
           lst
 
-  case class PartialSearchResultWithPriority2[P, R](news: Iterable[P], found: List[R])
-  
-  def priorityFindFirst2[P: Order, R, S](
-    f: S => P => PartialSearchResultWithPriority2[P, R], 
-    eliminate: (S, Iterable[P]) => (S, Iterable[P])
-  )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] =
+  case class PartialSearchResultWithPriority2[Path, Result](news: Iterable[Path], found: List[Result])
+
+  /** Внимание! Возвращает первые результаты. Не обязательно лучшие. */
+  def priorityFindFirstNotBest[Path: Order, Result, GlobalState](
+    f: GlobalState => Path => PartialSearchResultWithPriority2[Path, Result],
+    eliminate: (GlobalState, Iterable[Path]) => (GlobalState, Iterable[Path])
+  )(zero: GlobalState, start: Heap[Path], foundSoFar: List[Result]): List[Result] =
     start.pop match
      case None =>
       foundSoFar
@@ -157,18 +158,18 @@ object GraphUtils:
       val PartialSearchResultWithPriority2(next, found) = f(zero)(min)
       found match
         case Nil =>
-          val (zero2, nextElim) = eliminate(zero, next)
-          val nextStartElim = queue.addAll(nextElim)
-          priorityFindFirst2(f, eliminate)(zero2, nextStartElim, 
+          val (zero2, nextEliminated) = eliminate(zero, next)
+          val toVisit = queue.addAll(nextEliminated)
+          priorityFindFirstNotBest(f, eliminate)(zero2, toVisit,
             found reverse_::: foundSoFar)
         case lst =>
           lst
 
-  def priorityFindAll2[P: Order, R, S](
-    f: P => PartialSearchResultWithPriority2[P, R],
-    estimate: (S, List[R]) => S, 
-    eliminate: (S, Iterable[P]) => (S, Iterable[P])
-  )(zero: S, start: Heap[P], foundSoFar: List[R]): List[R] =
+  def priorityFindAll2[Path: Order, Result, GlobalState](
+    f: Path => PartialSearchResultWithPriority2[Path, Result],
+    estimate: (GlobalState, List[Result]) => GlobalState,
+    eliminate: (GlobalState, Iterable[Path]) => (GlobalState, Iterable[Path])
+  )(zero: GlobalState, start: Heap[Path], foundSoFar: List[Result]): List[Result] =
     start.pop match
      case None =>
       foundSoFar
